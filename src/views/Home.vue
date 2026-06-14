@@ -1,6 +1,8 @@
 <template>
   <div>
-    <h1>GameHub</h1>
-    <p>Welcome to GameHub!</p>
+    <h1>Welcome to GameHub</h1>
+    <p>
+      Discover games, read news, and join the community.
+    </p>
   </div>
 </template>

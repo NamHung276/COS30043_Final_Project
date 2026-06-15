@@ -7,6 +7,12 @@ export default {
     }
   },
 
+  methods:{
+    addToFavorites() {
+      
+    }
+  },
+
   async mounted() {
     try {
       const id = this.$route.params.id
@@ -34,36 +40,88 @@ export default {
       Loading...
     </div>
 
-    <div v-else>
+    <div v-else class="container mt-4">
 
       <h1>{{ game.title }}</h1>
 
-      <img
-        :src="game.thumbnail"
-        class="img-fluid mb-3"
-        :alt="game.title"
-      >
+      <div class="row mb-4">
+        <div class="col-md-4">
+          <img
+            :src="game.thumbnail"
+            class="img-fluid rounded"
+            :alt="game.title"
+          >
+        </div>
+        <div class="col-md-8">
+          <div class="card">
+            <div class="card-body text-start">
+              <p>
+                <strong>Genre:</strong>
+                {{ game.genre }}
+              </p>
+              <p>
+                <strong>Platform:</strong>
+                {{ game.platform }}
+              </p>
+              <p>
+                <strong>Publisher:</strong>
+                {{ game.publisher }}
+              </p>
+              <p>
+                <strong>Developer:</strong>
+                {{ game.developer }}
+              </p>
+              <p>
+                <strong>Release Date:</strong>
+                {{ game.release_date }}
+              </p>
+              <p>
+                <strong>Status:</strong>
+                {{ game.status }}
+              </p>
+              <div class="mt-3 d-flex justify-content-end">
+                <a
+                  v-if="game.game_url"
+                  :href="game.game_url"
+                  target="_blank"
+                  class="btn btn-primary me-2"
+                >
+                  Play Game
+                </a>
+                <button
+                  class="btn btn-success"
+                  @click="addToFavorites"
+                >
+                  Add to Favorites (Coming Soon)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <p>
-        <strong>Genre:</strong>
-        {{ game.genre }}
-      </p>
-
-      <p>
-        <strong>Platform:</strong>
-        {{ game.platform }}
-      </p>
-
-      <p>
-        <strong>Publisher:</strong>
-        {{ game.publisher }}
-      </p>
-
+      <h3 class="mb-3">Description</h3>
       <p>
         {{ game.description }}
       </p>
 
-    </div>
+      <div v-if="game.screenshots && game.screenshots.length" class="mt-5">
+        <h3 class="mb-3">Screenshots</h3>
+        <div class="row g-3">
+          <div
+            v-for="screenshot in game.screenshots"
+            :key="screenshot.id"
+            class="col-md-4"
+          >
+            <img
+              :src="screenshot.image"
+              :alt="game.title"
+              class="img-thumbnail w-100"
+            >
+          </div>
+        </div>
+      </div>
 
+    </div>
   </div>
 </template>

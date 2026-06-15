@@ -20,6 +20,13 @@
 
         <router-link
           class="nav-link"
+          to="/games"
+        >
+          Games
+        </router-link>
+
+        <router-link
+          class="nav-link"
           to="/news"
         >
           News

@@ -294,3 +294,34 @@ code {
     border-right-color: var(--border);
   }
 }
+
+body {
+  background-color: #121212;
+  color: white;
+}
+
+.card {
+  background-color: #1e1e1e;
+  color: white;
+  border: none;
+
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+
+.card-img-top {
+  height: 200px;
+  object-fit: cover;
+}
+
+.btn-primary {
+  border-radius: 10px;
+}
+
+.navbar {
+  box-shadow: 0 2px 15px rgba(0,0,0,0.5);
+}

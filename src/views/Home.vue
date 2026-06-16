@@ -2,52 +2,175 @@
 export default {
   data() {
     return {
-      featuredGames: [
-        {
-          title: 'Minecraft',
-          genre: 'Sandbox'
-        },
-        {
-          title: 'Valorant',
-          genre: 'FPS'
-        },
-        {
-          title: 'League of Legends',
-          genre: 'MOBA'
-        }
-      ]
+      featuredGames: [],
+      loading: true
+    }
+  },
+
+  async mounted() {
+    try {
+      const response = await fetch(
+        'https://www.freetogame.com/api/games'
+      )
+
+      const games = await response.json()
+
+      this.featuredGames =
+        games
+          .sort(() => 0.5 - Math.random())
+          .slice(0, 3)
+
+    } catch (error) {
+      console.error(error)
+    } finally {
+      this.loading = false
     }
   }
 }
 </script>
 
 <template>
-  <div class="text-center mb-5">
-    <h1>Welcome to GameHub</h1>
-    <p class="lead">
-      Discover games, read news, and join the community.
-    </p>
-  </div>
+  <div>
 
-  <h2 class="mb-4">Featured Games</h2>
+    <!-- Hero Banner -->
+    <div class="hero-banner">
+      <div class="hero-content">
 
-  <div class="row">
-    <div
-      class="col-md-4 mb-4"
-      v-for="game in featuredGames"
-      :key="game.title"
-    >
-      <div class="card h-100">
-        <div class="card-body">
-          <h5 class="card-title">
-            {{ game.title }}
-          </h5>
+        <h1>Discover Your Next Adventure</h1>
 
-          <p class="card-text">
-            Genre: {{ game.genre }}
+        <p class="lead">
+          Explore free-to-play games,
+          stay updated with gaming news,
+          and build your favorite collection.
+        </p>
+
+        <div class="mt-4">
+          <router-link
+            to="/games"
+            class="btn btn-primary me-2"
+          >
+            Browse Games
+          </router-link>
+
+          <router-link
+            to="/live-news"
+            class="btn btn-outline-light"
+          >
+            Latest News
+          </router-link>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="container py-4">
+
+      <!-- Stage 1: Two Static Images -->
+      <h2 class="mb-4">Welcome to GameHub</h2>
+      <p class="text-muted mb-4">
+        Your one-stop destination for free-to-play games, gaming news,
+        and a community of passionate gamers. Browse hundreds of titles,
+        stay up to date with the latest gaming news, and save your
+        favourite games all in one place.
+      </p>
+
+      <div class="row mb-5 g-4">
+        <div class="col-md-6">
+          <img
+            src="https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=800&q=80"
+            alt="Gaming setup with PC and RGB lighting"
+            class="img-fluid rounded shadow"
+            style="width: 100%; height: 280px; object-fit: cover;"
+          >
+          <p class="text-muted small mt-2 text-center">
+            Level up your gaming experience
+          </p>
+        </div>
+        <div class="col-md-6">
+          <img
+            src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80"
+            alt="Multiplayer gaming community"
+            class="img-fluid rounded shadow"
+            style="width: 100%; height: 280px; object-fit: cover;"
+          >
+          <p class="text-muted small mt-2 text-center">
+            Join a community of gamers
           </p>
         </div>
       </div>
+
+      <!-- Featured Games -->
+      <h2 class="mb-4">Featured Games</h2>
+
+      <div v-if="loading" class="text-center py-4">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+
+      <div v-else class="row">
+        <div
+          class="col-md-4 mb-4"
+          v-for="game in featuredGames"
+          :key="game.title"
+        >
+          <div class="card h-100">
+            <img
+              :src="game.thumbnail"
+              class="card-img-top"
+              :alt="game.title"
+            >
+            <div class="card-body">
+              <h5 class="card-title">
+                {{ game.title }}
+              </h5>
+              <p class="card-text">
+                Genre: {{ game.genre }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Why GameHub -->
+      <h2 class="mb-4">Why Choose GameHub?</h2>
+
+      <div class="row">
+        <div class="col-md-4 mb-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">🎮 Games</h5>
+              <p class="card-text">
+                Discover free-to-play games from multiple genres.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">📰 News</h5>
+              <p class="card-text">
+                Stay updated with the latest gaming news.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">⭐ Favorites</h5>
+              <p class="card-text">
+                Save your favorite games for quick access.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
+
   </div>
 </template>

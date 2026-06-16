@@ -9,52 +9,149 @@
         GameHub
       </router-link>
 
-      <div class="navbar-nav">
+      <!-- Hamburger toggle for mobile -->
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-        <router-link
-          class="nav-link"
-          to="/"
-        >
-          Home
-        </router-link>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <div class="navbar-nav ms-auto">
 
-        <router-link
-          class="nav-link"
-          to="/games"
-        >
-          Games
-        </router-link>
+          <router-link
+            class="nav-link"
+            to="/"
+          >
+            Home
+          </router-link>
 
-        <router-link
-          class="nav-link"
-          to="/news"
-        >
-          News
-        </router-link>
+          <router-link
+            class="nav-link"
+            to="/games"
+          >
+            Games
+          </router-link>
 
-        <router-link
-          class="nav-link"
-          to="/about"
-        >
-          About
-        </router-link>
+          <!-- News Dropdown -->
+          <li class="nav-item dropdown list-unstyled">
+            <a
+              class="nav-link dropdown-toggle"
+              href="#"
+              role="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              News
+            </a>
+            <ul class="dropdown-menu dropdown-menu-dark">
+              <li>
+                <router-link
+                  class="dropdown-item"
+                  to="/live-news"
+                >
+                  📡 Live News
+                </router-link>
+              </li>
+              <li>
+                <router-link
+                  class="dropdown-item"
+                  to="/gamehub-news"
+                >
+                  🗂️ GameHub News
+                </router-link>
+              </li>
+            </ul>
+          </li>
 
-        <router-link
-          class="nav-link"
-          to="/login"
-        >
-          Login
-        </router-link>
+          <router-link
+            class="nav-link"
+            to="/favorites"
+          >
+            Favorites
+          </router-link>
 
-        <router-link
-          class="nav-link"
-          to="/register"
-        >
-          Register
-        </router-link>
+          <router-link
+            class="nav-link"
+            to="/about"
+          >
+            About
+          </router-link>
 
+          <template v-if="!currentUser">
+            <router-link
+              class="nav-link"
+              to="/login"
+            >
+              Login
+            </router-link>
+
+            <router-link
+              class="nav-link"
+              to="/register"
+            >
+              Register
+            </router-link>
+          </template>
+
+          <template v-if="currentUser">
+            <span class="nav-link">
+              Welcome {{ currentUser.name }}
+            </span>
+
+            <button
+              class="nav-link btn btn-link"
+              @click="logout"
+            >
+              Logout
+            </button>
+          </template>
+
+        </div>
       </div>
 
     </div>
   </nav>
 </template>
+
+<script>
+export default {
+  data() {
+    return {
+      currentUser: null
+    }
+  },
+
+  mounted() {
+    this.currentUser =
+      JSON.parse(localStorage.getItem('currentUser'))
+
+    // Listen for login/logout events from other pages
+    window.addEventListener('auth-updated', this.refreshUser)
+  },
+
+  beforeUnmount() {
+    window.removeEventListener('auth-updated', this.refreshUser)
+  },
+
+  methods: {
+    refreshUser() {
+      this.currentUser =
+        JSON.parse(localStorage.getItem('currentUser'))
+    },
+
+    logout() {
+      localStorage.removeItem('currentUser')
+      localStorage.removeItem('favorites')
+      this.currentUser = null
+      this.$router.push('/')
+    }
+  }
+}
+</script>

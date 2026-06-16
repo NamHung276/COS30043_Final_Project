@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
-import News from '../views/News.vue'
 import About from '../views/About.vue'
 import Games from '../views/Games.vue'
 
@@ -11,9 +10,14 @@ const routes = [
     component: Home
   },
   {
-    path: '/news',
-    name: 'News',
-    component: News
+    path: '/live-news',
+    name: 'LiveNews',
+    component: () => import('../views/LiveNews.vue')
+  },
+  {
+    path: '/gamehub-news',
+    name: 'GameHubNews',
+    component: () => import('../views/GameHubNews.vue')
   },
   {
     path: '/about',
@@ -39,12 +43,28 @@ const routes = [
     path: '/register',
     name: 'Register',
     component: () => import('../views/Register.vue')
+  },
+  {
+    path: '/favorites',
+    name: 'Favorites',
+    component: () => import('../views/Favorites.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes
+})
+
+// Route guard — redirect to login if not authenticated
+router.beforeEach((to, from, next) => {
+  const user = localStorage.getItem('currentUser')
+  if (to.meta.requiresAuth && !user) {
+    next('/login')
+  } else {
+    next()
+  }
 })
 
 export default router

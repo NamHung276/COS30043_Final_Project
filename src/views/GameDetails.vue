@@ -7,9 +7,59 @@ export default {
     }
   },
 
-  methods:{
+  methods: {
     addToFavorites() {
-      
+
+      const currentUser =
+        JSON.parse(
+          localStorage.getItem('currentUser')
+        )
+
+      if (!currentUser) {
+
+        alert(
+          'Please login to add favorites.'
+        )
+
+        this.$router.push('/login')
+
+        return
+      }
+
+      const favorites =
+        JSON.parse(
+          localStorage.getItem('favorites')
+        ) || []
+
+      const exists =
+        favorites.find(
+          game => game.id === this.game.id
+        )
+
+      if (exists) {
+
+        alert(
+          'Game already in favorites.'
+        )
+
+        return
+      }
+
+      favorites.push({
+        id: this.game.id,
+        title: this.game.title,
+        thumbnail: this.game.thumbnail,
+        genre: this.game.genre
+      })
+
+      localStorage.setItem(
+        'favorites',
+        JSON.stringify(favorites)
+      )
+
+      alert(
+        'Added to favorites!'
+      )
     }
   },
 
@@ -92,7 +142,7 @@ export default {
                   class="btn btn-success"
                   @click="addToFavorites"
                 >
-                  Add to Favorites (Coming Soon)
+                  Add to Favorites
                 </button>
               </div>
             </div>

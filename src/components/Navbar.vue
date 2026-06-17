@@ -6,7 +6,7 @@
         class="navbar-brand"
         to="/"
       >
-        GameHub
+        🎮 GameHub
       </router-link>
 
       <!-- Hamburger toggle for mobile -->
@@ -86,23 +86,25 @@
 
           <template v-if="!currentUser">
             <router-link
-              class="nav-link"
+              class="nav-link btn btn-primary"
               to="/login"
+              style="margin-left: 10px; padding: 6px 16px; border-radius: 4px;"
             >
               Login
             </router-link>
 
             <router-link
-              class="nav-link"
+              class="nav-link btn btn-primary"
               to="/register"
+              style="margin-left: 10px; padding: 6px 16px; border-radius: 4px;"
             >
-              Register
+              Sign Up
             </router-link>
           </template>
 
           <template v-if="currentUser">
             <span class="nav-link">
-              Welcome {{ currentUser.name }}
+              👤 {{ currentUser.name }}
             </span>
 
             <button

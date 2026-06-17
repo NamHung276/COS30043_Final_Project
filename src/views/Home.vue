@@ -77,7 +77,7 @@ export default {
       <div class="row mb-5 g-4">
         <div class="col-md-6">
           <img
-            src="https://images.unsplash.com/photo-1593305841991-05c297ba4575?w=800&q=80"
+            src="/home/game_home.jpg"
             alt="Gaming setup with PC and RGB lighting"
             class="img-fluid rounded shadow"
             style="width: 100%; height: 280px; object-fit: cover;"
@@ -88,7 +88,7 @@ export default {
         </div>
         <div class="col-md-6">
           <img
-            src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80"
+            src="/home/gaming_community.jpg"
             alt="Multiplayer gaming community"
             class="img-fluid rounded shadow"
             style="width: 100%; height: 280px; object-fit: cover;"
@@ -96,6 +96,38 @@ export default {
           <p class="text-muted small mt-2 text-center">
             Join a community of gamers
           </p>
+        </div>
+      </div>
+
+      <!-- Trending Section -->
+
+      <h2 class="mb-3">
+        🔥 Trending Now
+      </h2>
+
+      <div class="card mb-5">
+        <div class="card-body">
+
+          <div class="row text-center">
+
+            <div class="col-md-3">
+              <h5>MMORPG</h5>
+            </div>
+
+            <div class="col-md-3">
+              <h5>Shooter</h5>
+            </div>
+
+            <div class="col-md-3">
+              <h5>Battle Royale</h5>
+            </div>
+
+            <div class="col-md-3">
+              <h5>MOBA</h5>
+            </div>
+
+          </div>
+
         </div>
       </div>
 
@@ -114,6 +146,10 @@ export default {
           v-for="game in featuredGames"
           :key="game.title"
         >
+        <router-link
+          :to="'/games/' + game.id"
+          class="text-decoration-none"
+        >
           <div class="card h-100">
             <img
               :src="game.thumbnail"
@@ -129,6 +165,41 @@ export default {
               </p>
             </div>
           </div>
+        </router-link>
+        </div>
+      </div>
+      
+      <!-- Statistics -->
+      <div class="row text-center my-5">
+
+        <div class="col-md-4">
+          <h2 class="fw-bold text-primary">
+            500+
+          </h2>
+
+          <p>
+            Free Games
+          </p>
+        </div>
+
+        <div class="col-md-4">
+          <h2 class="fw-bold text-success">
+            24/7
+          </h2>
+
+          <p>
+            Gaming News
+          </p>
+        </div>
+
+        <div class="col-md-4">
+          <h2 class="fw-bold text-warning">
+            Unlimited
+          </h2>
+
+          <p>
+            Favorites
+          </p>
         </div>
       </div>
 
@@ -136,13 +207,20 @@ export default {
       <h2 class="mb-4">Why Choose GameHub?</h2>
 
       <div class="row">
+
         <div class="col-md-4 mb-4">
           <div class="card h-100">
             <div class="card-body">
-              <h5 class="card-title">🎮 Games</h5>
+
+              <h5 class="card-title">
+                🎮 Massive Library
+              </h5>
+
               <p class="card-text">
-                Discover free-to-play games from multiple genres.
+                Discover hundreds of free-to-play games
+                across multiple genres and platforms.
               </p>
+
             </div>
           </div>
         </div>
@@ -150,10 +228,16 @@ export default {
         <div class="col-md-4 mb-4">
           <div class="card h-100">
             <div class="card-body">
-              <h5 class="card-title">📰 News</h5>
+
+              <h5 class="card-title">
+                📰 Live Updates
+              </h5>
+
               <p class="card-text">
-                Stay updated with the latest gaming news.
+                Stay informed with the latest gaming
+                news, releases, and industry updates.
               </p>
+
             </div>
           </div>
         </div>
@@ -161,13 +245,20 @@ export default {
         <div class="col-md-4 mb-4">
           <div class="card h-100">
             <div class="card-body">
-              <h5 class="card-title">⭐ Favorites</h5>
+
+              <h5 class="card-title">
+                ⭐ Personal Collection
+              </h5>
+
               <p class="card-text">
-                Save your favorite games for quick access.
+                Save your favorite games and
+                access them anytime.
               </p>
+
             </div>
           </div>
         </div>
+
       </div>
 
     </div>

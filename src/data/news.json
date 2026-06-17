@@ -5,7 +5,7 @@
     "content": "FromSoftware's massive expansion to Elden Ring has shattered expectations, selling over 5 million copies in its first week. The DLC introduces a sprawling new region, dozens of new bosses, and hundreds of new weapons and spells.",
     "category": "PC",
     "date": "2025-06-01",
-    "image": "https://placehold.co/600x400?text=Elden+Ring"
+    "image": "/news/elden-ring.jpg"
   },
   {
     "id": 2,
@@ -13,7 +13,7 @@
     "content": "Riot Games has unveiled Tempo, a new duelist agent in Valorant whose abilities revolve around manipulating time. Players can rewind enemy positions and freeze them in place, adding a fresh layer of strategy to competitive play.",
     "category": "FPS",
     "date": "2025-06-03",
-    "image": "https://placehold.co/600x400?text=Valorant"
+    "image": "/news/valorant.jpg"
   },
   {
     "id": 3,
@@ -21,7 +21,7 @@
     "content": "Riot Games has officially announced the venue and dates for the 2025 World Championship. The event will be held across three cities in South Korea, with the grand finals taking place in Seoul's Olympic Stadium.",
     "category": "MOBA",
     "date": "2025-06-05",
-    "image": "https://placehold.co/600x400?text=League+of+Legends"
+    "image": "/news/league-of-legends.jpg"
   },
   {
     "id": 4,
@@ -29,7 +29,7 @@
     "content": "Grinding Gear Games' highly anticipated sequel Path of Exile 2 has launched into early access, attracting over 500,000 concurrent players on Steam. The game features a completely reworked skill system and six new character classes.",
     "category": "RPG",
     "date": "2025-06-07",
-    "image": "https://placehold.co/600x400?text=Path+of+Exile+2"
+    "image": "/news/poe2.jpg"
   },
   {
     "id": 5,
@@ -37,7 +37,7 @@
     "content": "Epic Games has kicked off a major anime crossover event in Fortnite Chapter 6 Season 2, featuring iconic characters from popular series. New limited-time game modes and exclusive cosmetic items are available throughout the event.",
     "category": "Battle Royale",
     "date": "2025-06-08",
-    "image": "https://placehold.co/600x400?text=Fortnite"
+    "image": "/news/fortnite.jpg"
   },
   {
     "id": 6,
@@ -45,7 +45,7 @@
     "content": "Blizzard Entertainment's latest WoW expansion The War Within has received widespread praise from the community. The underground zones, new hero talents system, and improved storytelling mark a strong return to form for the iconic MMO.",
     "category": "MMO",
     "date": "2025-06-09",
-    "image": "https://placehold.co/600x400?text=World+of+Warcraft"
+    "image": "/news/wow.jpg"
   },
   {
     "id": 7,
@@ -53,7 +53,7 @@
     "content": "Valve has released a significant update to Counter-Strike 2 that completely reworks the matchmaking rating system. The new system uses a more transparent ranking model and introduces regional leaderboards for top players.",
     "category": "FPS",
     "date": "2025-06-10",
-    "image": "https://placehold.co/600x400?text=Counter+Strike+2"
+    "image": "/news/cs2.jpg"
   },
   {
     "id": 8,
@@ -61,7 +61,7 @@
     "content": "Valve's landmark patch 7.38 for Dota 2 introduces three brand-new heroes simultaneously, the first time this has happened in the game's history. The patch also includes sweeping changes to the map layout and item system.",
     "category": "MOBA",
     "date": "2025-06-11",
-    "image": "https://placehold.co/600x400?text=Dota+2"
+    "image": "/news/dota2.jpg"
   },
   {
     "id": 9,
@@ -69,7 +69,7 @@
     "content": "HoYoverse has released Genshin Impact version 5.5, expanding the game world with a brand new region inspired by ancient Mesoamerican culture. Two new five-star characters and a suite of quality-of-life improvements accompany the update.",
     "category": "RPG",
     "date": "2025-06-12",
-    "image": "https://placehold.co/600x400?text=Genshin+Impact"
+    "image": "/news/genshin.jpg"
   },
   {
     "id": 10,
@@ -77,7 +77,7 @@
     "content": "After years of community requests, Respawn Entertainment has finally added a permanent solo mode to Apex Legends in Season 22. The mode features adjusted loot distribution and special solo-only legend abilities.",
     "category": "Battle Royale",
     "date": "2025-06-13",
-    "image": "https://placehold.co/600x400?text=Apex+Legends"
+    "image": "/news/apex.jpg"
   },
   {
     "id": 11,
@@ -85,7 +85,7 @@
     "content": "Blizzard has released Season of the Inferno for Diablo IV, introducing a brand-new endgame dungeon system and a seasonal questline. The update also includes major quality-of-life improvements to the paragon board system.",
     "category": "RPG",
     "date": "2025-06-13",
-    "image": "https://placehold.co/600x400?text=Diablo+IV"
+    "image": "/news/diablo4.jpg"
   },
   {
     "id": 12,
@@ -93,7 +93,7 @@
     "content": "Digital Extremes' ambitious Warframe 1999 narrative update has been met with widespread acclaim from the community. The update delivers a cinematic story experience and introduces a completely new gameplay loop set in a retro-futuristic world.",
     "category": "Action",
     "date": "2025-06-14",
-    "image": "https://placehold.co/600x400?text=Warframe"
+    "image": "/news/warframe.jpg"
   },
   {
     "id": 13,
@@ -101,7 +101,7 @@
     "content": "Smilegate has released a massive continent expansion for Lost Ark's global version, bringing a wealth of new raids, storylines, and endgame content. The update also includes significant class balance changes based on community feedback.",
     "category": "MMO",
     "date": "2025-06-14",
-    "image": "https://placehold.co/600x400?text=Lost+Ark"
+    "image": "/news/lostark.jpg"
   },
   {
     "id": 14,
@@ -109,7 +109,7 @@
     "content": "Blizzard reports that the newly introduced Stadium mode in Overwatch 2 has become the most-played feature in the game's history. The roguelite-inspired mode allows players to build their heroes with persistent upgrades across rounds.",
     "category": "FPS",
     "date": "2025-06-15",
-    "image": "https://placehold.co/600x400?text=Overwatch+2"
+    "image": "/news/overwatch2.jpg"
   },
   {
     "id": 15,
@@ -117,6 +117,6 @@
     "content": "Riot Games has launched TFT Set 13 with a galaxy exploration theme, introducing a new portal mechanic that lets players choose from different starting conditions. The set also features over 60 new champions and five new trait categories.",
     "category": "Strategy",
     "date": "2025-06-16",
-    "image": "https://placehold.co/600x400?text=TFT"
+    "image": "/news/tft.jpg"
   }
 ]

@@ -1,4 +1,10 @@
 <script>
+import { auth } from '../firebase'
+import {
+  createUserWithEmailAndPassword,
+  updateProfile
+} from 'firebase/auth'
+
 export default {
   data() {
     return {
@@ -8,6 +14,7 @@ export default {
       confirmPassword: '',
       error: '',
       success: '',
+      loading: false,
       touched: {
         name: false,
         email: false,
@@ -66,7 +73,7 @@ export default {
       this.touched[field] = true
     },
 
-    register() {
+    async register() {
       // Touch all fields to show all errors at once
       Object.keys(this.touched).forEach(
         field => this.touched[field] = true
@@ -77,37 +84,40 @@ export default {
 
       if (!this.isFormValid) return
 
-      const users =
-        JSON.parse(
-          localStorage.getItem('users')
-        ) || []
+      this.loading = true
 
-      const existingUser =
-        users.find(
-          user => user.email === this.email
+      try {
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          this.email,
+          this.password
         )
 
-      if (existingUser) {
-        this.error = 'Email already registered.'
-        return
+        // Save the display name on the Firebase user profile
+        await updateProfile(userCredential.user, {
+          displayName: this.name
+        })
+
+        this.success = 'Registration successful! Redirecting to login...'
+
+        setTimeout(() => {
+          this.$router.push('/login')
+        }, 1500)
+
+      } catch (error) {
+        if (error.code === 'auth/email-already-in-use') {
+          this.error = 'Email already registered.'
+        } else if (error.code === 'auth/invalid-email') {
+          this.error = 'Invalid email address.'
+        } else if (error.code === 'auth/weak-password') {
+          this.error = 'Password is too weak.'
+        } else {
+          this.error = 'Registration failed. Please try again.'
+        }
+        console.error(error)
+      } finally {
+        this.loading = false
       }
-
-      users.push({
-        name: this.name,
-        email: this.email,
-        password: this.password
-      })
-
-      localStorage.setItem(
-        'users',
-        JSON.stringify(users)
-      )
-
-      this.success = 'Registration successful! Redirecting to login...'
-
-      setTimeout(() => {
-        this.$router.push('/login')
-      }, 1500)
     }
   }
 }
@@ -255,8 +265,9 @@ export default {
               <button
                 type="submit"
                 class="btn btn-primary w-100"
+                :disabled="loading"
               >
-                Register
+                {{ loading ? 'Registering...' : 'Register' }}
               </button>
 
             </form>

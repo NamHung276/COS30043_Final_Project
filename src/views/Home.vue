@@ -171,35 +171,21 @@ export default {
       
       <!-- Statistics -->
       <div class="row text-center my-5">
-
-        <div class="col-md-4">
-          <h2 class="fw-bold text-primary">
-            500+
-          </h2>
-
-          <p>
-            Free Games
-          </p>
+        <div class="col-md-3">
+          <h2>300+</h2>
+          <p>Free Games</p>
         </div>
-
-        <div class="col-md-4">
-          <h2 class="fw-bold text-success">
-            24/7
-          </h2>
-
-          <p>
-            Gaming News
-          </p>
+        <div class="col-md-3">
+          <h2>15</h2>
+          <p>GameHub Articles</p>
         </div>
-
-        <div class="col-md-4">
-          <h2 class="fw-bold text-warning">
-            Unlimited
-          </h2>
-
-          <p>
-            Favorites
-          </p>
+        <div class="col-md-3">
+          <h2>24/7</h2>
+          <p>Gaming Updates</p>
+        </div>
+        <div class="col-md-3">
+          <h2>100%</h2>
+          <p>Free To Play</p>
         </div>
       </div>
 

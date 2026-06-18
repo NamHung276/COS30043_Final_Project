@@ -86,6 +86,21 @@ export default {
       if (page >= 1 && page <= this.totalPages) {
         this.currentPage = page
       }
+    },
+
+    getCategoryColor(category) {
+      switch(category) {
+        case 'FPS':
+          return 'bg-danger'
+        case 'MOBA':
+          return 'bg-success'
+        case 'RPG':
+          return 'bg-warning text-dark'
+        case 'MMO':
+          return 'bg-info text-dark'
+        default:
+          return 'bg-primary'
+      }
     }
   }
 }
@@ -94,7 +109,12 @@ export default {
 <template>
   <div class="container py-4">
 
-    <h1 class="mb-4">Gaming News</h1>
+    <h1 class="mb-4">📰 GameHub News</h1>
+
+    <p class="lead text-muted">
+      Discover gaming updates, esports stories,
+      game launches, and industry news.
+    </p>
 
     <!-- Search and Filter -->
     <div class="row mb-4 g-3">
@@ -122,6 +142,44 @@ export default {
       </div>
     </div>
 
+    <!-- Total Results -->
+    <p class="text-muted mb-4">
+      Showing {{ filteredNews.length }}
+      articles
+    </p>
+
+    <!-- News List or Featured Article -->
+    <div
+      v-if="news.length"
+      class="card mb-5 featured-news overflow-hidden"
+    >
+      <img
+        :src="news[0].image"
+        :alt="news[0].title"
+        class="card-img-top"
+        style="height:400px;object-fit:cover;"
+      >
+
+      <div class="card-body">
+        <span class="badge bg-danger mb-2">
+          Featured Story
+        </span>
+
+        <h2>{{ news[0].title }}</h2>
+
+        <p>
+          {{ news[0].content.substring(0, 200) }}...
+        </p>
+
+        <router-link
+          :to="`/gamehub-news/${news[0].id}`"
+          class="btn btn-primary"
+        >
+          Read Full Story
+        </router-link>
+      </div>
+    </div>
+
     <!-- No Results -->
     <div
       v-if="filteredNews.length === 0"
@@ -134,7 +192,7 @@ export default {
     <div
       v-for="item in paginatedNews"
       :key="item.id"
-      class="card mb-4"
+      class="card mb-4 news-card"
     >
       <div class="row g-0">
         <div class="col-md-3">
@@ -148,7 +206,10 @@ export default {
         <div class="col-md-9">
           <div class="card-body text-start">
             <div class="d-flex justify-content-between align-items-start mb-2">
-              <span class="badge bg-primary">
+              <span
+                class="badge"
+                :class="getCategoryColor(item.category)"
+              >
                 {{ item.category }}
               </span>
               <small class="text-muted">
@@ -159,8 +220,13 @@ export default {
               {{ item.title }}
             </h5>
             <p class="card-text">
-              {{ item.content }}
-            </p>
+              {{ item.content.substring(0, 120) }}...</p>
+            <router-link
+              :to="`/gamehub-news/${item.id}`"
+              class="btn btn-outline-primary btn-sm"
+            >
+              Read More
+            </router-link>
           </div>
         </div>
       </div>

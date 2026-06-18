@@ -84,7 +84,7 @@
             About
           </router-link>
 
-          <template v-if="!currentUser">
+          <template v-if="!currentUser && authReady">
             <router-link
               class="nav-link btn btn-primary"
               to="/login"
@@ -104,7 +104,7 @@
 
           <template v-if="currentUser">
             <span class="nav-link">
-              👤 {{ currentUser.name }}
+              👤 {{ currentUser.displayName || currentUser.email }}
             </span>
 
             <button
@@ -123,36 +123,41 @@
 </template>
 
 <script>
+import { auth } from '../firebase'
+import { onAuthStateChanged, signOut } from 'firebase/auth'
+
 export default {
   data() {
     return {
-      currentUser: null
+      currentUser: null,
+      authReady: false,
+      unsubscribe: null
     }
   },
 
   mounted() {
-    this.currentUser =
-      JSON.parse(localStorage.getItem('currentUser'))
-
-    // Listen for login/logout events from other pages
-    window.addEventListener('auth-updated', this.refreshUser)
+    // Firebase listener — fires automatically on login/logout/page load
+    this.unsubscribe = onAuthStateChanged(auth, (user) => {
+      this.currentUser = user
+      this.authReady = true
+    })
   },
 
   beforeUnmount() {
-    window.removeEventListener('auth-updated', this.refreshUser)
+    if (this.unsubscribe) {
+      this.unsubscribe()
+    }
   },
 
   methods: {
-    refreshUser() {
-      this.currentUser =
-        JSON.parse(localStorage.getItem('currentUser'))
-    },
-
-    logout() {
-      localStorage.removeItem('currentUser')
-      localStorage.removeItem('favorites')
-      this.currentUser = null
-      this.$router.push('/')
+    async logout() {
+      try {
+        await signOut(auth)
+        localStorage.removeItem('favorites')
+        this.$router.push('/')
+      } catch (error) {
+        console.error('Logout failed:', error)
+      }
     }
   }
 }

@@ -20,6 +20,11 @@ const routes = [
     component: () => import('../views/GameHubNews.vue')
   },
   {
+    path: '/gamehub-news/:id',
+    name: 'NewsDetails',
+    component: () => import('../views/NewsDetails.vue')
+  },
+  {
     path: '/about',
     name: 'About',
     component: About

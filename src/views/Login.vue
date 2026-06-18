@@ -1,44 +1,51 @@
 <script>
+import { auth } from '../firebase'
+import { signInWithEmailAndPassword } from 'firebase/auth'
+
 export default {
   data() {
     return {
       email: '',
       password: '',
-      error: ''
+      error: '',
+      loading: false
     }
   },
 
   methods: {
-    login() {
+    async login() {
       this.error = ''
+      this.loading = true
 
-      const users =
-        JSON.parse(
-          localStorage.getItem('users')
-        ) || []
-
-      const user =
-        users.find(
-          user =>
-            user.email === this.email &&
-            user.password === this.password
+      try {
+        await signInWithEmailAndPassword(
+          auth,
+          this.email,
+          this.password
         )
 
-      if (!user) {
-        this.error = 'Invalid email or password.'
-        return
+        // Redirect to home
+        // Navbar updates automatically via onAuthStateChanged
+        this.$router.push('/')
+
+      } catch (error) {
+        if (
+          error.code === 'auth/invalid-credential' ||
+          error.code === 'auth/wrong-password' ||
+          error.code === 'auth/user-not-found'
+        ) {
+          this.error = 'Invalid email or password.'
+        } else if (error.code === 'auth/invalid-email') {
+          this.error = 'Invalid email address.'
+        } else if (error.code === 'auth/too-many-requests') {
+          this.error = 'Too many attempts. Please try again later.'
+        } else {
+          this.error = 'Login failed. Please try again.'
+        }
+        console.error(error)
+      } finally {
+        this.loading = false
       }
-
-      localStorage.setItem(
-        'currentUser',
-        JSON.stringify(user)
-      )
-
-      // Notify navbar to update instantly
-      window.dispatchEvent(new Event('auth-updated'))
-
-      // Redirect to home
-      this.$router.push('/')
     }
   }
 }
@@ -101,8 +108,9 @@ export default {
               <button
                 type="submit"
                 class="btn btn-primary w-100"
+                :disabled="loading"
               >
-                Login
+                {{ loading ? 'Logging in...' : 'Login' }}
               </button>
 
             </form>

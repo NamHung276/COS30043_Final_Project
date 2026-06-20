@@ -236,7 +236,7 @@ export default {
                 <span class="badge bg-primary">
                   {{ game.genre }}
                 </span>
-                <span class="badge" style="background: var(--bg-glass-hover); color: var(--text-secondary);">
+                <span class="badge" style="background: #475569; color: #ffffff;">
                   {{ platformIcon(game.platform) }} {{ game.platform }}
                 </span>
               </div>

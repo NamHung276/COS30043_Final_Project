@@ -5,7 +5,7 @@
 
       <h5>🎮 GameHub</h5>
 
-      <p class="text-muted mb-3" style="max-width: 480px; margin: 0 auto 16px;">
+      <p class="mb-3" style="max-width: 480px; margin: 0 auto 16px; color: var(--text-secondary);">
         Discover free-to-play games and stay updated with gaming news.
       </p>
 
@@ -40,12 +40,12 @@
       <hr class="footer-divider" />
 
       <div class="d-flex justify-content-center align-items-center gap-3 flex-wrap">
-        <small class="text-muted">
+        <small style="color: var(--text-secondary);">
           Built with Vue 3, Firebase, FreeToGame API and NewsAPI
         </small>
       </div>
 
-      <small class="text-muted d-block mt-2" style="opacity: 0.6;">
+      <small class="d-block mt-2" style="color: var(--text-secondary);">
         © 2026 GameHub | COS30043 Full-Stack Project
       </small>
 

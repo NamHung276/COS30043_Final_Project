@@ -128,7 +128,7 @@ export default {
                 style="width: 200px; height: 120px; object-fit: cover; box-shadow: 0 8px 30px rgba(0,0,0,0.5);"
               >
               <div>
-                <h1 class="mb-2" style="text-shadow: 0 2px 10px rgba(0,0,0,0.5);">{{ game.title }}</h1>
+                <h1 class="mb-2" style="color: #ffffff; text-shadow: 0 2px 16px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,0.8);">{{ game.title }}</h1>
                 <div class="d-flex gap-2 flex-wrap">
                   <span class="badge bg-primary">{{ game.genre }}</span>
                   <span class="badge" style="background: rgba(255,255,255,0.15);">{{ game.platform }}</span>
@@ -188,6 +188,59 @@ export default {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Minimum System Requirements Table (accessible) -->
+      <div
+        v-if="game.minimum_system_requirements && Object.values(game.minimum_system_requirements).some(v => v)"
+        class="mt-5"
+      >
+        <div class="section-header">
+          <span class="section-icon">🖥️</span>
+          <h3 class="mb-0">Minimum System Requirements</h3>
+        </div>
+
+        <div class="card">
+          <div class="card-body p-0">
+            <table
+              class="table table-bordered mb-0"
+              :aria-label="`Minimum system requirements for ${game.title}`"
+              style="border-color: var(--border-glass);"
+            >
+              <caption class="visually-hidden">
+                Minimum system requirements for {{ game.title }}
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col" style="width: 35%;">Component</th>
+                  <th scope="col">Requirement</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="game.minimum_system_requirements.os">
+                  <th scope="row">Operating System</th>
+                  <td>{{ game.minimum_system_requirements.os }}</td>
+                </tr>
+                <tr v-if="game.minimum_system_requirements.processor">
+                  <th scope="row">Processor</th>
+                  <td>{{ game.minimum_system_requirements.processor }}</td>
+                </tr>
+                <tr v-if="game.minimum_system_requirements.memory">
+                  <th scope="row">Memory</th>
+                  <td>{{ game.minimum_system_requirements.memory }}</td>
+                </tr>
+                <tr v-if="game.minimum_system_requirements.graphics">
+                  <th scope="row">Graphics</th>
+                  <td>{{ game.minimum_system_requirements.graphics }}</td>
+                </tr>
+                <tr v-if="game.minimum_system_requirements.storage">
+                  <th scope="row">Storage</th>
+                  <td>{{ game.minimum_system_requirements.storage }}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

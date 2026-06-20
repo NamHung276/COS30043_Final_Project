@@ -1,3 +1,4 @@
+// src/components/Footer.vue
 <template>
   <footer class="footer mt-5 py-4">
     <div class="container text-center">

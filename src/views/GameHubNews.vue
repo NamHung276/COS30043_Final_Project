@@ -1,7 +1,11 @@
+// src/views/GameHubNews.vue
 <script>
 import newsData from '../data/news.json'
+import LikeButton from '../components/LikeButton.vue'
 
 export default {
+  components: { LikeButton },
+
   data() {
     return {
       news: [],
@@ -154,7 +158,7 @@ export default {
       class="card mb-5 featured-news overflow-hidden"
     >
       <img
-        :src="news[0].image"
+        v-lazy-img="news[0].image"
         :alt="news[0].title"
         class="card-img-top"
         style="height:400px;object-fit:cover;"
@@ -173,10 +177,12 @@ export default {
 
         <router-link
           :to="`/gamehub-news/${news[0].id}`"
-          class="btn btn-primary"
+          class="btn btn-primary me-2"
         >
           Read Full Story
         </router-link>
+
+        <LikeButton :article-id="news[0].id" />
       </div>
     </div>
 
@@ -197,7 +203,7 @@ export default {
       <div class="row g-0">
         <div class="col-md-3">
           <img
-            :src="item.image"
+            v-lazy-img="item.image"
             :alt="item.title"
             class="img-fluid rounded-start h-100 w-100"
             style="object-fit: cover;"
@@ -223,10 +229,12 @@ export default {
               {{ item.content.substring(0, 120) }}...</p>
             <router-link
               :to="`/gamehub-news/${item.id}`"
-              class="btn btn-outline-primary btn-sm"
+              class="btn btn-outline-primary btn-sm me-2"
             >
               Read More
             </router-link>
+
+            <LikeButton :article-id="item.id" />
           </div>
         </div>
       </div>

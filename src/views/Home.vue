@@ -1,3 +1,4 @@
+// src/views/Home.vue
 <script>
 export default {
   data() {
@@ -48,6 +49,7 @@ export default {
           <router-link
             to="/games"
             class="btn btn-primary me-2"
+            aria-label="Browse all games"
           >
             Browse Games
           </router-link>
@@ -55,6 +57,7 @@ export default {
           <router-link
             to="/live-news"
             class="btn btn-outline-light"
+            aria-label="View latest gaming news"
           >
             Latest News
           </router-link>
@@ -144,7 +147,7 @@ export default {
         <div
           class="col-md-4 mb-4"
           v-for="game in featuredGames"
-          :key="game.title"
+          :key="game.id"
         >
         <router-link
           :to="'/games/' + game.id"
@@ -154,7 +157,7 @@ export default {
             <img
               :src="game.thumbnail"
               class="card-img-top"
-              :alt="game.title"
+              :alt="`${game.title} featured game thumbnail`"
             >
             <div class="card-body">
               <h5 class="card-title">
@@ -170,23 +173,36 @@ export default {
       </div>
       
       <!-- Statistics -->
-      <div class="row text-center my-5">
-        <div class="col-md-3">
-          <h2>300+</h2>
-          <p>Free Games</p>
+      <div class="card my-5">
+
+        <div class="card-body">
+
+          <div class="row text-center">
+
+            <div class="col-md-3">
+              <h2>300+</h2>
+              <p>Free Games</p>
+            </div>
+
+            <div class="col-md-3">
+              <h2>15</h2>
+              <p>GameHub Articles</p>
+            </div>
+
+            <div class="col-md-3">
+              <h2>24/7</h2>
+              <p>Gaming Updates</p>
+            </div>
+
+            <div class="col-md-3">
+              <h2>100%</h2>
+              <p>Free To Play</p>
+            </div>
+
+          </div>
+
         </div>
-        <div class="col-md-3">
-          <h2>15</h2>
-          <p>GameHub Articles</p>
-        </div>
-        <div class="col-md-3">
-          <h2>24/7</h2>
-          <p>Gaming Updates</p>
-        </div>
-        <div class="col-md-3">
-          <h2>100%</h2>
-          <p>Free To Play</p>
-        </div>
+
       </div>
 
       <!-- Why GameHub -->

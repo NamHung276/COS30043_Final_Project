@@ -1,4 +1,7 @@
+// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
+import { auth } from '../firebase'
+import { onAuthStateChanged } from 'firebase/auth'
 import Home from '../views/Home.vue'
 import About from '../views/About.vue'
 import Games from '../views/Games.vue'
@@ -21,8 +24,8 @@ const routes = [
   },
   {
     path: '/gamehub-news/:id',
-    name: 'NewsDetails',
-    component: () => import('../views/NewsDetails.vue')
+    name: 'GameHubNewsDetails',
+    component: () => import('../views/GameHubNewsDetails.vue')
   },
   {
     path: '/about',
@@ -62,14 +65,27 @@ const router = createRouter({
   routes
 })
 
+// Helper — waits for Firebase to confirm the current auth state
+// (onAuthStateChanged fires once immediately with the current user, then again on changes)
+function getCurrentUser() {
+  return new Promise((resolve) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe()
+      resolve(user)
+    })
+  })
+}
+
 // Route guard — redirect to login if not authenticated
-router.beforeEach((to, from, next) => {
-  const user = localStorage.getItem('currentUser')
-  if (to.meta.requiresAuth && !user) {
-    next('/login')
-  } else {
-    next()
+router.beforeEach(async (to, from, next) => {
+  if (to.meta.requiresAuth) {
+    const user = await getCurrentUser()
+    if (!user) {
+      next('/login')
+      return
+    }
   }
+  next()
 })
 
 export default router

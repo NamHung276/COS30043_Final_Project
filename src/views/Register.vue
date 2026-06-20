@@ -1,3 +1,4 @@
+// src/views/Register.vue
 <script>
 import { auth } from '../firebase'
 import {

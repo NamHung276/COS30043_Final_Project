@@ -1,7 +1,11 @@
+// src/views/GameHubNewsDetails.vue
 <script>
 import newsData from '../data/news.json'
+import LikeButton from '../components/LikeButton.vue'
 
 export default {
+
+  components: { LikeButton },
 
   data() {
     return {
@@ -14,9 +18,19 @@ export default {
     const articleId =
       Number(this.$route.params.id)
 
+    // Read from localStorage first (same source as the list page),
+    // falling back to the original JSON if nothing's saved yet
+    const savedNews =
+      localStorage.getItem('gamehubNews')
+
+    const news =
+      savedNews
+        ? JSON.parse(savedNews)
+        : newsData
+
     this.article =
-      newsData.find(
-        news => news.id === articleId
+      news.find(
+        item => item.id === articleId
       )
 
   }
@@ -31,15 +45,19 @@ export default {
     <div v-if="article">
 
       <img
-        :src="article.image"
+        v-lazy-img="article.image"
         :alt="article.title"
         class="img-fluid rounded mb-4"
         style="width:100%;max-height:500px;object-fit:cover;"
       >
 
-      <span class="badge bg-primary mb-2">
-        {{ article.category }}
-      </span>
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="badge bg-primary">
+          {{ article.category }}
+        </span>
+
+        <LikeButton :article-id="article.id" />
+      </div>
 
       <h1>
         {{ article.title }}

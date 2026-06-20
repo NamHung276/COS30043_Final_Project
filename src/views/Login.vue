@@ -1,3 +1,4 @@
+// src/views/Login.vue
 <script>
 import { auth } from '../firebase'
 import { signInWithEmailAndPassword } from 'firebase/auth'

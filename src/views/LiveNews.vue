@@ -1,3 +1,4 @@
+// src/views/LiveNews.vue
 <script>
 export default {
   data() {
@@ -146,7 +147,7 @@ export default {
 
           <img
             v-if="article.urlToImage"
-            :src="article.urlToImage"
+            v-lazy-img="article.urlToImage"
             class="card-img-top"
             :alt="article.title"
             style="height: 200px; object-fit: cover;"

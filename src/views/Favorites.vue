@@ -1,58 +1,90 @@
+// src/views/Favorites.vue
 <script>
+import { auth, db } from '../firebase'
+import { onAuthStateChanged } from 'firebase/auth'
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  deleteDoc,
+  doc
+} from 'firebase/firestore'
+
 export default {
   data() {
     return {
-      favorites: []
+      favorites: [],
+      loading: true,
+      currentUser: null
     }
   },
 
   methods: {
-    removeFavorite(id) {
-
-      this.favorites =
-        this.favorites.filter(
-          game => game.id !== id
+    async removeFavorite(favoriteId) {
+      try {
+        await deleteDoc(doc(db, 'favorites', favoriteId))
+        this.favorites = this.favorites.filter(
+          fav => fav.id !== favoriteId
         )
+      } catch (error) {
+        console.error('Failed to remove favorite:', error)
+      }
+    },
 
-      localStorage.setItem(
-        'favorites',
-        JSON.stringify(this.favorites)
+    async loadFavorites(user) {
+      this.loading = true
+
+      const favoritesQuery = query(
+        collection(db, 'favorites'),
+        where('userId', '==', user.uid)
       )
+
+      const snapshot = await getDocs(favoritesQuery)
+
+      this.favorites = snapshot.docs.map(docSnap => ({
+        id: docSnap.id,
+        ...docSnap.data()
+      }))
+
+      this.loading = false
     }
   },
 
   mounted() {
-
-    const currentUser =
-      JSON.parse(
-        localStorage.getItem('currentUser')
-      )
-
-    if (!currentUser) {
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        this.favorites = []
+        this.currentUser = null
         this.$router.push('/login')
         return
-    }
-      
-    this.favorites =
-      JSON.parse(
-        localStorage.getItem('favorites')
-      ) || []
+      }
+
+      this.currentUser = user
+      this.loadFavorites(user)
+    })
   }
 }
 </script>
 
 <template>
-  <div>
+  <div class="container py-4">
 
-    <h1 class="mb-4">
-      My Favorites
-    </h1>
+    <h1 class="mb-4">My Favorites</h1>
+
+    <div v-if="loading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
 
     <div
-      v-if="favorites.length === 0"
+      v-else-if="favorites.length === 0"
       class="alert alert-info"
     >
-      No favorite games yet.
+      No favorite games yet. Browse
+      <router-link to="/games">games</router-link>
+      and add some!
     </div>
 
     <div
@@ -69,7 +101,7 @@ export default {
         <div class="card h-100">
 
           <img
-            :src="game.thumbnail"
+            v-lazy-img="game.thumbnail"
             class="card-img-top"
             :alt="game.title"
           >
@@ -85,7 +117,7 @@ export default {
             </p>
 
             <router-link
-              :to="`/games/${game.id}`"
+              :to="`/games/${game.gameId}`"
               class="btn btn-primary me-2"
             >
               Details

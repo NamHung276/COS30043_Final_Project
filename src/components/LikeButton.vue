@@ -27,7 +27,8 @@ export default {
       currentUser: null,
       likeCount: 0,
       userLikeDocId: null, // Firestore doc id of the current user's like, if any
-      loading: true
+      loading: true,
+      bouncing: false
     }
   },
 
@@ -76,6 +77,10 @@ export default {
         return
       }
 
+      // Bounce animation
+      this.bouncing = true
+      setTimeout(() => { this.bouncing = false }, 400)
+
       try {
         if (this.isLiked) {
           // Unlike
@@ -109,7 +114,10 @@ export default {
 <template>
   <button
     class="btn btn-sm like-button"
-    :class="isLiked ? 'btn-danger' : 'btn-outline-danger'"
+    :class="[
+      isLiked ? 'btn-danger' : 'btn-outline-danger',
+      { 'like-bounce': bouncing }
+    ]"
     :disabled="loading"
     @click.stop="toggleLike"
   >

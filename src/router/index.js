@@ -1,4 +1,3 @@
-// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
 import { auth } from '../firebase'
 import { onAuthStateChanged } from 'firebase/auth'
@@ -21,6 +20,19 @@ const routes = [
     path: '/gamehub-news',
     name: 'GameHubNews',
     component: () => import('../views/GameHubNews.vue')
+  },
+  // IMPORTANT: '/create' and '/user/:id' must come BEFORE '/:id'
+  // otherwise '/:id' would match "create" as if it were an article id
+  {
+    path: '/gamehub-news/create',
+    name: 'CreateNews',
+    component: () => import('../views/CreateNews.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/gamehub-news/user/:id',
+    name: 'UserNewsDetails',
+    component: () => import('../views/UserNewsDetails.vue')
   },
   {
     path: '/gamehub-news/:id',

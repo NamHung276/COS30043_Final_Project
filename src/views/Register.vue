@@ -66,6 +66,27 @@ export default {
         this.password &&
         this.confirmPassword
       )
+    },
+
+    passwordStrength() {
+      if (!this.password) return 0
+      let strength = 0
+      if (this.password.length >= 6) strength++
+      if (this.password.length >= 8) strength++
+      if (/[A-Z]/.test(this.password)) strength++
+      if (/[0-9]/.test(this.password)) strength++
+      if (/[^A-Za-z0-9]/.test(this.password)) strength++
+      return strength
+    },
+
+    strengthLabel() {
+      const labels = ['', 'Weak', 'Fair', 'Good', 'Strong', 'Very Strong']
+      return labels[this.passwordStrength] || ''
+    },
+
+    strengthColor() {
+      const colors = ['', '#ef4444', '#f59e0b', '#eab308', '#22c55e', '#06b6d4']
+      return colors[this.passwordStrength] || ''
     }
   },
 
@@ -125,14 +146,17 @@ export default {
 </script>
 
 <template>
-  <div class="container py-4">
-
-    <h1 class="mb-4">Register</h1>
+  <div class="container py-5">
 
     <div class="row justify-content-center">
       <div class="col-md-5">
 
-        <div class="card">
+        <div class="text-center mb-4">
+          <h1 style="font-size: 2rem;">Create Account</h1>
+          <p class="text-muted">Join the GameHub community</p>
+        </div>
+
+        <div class="card auth-card">
           <div class="card-body text-start p-4">
 
             <div
@@ -157,7 +181,7 @@ export default {
                   for="name"
                   class="form-label"
                 >
-                  Name
+                  👤 Name
                 </label>
                 <input
                   id="name"
@@ -185,7 +209,7 @@ export default {
                   for="regEmail"
                   class="form-label"
                 >
-                  Email
+                  📧 Email
                 </label>
                 <input
                   id="regEmail"
@@ -213,7 +237,7 @@ export default {
                   for="regPassword"
                   class="form-label"
                 >
-                  Password
+                  🔒 Password
                 </label>
                 <input
                   id="regPassword"
@@ -233,6 +257,26 @@ export default {
                 >
                   {{ passwordError }}
                 </div>
+
+                <!-- Password Strength Indicator -->
+                <div v-if="password && !passwordError" class="mt-2">
+                  <div
+                    style="height: 4px; border-radius: 2px; background: var(--bg-glass); overflow: hidden;"
+                  >
+                    <div
+                      :style="{
+                        width: (passwordStrength / 5 * 100) + '%',
+                        height: '100%',
+                        background: strengthColor,
+                        borderRadius: '2px',
+                        transition: 'all 0.3s ease'
+                      }"
+                    ></div>
+                  </div>
+                  <small :style="{ color: strengthColor }" class="mt-1 d-block">
+                    {{ strengthLabel }}
+                  </small>
+                </div>
               </div>
 
               <!-- Confirm Password -->
@@ -241,7 +285,7 @@ export default {
                   for="confirmPassword"
                   class="form-label"
                 >
-                  Confirm Password
+                  🔒 Confirm Password
                 </label>
                 <input
                   id="confirmPassword"
@@ -268,7 +312,7 @@ export default {
                 class="btn btn-primary w-100"
                 :disabled="loading"
               >
-                {{ loading ? 'Registering...' : 'Register' }}
+                {{ loading ? 'Creating account...' : '🎮 Register' }}
               </button>
 
             </form>

@@ -87,6 +87,14 @@ export default {
       this.loading = false
     },
 
+    setNewRating(rating) {
+      this.newRating = rating
+    },
+
+    setEditRating(rating) {
+      this.editRating = rating
+    },
+
     async submitReview() {
       this.formError = ''
 
@@ -157,11 +165,27 @@ export default {
     },
 
     async deleteReview(reviewId) {
+
+      if (
+        !confirm(
+          'Delete this review?'
+        )
+      ) {
+        return
+      }
+
       try {
-        await deleteDoc(doc(db, 'reviews', reviewId))
+        await deleteDoc(
+          doc(db, 'reviews', reviewId)
+        )
+
         await this.loadReviews()
+
       } catch (error) {
-        console.error('Failed to delete review:', error)
+        console.error(
+          'Failed to delete review:',
+          error
+        )
       }
     }
   },
@@ -179,9 +203,15 @@ export default {
   <div class="review-section">
 
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h3 class="mb-0">Reviews</h3>
-      <span v-if="reviews.length" class="text-muted">
-        ⭐ {{ averageRating }} average ({{ reviews.length }} review{{ reviews.length === 1 ? '' : 's' }})
+      <div class="section-header mb-0">
+        <span class="section-icon">💬</span>
+        <h3 class="mb-0">
+          Reviews ({{ reviews.length }})
+        </h3>
+      </div>
+
+      <span v-if="reviews.length" class="text-muted" style="font-size: 0.9rem;">
+        ⭐ {{ averageRating }} average
       </span>
     </div>
 
@@ -201,24 +231,19 @@ export default {
         </div>
 
         <div class="mb-3">
-          <label
-            for="newRating"
-            class="form-label"
-          >
+          <label class="form-label">
             Rating
           </label>
-          <select
-            id="newRating"
-            v-model.number="newRating"
-            class="form-select"
-            style="max-width: 150px;"
-          >
-            <option :value="5">⭐⭐⭐⭐⭐ (5)</option>
-            <option :value="4">⭐⭐⭐⭐ (4)</option>
-            <option :value="3">⭐⭐⭐ (3)</option>
-            <option :value="2">⭐⭐ (2)</option>
-            <option :value="1">⭐ (1)</option>
-          </select>
+          <div class="star-rating">
+            <span
+              v-for="star in 5"
+              :key="star"
+              class="star"
+              @click="setNewRating(star)"
+            >
+              {{ star <= newRating ? '⭐' : '☆' }}
+            </span>
+          </div>
         </div>
 
         <div class="mb-3">
@@ -233,8 +258,12 @@ export default {
             v-model="newComment"
             class="form-control"
             rows="3"
+            maxlength="1000"
             placeholder="Share your thoughts on this game..."
           ></textarea>
+          <small class="text-muted">
+            {{ newComment.length }}/1000 characters
+          </small>
         </div>
 
         <button
@@ -242,7 +271,7 @@ export default {
           :disabled="submitting"
           @click="submitReview"
         >
-          {{ submitting ? 'Submitting...' : 'Submit Review' }}
+          {{ submitting ? 'Submitting...' : '📝 Submit Review' }}
         </button>
       </div>
     </div>
@@ -264,9 +293,11 @@ export default {
     <!-- No Reviews -->
     <div
       v-else-if="reviews.length === 0"
-      class="alert alert-secondary"
+      class="empty-state" style="padding: 30px 20px;"
     >
-      No reviews yet. Be the first to share your thoughts!
+      <div class="empty-state-icon" style="font-size: 2.5rem;">💬</div>
+      <h3 style="font-size: 1.1rem;">No reviews yet</h3>
+      <p style="font-size: 0.9rem;">Be the first to share your thoughts!</p>
     </div>
 
     <!-- Review List -->
@@ -282,37 +313,40 @@ export default {
         <div v-if="editingReviewId === review.id">
 
           <div class="mb-2">
-            <select
-              v-model.number="editRating"
-              class="form-select"
-              style="max-width: 150px;"
-            >
-              <option :value="5">⭐⭐⭐⭐⭐ (5)</option>
-              <option :value="4">⭐⭐⭐⭐ (4)</option>
-              <option :value="3">⭐⭐⭐ (3)</option>
-              <option :value="2">⭐⭐ (2)</option>
-              <option :value="1">⭐ (1)</option>
-            </select>
+            <label class="form-label">Rating</label>
+            <div class="star-rating">
+              <span
+                v-for="star in 5"
+                :key="star"
+                class="star"
+                @click="setEditRating(star)"
+              >
+                {{ star <= editRating ? '⭐' : '☆' }}
+              </span>
+            </div>
           </div>
 
           <textarea
             v-model="editComment"
             class="form-control mb-2"
             rows="3"
+            maxlength="1000"
           ></textarea>
 
-          <button
-            class="btn btn-success btn-sm me-2"
-            @click="saveEdit(review.id)"
-          >
-            Save
-          </button>
-          <button
-            class="btn btn-secondary btn-sm"
-            @click="cancelEdit"
-          >
-            Cancel
-          </button>
+          <div class="d-flex gap-2">
+            <button
+              class="btn btn-success btn-sm"
+              @click="saveEdit(review.id)"
+            >
+              💾 Save
+            </button>
+            <button
+              class="btn btn-outline-secondary btn-sm"
+              @click="cancelEdit"
+            >
+              Cancel
+            </button>
+          </div>
 
         </div>
 
@@ -322,28 +356,38 @@ export default {
           <div class="d-flex justify-content-between align-items-start">
             <div>
               <strong>{{ review.userName }}</strong>
+
               <span class="text-warning ms-2">
                 {{ '⭐'.repeat(review.rating) }}
               </span>
+
+              <div
+                v-if="review.createdAt"
+                class="small text-muted"
+              >
+                {{ new Date(
+                  review.createdAt.seconds * 1000
+                ).toLocaleDateString() }}
+              </div>
             </div>
 
-            <div v-if="currentUser && review.userId === currentUser.uid">
+            <div v-if="currentUser && review.userId === currentUser.uid" class="d-flex gap-1">
               <button
-                class="btn btn-outline-secondary btn-sm me-1"
+                class="btn btn-outline-secondary btn-sm"
                 @click="startEdit(review)"
               >
-                Edit
+                ✏️
               </button>
               <button
                 class="btn btn-outline-danger btn-sm"
                 @click="deleteReview(review.id)"
               >
-                Delete
+                🗑️
               </button>
             </div>
           </div>
 
-          <p class="mb-0 mt-2">
+          <p class="mb-0 mt-2 text-muted">
             {{ review.comment }}
           </p>
 

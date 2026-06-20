@@ -1,6 +1,10 @@
 // src/views/Games.vue
 <script>
+import SkeletonCard from '../components/SkeletonCard.vue'
+
 export default {
+  components: { SkeletonCard },
+
   data() {
     return {
       games: [],
@@ -100,7 +104,14 @@ export default {
     goToPage(page) {
       if (page >= 1 && page <= this.totalPages) {
         this.currentPage = page
+        window.scrollTo({ top: 0, behavior: 'smooth' })
       }
+    },
+
+    platformIcon(platform) {
+      if (!platform) return '🎮'
+      if (platform.toLowerCase().includes('browser')) return '🌐'
+      return '💻'
     }
   },
 
@@ -126,17 +137,24 @@ export default {
 <template>
   <div class="container py-4">
 
-    <h1 class="mb-4">Games</h1>
+    <div class="section-header">
+      <span class="section-icon">🎮</span>
+      <h1 class="mb-0">Games</h1>
+    </div>
 
+    <!-- Search & Filter -->
     <div class="row mb-4 g-3">
       <div class="col-md-8">
-        <input
-          type="text"
-          class="form-control"
-          placeholder="Search games..."
-          aria-label="Search games"
-          v-model="searchTerm"
-        >
+        <div class="position-relative">
+          <input
+            type="text"
+            class="form-control"
+            placeholder="🔍 Search games..."
+            aria-label="Search games"
+            v-model="searchTerm"
+            style="padding-left: 14px;"
+          >
+        </div>
       </div>
       <div class="col-md-4">
         <select
@@ -155,11 +173,15 @@ export default {
       </div>
     </div>
 
-    <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
+    <!-- Skeleton Loading -->
+    <div v-if="loading" class="row">
+      <div
+        class="col-md-4 mb-4"
+        v-for="n in 12"
+        :key="n"
+      >
+        <SkeletonCard />
       </div>
-      <p class="mt-3">Loading games...</p>
     </div>
 
     <div
@@ -169,47 +191,55 @@ export default {
       {{ error }}
     </div>
 
+    <!-- Empty State -->
     <div
       v-else-if="filteredGames.length === 0"
-      class="alert alert-warning"
+      class="empty-state"
     >
-      No games found matching your search.
+      <div class="empty-state-icon">🔍</div>
+      <h3>No games found</h3>
+      <p>Try a different search term or genre filter.</p>
     </div>
 
     <div v-else class="row">
 
       <div
         class="col-md-4 mb-4"
-        v-for="game in paginatedGames"
+        v-for="(game, index) in paginatedGames"
         :key="game.id"
       >
 
         <router-link
           :to="`/games/${game.id}`"
-          class="text-decoration-none text-dark"
+          class="text-decoration-none"
         >
 
-          <div class="card h-100 shadow-sm">
+          <div
+            class="card h-100 stagger-item"
+            :style="{ animationDelay: `${(index % 12) * 0.04}s` }"
+          >
 
             <img
               v-lazy-img="game.thumbnail"
               class="card-img-top"
               :alt="`${game.title} game thumbnail`"
+              style="height: 180px; object-fit: cover;"
             >
 
             <div class="card-body">
 
-              <h5 class="card-title">
+              <h5 class="card-title" style="font-size: 1rem;">
                 {{ game.title }}
               </h5>
 
-              <p class="card-text">
-                Genre: {{ game.genre }}
-              </p>
-
-              <p class="card-text">
-                Platform: {{ game.platform }}
-              </p>
+              <div class="d-flex gap-2 flex-wrap">
+                <span class="badge bg-primary">
+                  {{ game.genre }}
+                </span>
+                <span class="badge" style="background: var(--bg-glass-hover); color: var(--text-secondary);">
+                  {{ platformIcon(game.platform) }} {{ game.platform }}
+                </span>
+              </div>
 
             </div>
 
@@ -233,7 +263,7 @@ export default {
             class="page-link"
             @click="goToPage(currentPage - 1)"
           >
-            Previous
+            ← Previous
           </button>
         </li>
 
@@ -269,16 +299,16 @@ export default {
             class="page-link"
             @click="goToPage(currentPage + 1)"
           >
-            Next
+            Next →
           </button>
         </li>
 
       </ul>
     </nav>
 
-    <p v-if="!loading" class="text-center text-muted mt-2">
+    <p v-if="!loading" class="text-center text-muted mt-2" style="font-size: 0.85rem;">
       Page {{ currentPage }} of {{ totalPages }}
-      ({{ filteredGames.length }} games)
+      · {{ filteredGames.length }} games
     </p>
 
   </div>

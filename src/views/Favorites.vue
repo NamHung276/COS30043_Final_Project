@@ -1,5 +1,6 @@
 // src/views/Favorites.vue
 <script>
+import { inject } from 'vue'
 import { auth, db } from '../firebase'
 import { onAuthStateChanged } from 'firebase/auth'
 import {
@@ -12,6 +13,11 @@ import {
 } from 'firebase/firestore'
 
 export default {
+  setup() {
+    const toast = inject('toast')
+    return { toast }
+  },
+
   data() {
     return {
       favorites: [],
@@ -21,14 +27,16 @@ export default {
   },
 
   methods: {
-    async removeFavorite(favoriteId) {
+    async removeFavorite(favoriteId, title) {
       try {
         await deleteDoc(doc(db, 'favorites', favoriteId))
         this.favorites = this.favorites.filter(
           fav => fav.id !== favoriteId
         )
+        this.toast.show(`Removed "${title}" from favorites`, 'info')
       } catch (error) {
         console.error('Failed to remove favorite:', error)
+        this.toast.show('Failed to remove. Please try again.', 'error')
       }
     },
 
@@ -70,7 +78,17 @@ export default {
 <template>
   <div class="container py-4">
 
-    <h1 class="mb-4">My Favorites</h1>
+    <div class="section-header">
+      <span class="section-icon">⭐</span>
+      <h1 class="mb-0">My Favorites</h1>
+    </div>
+
+    <router-link
+      to="/games"
+      class="btn btn-outline-secondary mb-4"
+    >
+      ← Browse More Games
+    </router-link>
 
     <div v-if="loading" class="text-center py-5">
       <div class="spinner-border text-primary" role="status">
@@ -78,13 +96,19 @@ export default {
       </div>
     </div>
 
+    <!-- Empty State -->
     <div
       v-else-if="favorites.length === 0"
-      class="alert alert-info"
+      class="empty-state"
     >
-      No favorite games yet. Browse
-      <router-link to="/games">games</router-link>
-      and add some!
+      <div class="empty-state-icon">⭐</div>
+      <h3>No favorites yet</h3>
+      <p>
+        Browse games and add your favorites to build your personal collection!
+      </p>
+      <router-link to="/games" class="btn btn-primary">
+        🎮 Browse Games
+      </router-link>
     </div>
 
     <div
@@ -94,41 +118,48 @@ export default {
 
       <div
         class="col-md-4 mb-4"
-        v-for="game in favorites"
+        v-for="(game, index) in favorites"
         :key="game.id"
       >
 
-        <div class="card h-100">
+        <div
+          class="card h-100 stagger-item"
+          :style="{ animationDelay: `${index * 0.06}s` }"
+        >
 
           <img
             v-lazy-img="game.thumbnail"
             class="card-img-top"
-            :alt="game.title"
+            :alt="`${game.title} favorite game thumbnail`"
+            style="height: 180px; object-fit: cover;"
           >
 
           <div class="card-body">
 
-            <h5 class="card-title">
+            <h5 class="card-title" style="font-size: 1rem;">
               {{ game.title }}
             </h5>
 
-            <p class="card-text">
-              Genre: {{ game.genre }}
-            </p>
+            <span class="badge bg-primary mb-3">
+              {{ game.genre }}
+            </span>
 
-            <router-link
-              :to="`/games/${game.gameId}`"
-              class="btn btn-primary me-2"
-            >
-              Details
-            </router-link>
+            <div class="d-flex gap-2">
+              <router-link
+                :to="`/games/${game.gameId}`"
+                class="btn btn-primary btn-sm"
+              >
+                Details
+              </router-link>
 
-            <button
-              class="btn btn-danger"
-              @click="removeFavorite(game.id)"
-            >
-              Remove
-            </button>
+              <button
+                class="btn btn-outline-danger btn-sm"
+                aria-label="Remove game from favorites"
+                @click="removeFavorite(game.id, game.title)"
+              >
+                Remove
+              </button>
+            </div>
 
           </div>
 

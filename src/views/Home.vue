@@ -45,32 +45,36 @@ export default {
           and build your favorite collection.
         </p>
 
-        <div class="mt-4">
+        <div class="mt-4 d-flex justify-content-center gap-3 flex-wrap">
           <router-link
             to="/games"
-            class="btn btn-primary me-2"
+            class="btn btn-primary btn-lg"
             aria-label="Browse all games"
           >
-            Browse Games
+            🎮 Browse Games
           </router-link>
 
           <router-link
             to="/live-news"
-            class="btn btn-outline-light"
+            class="btn btn-outline-light btn-lg"
             aria-label="View latest gaming news"
           >
-            Latest News
+            📰 Latest News
           </router-link>
         </div>
 
       </div>
     </div>
 
-    <div class="container py-4">
+    <div class="container py-5">
 
-      <!-- Stage 1: Two Static Images -->
-      <h2 class="mb-4">Welcome to GameHub</h2>
-      <p class="text-muted mb-4">
+      <!-- Welcome Section -->
+      <div class="section-header">
+        <span class="section-icon">👋</span>
+        <h2 class="mb-0">Welcome to GameHub</h2>
+      </div>
+
+      <p class="text-muted mb-4" style="max-width: 700px;">
         Your one-stop destination for free-to-play games, gaming news,
         and a community of passionate gamers. Browse hundreds of titles,
         stay up to date with the latest gaming news, and save your
@@ -79,93 +83,108 @@ export default {
 
       <div class="row mb-5 g-4">
         <div class="col-md-6">
-          <img
-            src="/home/game_home.jpg"
-            alt="Gaming setup with PC and RGB lighting"
-            class="img-fluid rounded shadow"
-            style="width: 100%; height: 280px; object-fit: cover;"
-          >
-          <p class="text-muted small mt-2 text-center">
-            Level up your gaming experience
-          </p>
+          <div class="card overflow-hidden" style="border: none;">
+            <img
+              src="/home/game_home.jpg"
+              alt="Gaming setup with PC and RGB lighting"
+              class="img-fluid"
+              style="width: 100%; height: 280px; object-fit: cover;"
+            >
+            <div class="card-body text-center">
+              <p class="text-muted small mb-0">
+                Level up your gaming experience
+              </p>
+            </div>
+          </div>
         </div>
         <div class="col-md-6">
-          <img
-            src="/home/gaming_community.jpg"
-            alt="Multiplayer gaming community"
-            class="img-fluid rounded shadow"
-            style="width: 100%; height: 280px; object-fit: cover;"
-          >
-          <p class="text-muted small mt-2 text-center">
-            Join a community of gamers
-          </p>
+          <div class="card overflow-hidden" style="border: none;">
+            <img
+              src="/home/gaming_community.jpg"
+              alt="Multiplayer gaming community"
+              class="img-fluid"
+              style="width: 100%; height: 280px; object-fit: cover;"
+            >
+            <div class="card-body text-center">
+              <p class="text-muted small mb-0">
+                Join a community of gamers
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Trending Section -->
+      <div class="section-header">
+        <span class="section-icon">🔥</span>
+        <h2 class="mb-0">Trending Now</h2>
+      </div>
 
-      <h2 class="mb-3">
-        🔥 Trending Now
-      </h2>
-
-      <div class="card mb-5">
-        <div class="card-body">
-
-          <div class="row text-center">
-
-            <div class="col-md-3">
-              <h5>MMORPG</h5>
-            </div>
-
-            <div class="col-md-3">
-              <h5>Shooter</h5>
-            </div>
-
-            <div class="col-md-3">
-              <h5>Battle Royale</h5>
-            </div>
-
-            <div class="col-md-3">
-              <h5>MOBA</h5>
-            </div>
-
-          </div>
-
+      <div class="d-flex gap-3 flex-wrap mb-5">
+        <div class="genre-badge">
+          <span class="genre-icon">⚔️</span> MMORPG
+        </div>
+        <div class="genre-badge">
+          <span class="genre-icon">🎯</span> Shooter
+        </div>
+        <div class="genre-badge">
+          <span class="genre-icon">🏆</span> Battle Royale
+        </div>
+        <div class="genre-badge">
+          <span class="genre-icon">🧙</span> MOBA
         </div>
       </div>
 
       <!-- Featured Games -->
-      <h2 class="mb-4">Featured Games</h2>
+      <div class="section-header">
+        <span class="section-icon">⭐</span>
+        <h2 class="mb-0">Featured Games</h2>
+      </div>
 
-      <div v-if="loading" class="text-center py-4">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
+      <!-- Skeleton Loading -->
+      <div v-if="loading" class="row">
+        <div
+          class="col-md-4 mb-4"
+          v-for="n in 3"
+          :key="n"
+        >
+          <div class="card skeleton-card">
+            <div class="skeleton skeleton-image"></div>
+            <div style="padding: 16px;">
+              <div class="skeleton skeleton-line" style="width: 80%;"></div>
+              <div class="skeleton skeleton-line short"></div>
+            </div>
+          </div>
         </div>
       </div>
 
       <div v-else class="row">
         <div
           class="col-md-4 mb-4"
-          v-for="game in featuredGames"
+          v-for="(game, index) in featuredGames"
           :key="game.id"
         >
         <router-link
           :to="'/games/' + game.id"
           class="text-decoration-none"
         >
-          <div class="card h-100">
+          <div
+            class="card h-100 stagger-item"
+            :style="{ animationDelay: `${index * 0.1}s` }"
+          >
             <img
               :src="game.thumbnail"
               class="card-img-top"
               :alt="`${game.title} featured game thumbnail`"
+              style="height: 200px; object-fit: cover;"
             >
             <div class="card-body">
               <h5 class="card-title">
                 {{ game.title }}
               </h5>
-              <p class="card-text">
-                Genre: {{ game.genre }}
-              </p>
+              <span class="badge bg-primary">
+                {{ game.genre }}
+              </span>
             </div>
           </div>
         </router-link>
@@ -174,55 +193,52 @@ export default {
       
       <!-- Statistics -->
       <div class="card my-5">
-
-        <div class="card-body">
-
+        <div class="card-body py-4">
           <div class="row text-center">
 
-            <div class="col-md-3">
-              <h2>300+</h2>
+            <div class="col-6 col-md-3 stat-card">
+              <div class="stat-number">300+</div>
               <p>Free Games</p>
             </div>
 
-            <div class="col-md-3">
-              <h2>15</h2>
+            <div class="col-6 col-md-3 stat-card">
+              <div class="stat-number">15</div>
               <p>GameHub Articles</p>
             </div>
 
-            <div class="col-md-3">
-              <h2>24/7</h2>
+            <div class="col-6 col-md-3 stat-card">
+              <div class="stat-number">24/7</div>
               <p>Gaming Updates</p>
             </div>
 
-            <div class="col-md-3">
-              <h2>100%</h2>
+            <div class="col-6 col-md-3 stat-card">
+              <div class="stat-number">100%</div>
               <p>Free To Play</p>
             </div>
 
           </div>
-
         </div>
-
       </div>
 
       <!-- Why GameHub -->
-      <h2 class="mb-4">Why Choose GameHub?</h2>
+      <div class="section-header">
+        <span class="section-icon">💡</span>
+        <h2 class="mb-0">Why Choose GameHub?</h2>
+      </div>
 
       <div class="row">
 
         <div class="col-md-4 mb-4">
           <div class="card h-100">
             <div class="card-body">
-
+              <div class="feature-icon">🎮</div>
               <h5 class="card-title">
-                🎮 Massive Library
+                Massive Library
               </h5>
-
-              <p class="card-text">
+              <p class="card-text text-muted">
                 Discover hundreds of free-to-play games
                 across multiple genres and platforms.
               </p>
-
             </div>
           </div>
         </div>
@@ -230,16 +246,14 @@ export default {
         <div class="col-md-4 mb-4">
           <div class="card h-100">
             <div class="card-body">
-
+              <div class="feature-icon">📰</div>
               <h5 class="card-title">
-                📰 Live Updates
+                Live Updates
               </h5>
-
-              <p class="card-text">
+              <p class="card-text text-muted">
                 Stay informed with the latest gaming
                 news, releases, and industry updates.
               </p>
-
             </div>
           </div>
         </div>
@@ -247,16 +261,14 @@ export default {
         <div class="col-md-4 mb-4">
           <div class="card h-100">
             <div class="card-body">
-
+              <div class="feature-icon">⭐</div>
               <h5 class="card-title">
-                ⭐ Personal Collection
+                Personal Collection
               </h5>
-
-              <p class="card-text">
+              <p class="card-text text-muted">
                 Save your favorite games and
                 access them anytime.
               </p>
-
             </div>
           </div>
         </div>

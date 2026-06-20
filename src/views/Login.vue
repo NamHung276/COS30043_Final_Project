@@ -53,14 +53,17 @@ export default {
 </script>
 
 <template>
-  <div class="container py-4">
-
-    <h1 class="mb-4">Login</h1>
+  <div class="container py-5">
 
     <div class="row justify-content-center">
       <div class="col-md-5">
 
-        <div class="card">
+        <div class="text-center mb-4">
+          <h1 style="font-size: 2rem;">Welcome Back</h1>
+          <p class="text-muted">Sign in to your GameHub account</p>
+        </div>
+
+        <div class="card auth-card">
           <div class="card-body text-start p-4">
 
             <div
@@ -77,7 +80,7 @@ export default {
                   for="email"
                   class="form-label"
                 >
-                  Email
+                  📧 Email
                 </label>
                 <input
                   id="email"
@@ -89,12 +92,12 @@ export default {
                 >
               </div>
 
-              <div class="mb-3">
+              <div class="mb-4">
                 <label
                   for="password"
                   class="form-label"
                 >
-                  Password
+                  🔒 Password
                 </label>
                 <input
                   id="password"
@@ -111,7 +114,7 @@ export default {
                 class="btn btn-primary w-100"
                 :disabled="loading"
               >
-                {{ loading ? 'Logging in...' : 'Login' }}
+                {{ loading ? 'Signing in...' : '🎮 Login' }}
               </button>
 
             </form>

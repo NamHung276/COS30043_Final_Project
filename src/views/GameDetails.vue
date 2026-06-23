@@ -24,14 +24,23 @@ export default {
     return {
       game: null,
       loading: true,
-      currentUser: null
+      currentUser: null,
+      favStatus: { visible: false, message: '', type: 'success' }
     }
   },
 
   methods: {
+    showFavStatus(message, type = 'success') {
+      this.favStatus = { visible: true, message, type }
+      clearTimeout(this._favTimer)
+      this._favTimer = setTimeout(() => {
+        this.favStatus.visible = false
+      }, 3000)
+    },
+
     async addToFavorites() {
       if (!this.currentUser) {
-        this.toast.show('Please login to add favorites.', 'warning')
+        this.showFavStatus('Please login to add favorites.', 'warning')
         setTimeout(() => this.$router.push('/login'), 1500)
         return
       }
@@ -47,7 +56,7 @@ export default {
         const existingSnapshot = await getDocs(existingQuery)
 
         if (!existingSnapshot.empty) {
-          this.toast.show('Game already in favorites.', 'warning')
+          this.showFavStatus('⚠️ Already in your favorites!', 'warning')
           return
         }
 
@@ -59,11 +68,11 @@ export default {
           genre: this.game.genre
         })
 
-        this.toast.show('Added to favorites! ⭐', 'success')
+        this.showFavStatus('⭐ Added to favorites!', 'success')
 
       } catch (error) {
         console.error('Failed to add favorite:', error)
-        this.toast.show('Something went wrong. Please try again.', 'error')
+        this.showFavStatus('Something went wrong. Please try again.', 'error')
       }
     }
   },
@@ -111,29 +120,34 @@ export default {
       </router-link>
 
       <!-- Game Hero Area -->
-      <div class="card mb-4 overflow-hidden" style="border: none;">
-        <div style="position: relative;">
+      <!-- isolation:isolate + contain:layout prevent the blurred/scaled bg img
+           from leaking a compositing layer that breaks position:fixed toasts -->
+      <div class="mb-4 rounded" style="position: relative; height: 300px; overflow: hidden; isolation: isolate; contain: layout;">
+        <!-- Blurred background layer – fully contained, cannot affect fixed elements -->
+        <div style="position: absolute; inset: 0; overflow: hidden; contain: strict;">
           <img
             v-if="game.thumbnail"
             :src="game.thumbnail"
-            :alt="`${game.title} banner`"
-            style="width: 100%; height: 300px; object-fit: cover; filter: blur(20px) brightness(0.3); transform: scale(1.1);"
+            :alt="''"
+            aria-hidden="true"
+            style="width: 100%; height: 100%; object-fit: cover; filter: blur(20px) brightness(0.3); transform: scale(1.1); display: block;"
           >
-          <div style="position: absolute; inset: 0; display: flex; align-items: center; padding: 32px;">
-            <div class="d-flex align-items-start gap-4 flex-wrap">
-              <img
-                v-lazy-img="game.thumbnail"
-                class="rounded"
-                :alt="`${game.title} game thumbnail`"
-                style="width: 200px; height: 120px; object-fit: cover; box-shadow: 0 8px 30px rgba(0,0,0,0.5);"
-              >
-              <div>
-                <h1 class="mb-2" style="color: #ffffff; text-shadow: 0 2px 16px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,0.8);">{{ game.title }}</h1>
-                <div class="d-flex gap-2 flex-wrap">
-                  <span class="badge bg-primary">{{ game.genre }}</span>
-                  <span class="badge" style="background: rgba(255,255,255,0.15);">{{ game.platform }}</span>
-                  <span class="badge" style="background: rgba(34,197,94,0.2); color: #86efac;">{{ game.status }}</span>
-                </div>
+        </div>
+        <!-- Foreground content layer -->
+        <div style="position: absolute; inset: 0; display: flex; align-items: center; padding: 32px;">
+          <div class="d-flex align-items-start gap-4 flex-wrap">
+            <img
+              v-lazy-img="game.thumbnail"
+              class="rounded"
+              :alt="`${game.title} game thumbnail`"
+              style="width: 200px; height: 120px; object-fit: cover; box-shadow: 0 8px 30px rgba(0,0,0,0.5); position: relative; z-index: 1;"
+            >
+            <div style="position: relative; z-index: 1;">
+              <h1 class="mb-2" style="color: #ffffff; text-shadow: 0 2px 16px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,0.8);">{{ game.title }}</h1>
+              <div class="d-flex gap-2 flex-wrap">
+                <span class="badge bg-primary">{{ game.genre }}</span>
+                <span class="badge" style="background: rgba(255,255,255,0.15);">{{ game.platform }}</span>
+                <span class="badge" style="background: rgba(34,197,94,0.2); color: #86efac;">{{ game.status }}</span>
               </div>
             </div>
           </div>
@@ -186,6 +200,19 @@ export default {
                 >
                   ⭐ Add to Favorites
                 </button>
+
+                <!-- Inline favorites status message -->
+                <transition name="fav-status">
+                  <div
+                    v-if="favStatus.visible"
+                    class="fav-status-msg"
+                    :class="`fav-status-${favStatus.type}`"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    {{ favStatus.message }}
+                  </div>
+                </transition>
               </div>
             </div>
           </div>

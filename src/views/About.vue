@@ -209,8 +209,9 @@ export default {
 
       <div class="col-md-4">
 
-        <div class="card mb-4 sticky-top" style="top: 80px;">
-          <div class="card-body text-start">
+        <div style="position: sticky; top: 80px;">
+          <div class="card mb-4">
+            <div class="card-body text-start">
 
             <h5 class="card-title mb-3">🎮 Gamer Profile</h5>
             <p class="text-muted small mb-3">
@@ -322,6 +323,7 @@ export default {
             </p>
 
           </div>
+        </div>
         </div>
 
       </div>

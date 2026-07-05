@@ -146,7 +146,9 @@ export default {
 
             <div class="d-flex gap-2">
               <router-link
-                :to="`/games/${game.gameId}`"
+                :to="game.source === 'freetogame'
+                  ? `/free-to-play/${game.gameId}`
+                  : `/games/${game.gameId}`"
                 class="btn btn-primary btn-sm"
               >
                 Details

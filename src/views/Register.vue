@@ -1,10 +1,11 @@
 // src/views/Register.vue
 <script>
-import { auth } from '../firebase'
+import { auth, db } from '../firebase'
 import {
   createUserWithEmailAndPassword,
   updateProfile
 } from 'firebase/auth'
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
 
 export default {
   data() {
@@ -119,6 +120,23 @@ export default {
         await updateProfile(userCredential.user, {
           displayName: this.name
         })
+
+        // Create a Firestore user document with default role 'user'
+        // Wrapped separately so a Firestore rules error doesn't mask
+        // the successful account creation
+        try {
+          await setDoc(doc(db, 'users', userCredential.user.uid), {
+            displayName: this.name.trim(),
+            email: this.email.trim().toLowerCase(),
+            role: 'user',
+            createdAt: serverTimestamp()
+          })
+        } catch (firestoreErr) {
+          console.warn(
+            'Account created but Firestore user doc failed (check security rules):',
+            firestoreErr
+          )
+        }
 
         this.success = 'Registration successful! Redirecting to login...'
 

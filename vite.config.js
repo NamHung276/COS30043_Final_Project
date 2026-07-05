@@ -10,6 +10,11 @@ export default defineConfig({
         target: 'https://newsapi.org',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/newsapi/, '')
+      },
+      '/cheapshark': {
+        target: 'https://www.cheapshark.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/cheapshark/, '')
       }
     }
   }

@@ -1,6 +1,7 @@
 // src/views/LiveNews.vue
 <script>
 import SkeletonCard from '../components/SkeletonCard.vue'
+import { newsApi } from '../api'
 
 export default {
   components: { SkeletonCard },
@@ -149,12 +150,14 @@ export default {
 
   async mounted() {
     try {
-      // Using Vite proxy — /newsapi routes to https://newsapi.org
-      const response = await fetch(
-        '/newsapi/v2/everything?q=gaming OR "video games"&language=en&sortBy=publishedAt&pageSize=100&apiKey=a125829a83b64ea99e6889447f348dc8'
-      )
-
-      const data = await response.json()
+      const { data } = await newsApi.get('/everything', {
+        params: {
+          q: 'gaming OR "video games"',
+          language: 'en',
+          sortBy: 'publishedAt',
+          pageSize: 100
+        }
+      })
 
       if (data.status === 'error') {
         this.error = data.message

@@ -34,13 +34,38 @@
             Home
           </router-link>
 
-          <router-link
-            class="nav-link"
-            to="/games"
-            @click="closeMenu"
-          >
-            Games
-          </router-link>
+          <!-- Games Dropdown -->
+          <li class="nav-item dropdown list-unstyled">
+            <a
+              class="nav-link dropdown-toggle"
+              href="#"
+              role="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              Games
+            </a>
+            <ul class="dropdown-menu dropdown-menu-dark">
+              <li>
+                <router-link
+                  class="dropdown-item"
+                  to="/games"
+                  @click="closeMenu"
+                >
+                  🎮 All Games
+                </router-link>
+              </li>
+              <li>
+                <router-link
+                  class="dropdown-item"
+                  to="/free-to-play"
+                  @click="closeMenu"
+                >
+                  🆓 Free to Play
+                </router-link>
+              </li>
+            </ul>
+          </li>
 
           <!-- News Dropdown -->
           <li class="nav-item dropdown list-unstyled">
@@ -91,6 +116,16 @@
             About
           </router-link>
 
+          <!-- Admin link (only visible to admins) -->
+          <router-link
+            v-if="isAdmin"
+            class="nav-link nav-admin-link"
+            to="/admin"
+            @click="closeMenu"
+          >
+            🛡️ Admin
+          </router-link>
+
           <template v-if="!currentUser && authReady">
             <router-link
               class="nav-link btn btn-primary nav-auth-btn"
@@ -110,15 +145,17 @@
           </template>
 
           <template v-if="currentUser">
-            <span
-              class="nav-link d-flex align-items-center"
-              :title="currentUser.email"
+            <router-link
+              class="nav-link d-flex align-items-center nav-profile-link"
+              to="/profile"
+              :title="`Account: ${currentUser.email}`"
+              @click="closeMenu"
             >
               <span class="nav-user-avatar">
                 {{ userInitial }}
               </span>
               {{ currentUser.displayName || currentUser.email }}
-            </span>
+            </router-link>
 
             <button
               class="btn btn-outline-danger btn-sm ms-2"
@@ -136,14 +173,16 @@
 </template>
 
 <script>
-import { auth } from '../firebase'
+import { auth, db } from '../firebase'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
+import { doc, getDoc } from 'firebase/firestore'
 
 export default {
   data() {
     return {
       currentUser: null,
       authReady: false,
+      isAdmin: false,
       unsubscribe: null
     }
   },
@@ -158,9 +197,19 @@ export default {
 
   mounted() {
     // Firebase listener — fires automatically on login/logout/page load
-    this.unsubscribe = onAuthStateChanged(auth, (user) => {
+    this.unsubscribe = onAuthStateChanged(auth, async (user) => {
       this.currentUser = user
       this.authReady = true
+      if (user) {
+        try {
+          const snap = await getDoc(doc(db, 'users', user.uid))
+          this.isAdmin = snap.exists() && snap.data().role === 'admin'
+        } catch {
+          this.isAdmin = false
+        }
+      } else {
+        this.isAdmin = false
+      }
     })
   },
 

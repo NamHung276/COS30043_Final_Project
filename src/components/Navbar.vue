@@ -128,7 +128,7 @@
 
           <template v-if="!currentUser && authReady">
             <router-link
-              class="nav-link btn btn-primary nav-auth-btn"
+              class="nav-btn-login"
               to="/login"
               @click="closeMenu"
             >
@@ -136,7 +136,7 @@
             </router-link>
 
             <router-link
-              class="nav-link btn btn-primary nav-auth-btn"
+              class="nav-btn-signup"
               to="/register"
               @click="closeMenu"
             >

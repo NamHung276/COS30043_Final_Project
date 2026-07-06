@@ -373,7 +373,7 @@ export default {
 
               <p
                 class="card-text text-muted mb-3"
-                style="font-size:0.82rem; flex:1; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;"
+                style="font-size:0.82rem; flex:1; display:-webkit-box; line-clamp:2; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;"
               >
                 {{ game.short_description }}
               </p>

@@ -186,9 +186,56 @@ a:hover {
   font-weight: 600;
 }
 
+/* ---- Navbar Auth Buttons ---- */
+.nav-btn-login {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 7px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--primary-light) !important;
+  border: 1.5px solid rgba(124, 58, 237, 0.6);
+  background: rgba(124, 58, 237, 0.1);
+  backdrop-filter: blur(4px);
+  text-decoration: none;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+.nav-btn-login:hover {
+  color: #fff !important;
+  background: rgba(124, 58, 237, 0.25);
+  border-color: var(--primary-light);
+  box-shadow: 0 0 16px rgba(124, 58, 237, 0.35);
+}
+
+.nav-btn-signup {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 7px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff !important;
+  background: var(--gradient-primary);
+  border: none;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 14px rgba(124, 58, 237, 0.45);
+  white-space: nowrap;
+}
+.nav-btn-signup:hover {
+  color: #fff !important;
+  filter: brightness(1.15);
+  box-shadow: 0 4px 22px rgba(124, 58, 237, 0.65);
+  transform: translateY(-1px);
+}
+
 /* Active nav link — neon underline slide */
-.router-link-active:not(.navbar-brand):not(.dropdown-item),
-.router-link-exact-active:not(.navbar-brand):not(.dropdown-item) {
+.router-link-active:not(.navbar-brand):not(.dropdown-item):not(.nav-btn-login):not(.nav-btn-signup),
+.router-link-exact-active:not(.navbar-brand):not(.dropdown-item):not(.nav-btn-login):not(.nav-btn-signup) {
   color: var(--primary-light) !important;
   font-weight: 600;
   background: rgba(124,58,237,0.12);
@@ -841,32 +888,34 @@ a:hover {
   text-align: center;
   position: relative;
   z-index: 1;
+  color: var(--text-primary);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
 }
 
-/* Color variants */
-.genre-tile-violet { background: rgba(124,58,237,0.15); }
+/* Color variants — use richer opaque-tinted backgrounds so text stays legible */
+.genre-tile-violet { background: rgba(124,58,237,0.25); border-color: rgba(124,58,237,0.35); }
 .genre-tile-violet:hover { box-shadow: 0 12px 40px rgba(124,58,237,0.5); }
-.genre-tile-violet::before { background: linear-gradient(135deg, rgba(124,58,237,0.4), rgba(124,58,237,0.1)); }
+.genre-tile-violet::before { background: linear-gradient(135deg, rgba(124,58,237,0.5), rgba(124,58,237,0.15)); }
 
-.genre-tile-cyan { background: rgba(6,182,212,0.12); }
+.genre-tile-cyan { background: rgba(6,182,212,0.22); border-color: rgba(6,182,212,0.3); }
 .genre-tile-cyan:hover { box-shadow: 0 12px 40px rgba(6,182,212,0.4); }
-.genre-tile-cyan::before { background: linear-gradient(135deg, rgba(6,182,212,0.35), rgba(6,182,212,0.08)); }
+.genre-tile-cyan::before { background: linear-gradient(135deg, rgba(6,182,212,0.45), rgba(6,182,212,0.12)); }
 
-.genre-tile-coral { background: rgba(244,63,94,0.12); }
+.genre-tile-coral { background: rgba(244,63,94,0.22); border-color: rgba(244,63,94,0.3); }
 .genre-tile-coral:hover { box-shadow: 0 12px 40px rgba(244,63,94,0.4); }
-.genre-tile-coral::before { background: linear-gradient(135deg, rgba(244,63,94,0.35), rgba(244,63,94,0.08)); }
+.genre-tile-coral::before { background: linear-gradient(135deg, rgba(244,63,94,0.45), rgba(244,63,94,0.12)); }
 
-.genre-tile-gold { background: rgba(245,158,11,0.12); }
+.genre-tile-gold { background: rgba(245,158,11,0.22); border-color: rgba(245,158,11,0.3); }
 .genre-tile-gold:hover { box-shadow: 0 12px 40px rgba(245,158,11,0.4); }
-.genre-tile-gold::before { background: linear-gradient(135deg, rgba(245,158,11,0.35), rgba(245,158,11,0.08)); }
+.genre-tile-gold::before { background: linear-gradient(135deg, rgba(245,158,11,0.45), rgba(245,158,11,0.12)); }
 
-.genre-tile-green { background: rgba(34,197,94,0.12); }
+.genre-tile-green { background: rgba(34,197,94,0.22); border-color: rgba(34,197,94,0.3); }
 .genre-tile-green:hover { box-shadow: 0 12px 40px rgba(34,197,94,0.4); }
-.genre-tile-green::before { background: linear-gradient(135deg, rgba(34,197,94,0.35), rgba(34,197,94,0.08)); }
+.genre-tile-green::before { background: linear-gradient(135deg, rgba(34,197,94,0.45), rgba(34,197,94,0.12)); }
 
-.genre-tile-pink { background: rgba(236,72,153,0.12); }
+.genre-tile-pink { background: rgba(236,72,153,0.22); border-color: rgba(236,72,153,0.3); }
 .genre-tile-pink:hover { box-shadow: 0 12px 40px rgba(236,72,153,0.4); }
-.genre-tile-pink::before { background: linear-gradient(135deg, rgba(236,72,153,0.35), rgba(236,72,153,0.08)); }
+.genre-tile-pink::before { background: linear-gradient(135deg, rgba(236,72,153,0.45), rgba(236,72,153,0.12)); }
 
 /* ════════════════════════════════════════════
    STATS COUNTER SECTION
@@ -907,7 +956,7 @@ a:hover {
 }
 .stat-label {
   font-size: 0.82rem;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-top: 8px;
@@ -953,10 +1002,11 @@ a:hover {
   margin-bottom: 12px;
   position: relative;
   z-index: 1;
+  color: var(--text-primary) !important;
 }
 .feature-card p {
   font-size: 0.9rem;
-  color: var(--text-secondary);
+  color: #c8d4f0 !important;
   line-height: 1.7;
   position: relative;
   z-index: 1;

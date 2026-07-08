@@ -1,20 +1,20 @@
 // src/views/Home.vue
 <script>
-import { rawgApi, freeToGameApi } from '../api'
+import { rawgApi, freeToGameApi, cheapSharkApi } from '../api'
 
 const GENRES = [
-  { label: 'MMORPG',       icon: '⚔️',  color: 'violet', cat: 'mmorpg',        link: '/free-to-play' },
-  { label: 'Shooter',      icon: '🎯',  color: 'coral',  cat: 'shooter',       link: '/free-to-play' },
-  { label: 'Battle Royale',icon: '🏆',  color: 'gold',   cat: 'battle-royale', link: '/free-to-play' },
-  { label: 'MOBA',         icon: '🧙',  color: 'cyan',   cat: 'moba',          link: '/free-to-play' },
-  { label: 'Strategy',     icon: '♟️',  color: 'green',  cat: 'strategy',      link: '/free-to-play' },
-  { label: 'Racing',       icon: '🏎️', color: 'pink',   cat: 'racing',        link: '/free-to-play' },
-  { label: 'Sports',       icon: '⚽',  color: 'cyan',   cat: 'sports',        link: '/free-to-play' },
-  { label: 'Anime',        icon: '🌸',  color: 'pink',   cat: 'anime',         link: '/free-to-play' },
-  { label: 'Survival',     icon: '🏕️', color: 'green',  cat: 'survival',      link: '/free-to-play' },
-  { label: 'Fantasy',      icon: '🐉',  color: 'violet', cat: 'fantasy',       link: '/free-to-play' },
-  { label: 'Sci-Fi',       icon: '🚀',  color: 'cyan',   cat: 'sci-fi',        link: '/free-to-play' },
-  { label: 'Horror',       icon: '👻',  color: 'coral',  cat: 'horror',        link: '/free-to-play' },
+  { label: 'MMORPG',       icon: 'bi-shield-shaded', color: 'violet', cat: 'mmorpg',        link: '/free-to-play' },
+  { label: 'Shooter',      icon: 'bi-crosshair',     color: 'coral',  cat: 'shooter',       link: '/free-to-play' },
+  { label: 'Battle Royale',icon: 'bi-trophy',        color: 'gold',   cat: 'battle-royale', link: '/free-to-play' },
+  { label: 'MOBA',         icon: 'bi-people-fill',   color: 'cyan',   cat: 'moba',          link: '/free-to-play' },
+  { label: 'Strategy',     icon: 'bi-grid-3x3-gap',  color: 'green',  cat: 'strategy',      link: '/free-to-play' },
+  { label: 'Racing',       icon: 'bi-speedometer2',  color: 'pink',   cat: 'racing',        link: '/free-to-play' },
+  { label: 'Sports',       icon: 'bi-dribbble',      color: 'cyan',   cat: 'sports',        link: '/free-to-play' },
+  { label: 'Anime',        icon: 'bi-stars',         color: 'pink',   cat: 'anime',         link: '/free-to-play' },
+  { label: 'Survival',     icon: 'bi-tree',          color: 'green',  cat: 'survival',      link: '/free-to-play' },
+  { label: 'Fantasy',      icon: 'bi-lightning',     color: 'violet', cat: 'fantasy',       link: '/free-to-play' },
+  { label: 'Sci-Fi',       icon: 'bi-rocket',        color: 'cyan',   cat: 'sci-fi',        link: '/free-to-play' },
+  { label: 'Horror',       icon: 'bi-eye-slash',     color: 'coral',  cat: 'horror',        link: '/free-to-play' },
 ]
 
 export default {
@@ -41,6 +41,10 @@ export default {
 
       // Genres
       genres: GENRES,
+
+      // Hot Deals (CheapShark)
+      hotDeals: [],
+      dealsLoading: true,
     }
   },
 
@@ -76,7 +80,8 @@ export default {
     // Load featured carousel + new releases in parallel
     await Promise.allSettled([
       this.loadFeatured(),
-      this.loadNewReleases()
+      this.loadNewReleases(),
+      this.loadHotDeals(),
     ])
 
     // Setup stats intersection observer
@@ -131,6 +136,19 @@ export default {
       }
     },
 
+    async loadHotDeals() {
+      try {
+        const { data } = await cheapSharkApi.get('/deals', {
+          params: { sortBy: 'DealRating', pageSize: 12, onSale: 1, upperPrice: 30 }
+        })
+        this.hotDeals = (data || []).slice(0, 8)
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.dealsLoading = false
+      }
+    },
+
     async fetchDetail(id) {
       if (this.detailCache[id]) return
       try {
@@ -165,6 +183,13 @@ export default {
       const n = parseInt(score)
       return n >= 75 ? 'mc-green' : n >= 50 ? 'mc-yellow' : 'mc-red'
     }
+    ,
+    formatDate(value) {
+      if (!value) return '—'
+      const date = new Date(value)
+      if (Number.isNaN(date.getTime())) return value
+      return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', year: 'numeric' }).format(date)
+    }
   }
 }
 </script>
@@ -182,7 +207,7 @@ export default {
       <div class="hero-orb hero-orb-3" aria-hidden="true"></div>
 
       <div class="hero-v2-content">
-        <div class="hero-eyebrow">🎮 The Ultimate Gaming Hub</div>
+        <div class="hero-eyebrow"><i class="bi bi-controller me-2"></i>The Ultimate Gaming Hub</div>
 
         <h1 class="hero-v2-title">
           Discover Your<br>
@@ -196,13 +221,13 @@ export default {
 
         <div class="hero-v2-actions">
           <router-link to="/games" class="btn btn-primary hero-cta-primary" aria-label="Browse all games">
-            🎮 Browse Games
+            <i class="bi bi-joystick me-1"></i>Browse Games
           </router-link>
           <router-link to="/free-to-play" class="btn btn-outline-light hero-cta-secondary" aria-label="Browse free to play games">
-            🆓 Free to Play
+            <i class="bi bi-gift me-1"></i>Free to Play
           </router-link>
           <router-link to="/deals" class="btn btn-outline-light hero-cta-secondary" aria-label="View game deals">
-            💰 Game Deals
+            <i class="bi bi-tag me-1"></i>Game Deals
           </router-link>
         </div>
 
@@ -238,7 +263,9 @@ export default {
            ══════════════════════════════════════ -->
       <div class="mb-5">
         <div class="section-header mb-3">
-          <span class="section-icon">🆕</span>
+          <span class="section-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </span>
           <h2 class="mb-0">New Releases</h2>
           <router-link
             to="/games"
@@ -272,10 +299,20 @@ export default {
             :to="`/games/${game.id}`"
             class="h-scroll-card stagger-item"
           >
-            <img
-              v-lazy-img="game.background_image"
-              :alt="game.name"
-            >
+            <div class="h-scroll-img-wrap">
+              <img
+                v-lazy-img="game.background_image"
+                :alt="game.name"
+              >
+              <div class="h-card-badges">
+                <span v-if="game.metacritic" class="h-badge h-badge-verified">
+                  <img src="/logo/star.svg" alt="Verified">Verified
+                </span>
+                <span v-if="game.website" class="h-badge h-badge-official">
+                  <img src="/logo/search.svg" alt="Official">Official
+                </span>
+              </div>
+            </div>
             <div class="h-scroll-card-body">
               <p class="h-scroll-card-title">{{ game.name }}</p>
               <div class="h-scroll-card-meta">
@@ -287,7 +324,7 @@ export default {
                 >
                   {{ game.metacritic }}
                 </span>
-                <span>{{ game.released }}</span>
+                <span>{{ formatDate(game.released) }}</span>
               </div>
             </div>
           </router-link>
@@ -298,7 +335,9 @@ export default {
            FEATURED & RECOMMENDED — Steam Carousel
            ══════════════════════════════════════ -->
       <div class="section-header mb-3">
-        <span class="section-icon">⭐</span>
+        <span class="section-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
+        </span>
         <h2 class="mb-0">Featured &amp; Recommended</h2>
       </div>
 
@@ -387,7 +426,9 @@ export default {
            ══════════════════════════════════════ -->
       <div class="mb-5">
         <div class="section-header mb-4">
-          <span class="section-icon">🗂️</span>
+          <span class="section-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </span>
           <h2 class="mb-0">Explore by Genre</h2>
         </div>
 
@@ -400,9 +441,65 @@ export default {
             :style="{ animationDelay: `${i * 0.04}s` }"
             :aria-label="`Browse ${g.label} games`"
           >
-            <span class="genre-tile-icon">{{ g.icon }}</span>
+            <span class="genre-tile-icon"><i :class="['bi', g.icon]"></i></span>
             <span class="genre-tile-label">{{ g.label }}</span>
           </router-link>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════
+           HOT DEALS — Horizontal Scroll Strip
+           ══════════════════════════════════════ -->
+      <div class="mb-5">
+        <div class="section-header mb-3">
+          <span class="section-icon" style="background: linear-gradient(135deg, #92400e, #f59e0b); box-shadow: 0 4px 16px rgba(245,158,11,0.4);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+          </span>
+          <h2 class="mb-0">Hot Deals</h2>
+          <router-link
+            to="/deals"
+            class="ms-auto btn btn-sm"
+            style="background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.3); color:#fbbf24; font-size:0.8rem; border-radius:20px; padding:4px 16px;"
+          >
+            View All →
+          </router-link>
+        </div>
+
+        <!-- Skeleton -->
+        <div v-if="dealsLoading" class="h-scroll-strip">
+          <div v-for="n in 8" :key="n" class="deal-scroll-card" style="background: var(--bg-glass);">
+            <div class="skeleton" style="height:120px; width:100%;"></div>
+            <div class="h-scroll-card-body">
+              <div class="skeleton" style="height:12px; width:85%; border-radius:4px; margin-bottom:6px;"></div>
+              <div class="skeleton" style="height:10px; width:50%; border-radius:4px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deals strip -->
+        <div v-else class="h-scroll-strip">
+          <a
+            v-for="deal in hotDeals"
+            :key="deal.dealID"
+            :href="`https://www.cheapshark.com/redirect?dealID=${deal.dealID}`"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="deal-scroll-card stagger-item"
+            :aria-label="`${deal.title} — ${deal.salePrice === '0.00' ? 'Free' : '$' + deal.salePrice}`"
+          >
+            <div class="deal-scroll-img-wrap">
+              <img :src="deal.thumb" :alt="deal.title" loading="lazy">
+              <div class="deal-scroll-overlay" aria-hidden="true"></div>
+              <span class="deal-scroll-savings">-{{ Math.round(parseFloat(deal.savings)) }}%</span>
+            </div>
+            <div class="h-scroll-card-body">
+              <p class="h-scroll-card-title">{{ deal.title }}</p>
+              <div class="deal-scroll-price">
+                <span class="deal-scroll-orig">${{ deal.normalPrice }}</span>
+                <span class="deal-scroll-sale">{{ deal.salePrice === '0.00' ? 'FREE' : `$${deal.salePrice}` }}</span>
+              </div>
+            </div>
+          </a>
         </div>
       </div>
 
@@ -443,14 +540,16 @@ export default {
            ══════════════════════════════════════ -->
       <div class="mb-5">
         <div class="section-header mb-4">
-          <span class="section-icon">💡</span>
+          <span class="section-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          </span>
           <h2 class="mb-0">Why Choose <span class="gradient-text">GameHub?</span></h2>
         </div>
 
         <div class="row g-4">
           <div class="col-md-4">
             <div class="feature-card fc-violet">
-              <span class="feature-card-icon">🎮</span>
+              <span class="feature-card-icon"><i class="bi bi-joystick"></i></span>
               <h5>Massive Library</h5>
               <p>
                 Discover 500,000+ titles from RAWG's database plus 400+ free-to-play games across every genre and platform imaginable.
@@ -459,7 +558,7 @@ export default {
           </div>
           <div class="col-md-4">
             <div class="feature-card fc-cyan">
-              <span class="feature-card-icon">📡</span>
+              <span class="feature-card-icon"><i class="bi bi-broadcast"></i></span>
               <h5>Live Gaming News</h5>
               <p>
                 Stay ahead with real-time gaming news from NewsAPI alongside our own curated GameHub articles and community posts.
@@ -468,7 +567,7 @@ export default {
           </div>
           <div class="col-md-4">
             <div class="feature-card fc-coral">
-              <span class="feature-card-icon">💰</span>
+              <span class="feature-card-icon"><i class="bi bi-tag"></i></span>
               <h5>Best Deals Finder</h5>
               <p>
                 Never overpay again. Our CheapShark-powered Deals page tracks the lowest prices on Steam, Epic, GOG &amp; more.
@@ -477,7 +576,7 @@ export default {
           </div>
           <div class="col-md-4">
             <div class="feature-card fc-violet" style="--fc-gradient: linear-gradient(135deg, rgba(6,182,212,0.12), transparent); --fc-glow: rgba(6,182,212,0.6);">
-              <span class="feature-card-icon">⭐</span>
+              <span class="feature-card-icon"><i class="bi bi-bookmark-heart"></i></span>
               <h5>Personal Collection</h5>
               <p>
                 Save any game to your favorites. Your collection is synced to the cloud and accessible from any device.
@@ -486,7 +585,7 @@ export default {
           </div>
           <div class="col-md-4">
             <div class="feature-card fc-cyan" style="--fc-gradient: linear-gradient(135deg, rgba(244,63,94,0.12), transparent); --fc-glow: rgba(244,63,94,0.6);">
-              <span class="feature-card-icon">⭐</span>
+              <span class="feature-card-icon"><i class="bi bi-pencil-square"></i></span>
               <h5>Write Reviews</h5>
               <p>
                 Share your thoughts. Leave star-rated reviews on any game and read what other players have to say.
@@ -495,7 +594,7 @@ export default {
           </div>
           <div class="col-md-4">
             <div class="feature-card fc-coral" style="--fc-gradient: linear-gradient(135deg, rgba(124,58,237,0.12), transparent); --fc-glow: rgba(124,58,237,0.6);">
-              <span class="feature-card-icon">🌐</span>
+              <span class="feature-card-icon"><i class="bi bi-globe"></i></span>
               <h5>100% Free</h5>
               <p>
                 No subscriptions, no paywalls, no ads. GameHub is a community-first platform built to be free for everyone.
@@ -514,4 +613,29 @@ export default {
 .mc-yellow { background: #a16207 !important; color: #fff !important; }
 .mc-red    { background: #b91c1c !important; color: #fff !important; }
 .mc-grey   { background: var(--bg-glass) !important; color: var(--text-muted) !important; }
+.h-scroll-strip { display:flex; gap:16px; overflow-x:auto; padding-bottom:8px; }
+.h-scroll-card { width:220px; flex:0 0 220px; border-radius:12px; overflow:hidden; background:var(--bg-glass); border:1px solid var(--border-glass); text-decoration:none; color:inherit; }
+.h-scroll-img-wrap { position:relative; height:120px; overflow:hidden; }
+.h-scroll-img-wrap img { width:100%; height:100%; object-fit:cover; display:block; }
+.h-card-badges { position:absolute; left:8px; top:8px; display:flex; gap:8px; }
+.h-badge { display:inline-flex; align-items:center; gap:6px; font-size:0.72rem; padding:6px 8px; border-radius:999px; color:#fff; font-weight:700; backdrop-filter:blur(6px); }
+.h-badge img { width:14px; height:14px; object-fit:contain; }
+.h-badge-verified { background:linear-gradient(90deg,#f59e0b,#fbbf24); box-shadow:0 6px 20px rgba(251,191,36,0.12); }
+.h-badge-official { background:rgba(59,130,246,0.95); }
+.h-scroll-card-body { padding:12px 14px; }
+.h-scroll-card-title { font-size:0.88rem; font-weight:700; margin:0 0 6px 0; color:var(--text-primary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.h-scroll-card-meta { display:flex; gap:8px; align-items:center; font-size:0.75rem; color:var(--text-muted); }
+
+/* Deal scroll cards */
+.deal-scroll-card { width:220px; flex:0 0 220px; border-radius:12px; overflow:hidden; background:var(--bg-glass); border:1px solid var(--border-glass); text-decoration:none; color:inherit; transition:transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease; }
+.deal-scroll-card:hover { transform:translateY(-5px); box-shadow:0 12px 32px rgba(245,158,11,0.18); border-color:rgba(245,158,11,0.3); }
+.deal-scroll-img-wrap { position:relative; height:120px; overflow:hidden; }
+.deal-scroll-img-wrap img { width:100%; height:100%; object-fit:cover; display:block; transition:transform 0.3s ease; }
+.deal-scroll-card:hover .deal-scroll-img-wrap img { transform:scale(1.06); }
+.deal-scroll-overlay { position:absolute; inset:0; background:linear-gradient(to top, rgba(10,15,30,0.7) 0%, transparent 55%); pointer-events:none; }
+.deal-scroll-savings { position:absolute; top:8px; right:8px; background:linear-gradient(135deg,#15803d,#4ade80); color:#fff; font-weight:800; font-size:0.68rem; padding:3px 8px; border-radius:20px; letter-spacing:0.4px; }
+.deal-scroll-price { display:flex; align-items:center; gap:8px; margin-top:4px; }
+.deal-scroll-orig { text-decoration:line-through; color:var(--text-muted); font-size:0.75rem; }
+.deal-scroll-sale { font-weight:800; font-size:0.95rem; color:#fbbf24; }
+
 </style>

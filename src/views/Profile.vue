@@ -206,10 +206,10 @@ export default {
       <p class="text-muted mb-3">{{ currentUser.email }}</p>
       <div class="d-flex justify-content-center gap-2 flex-wrap">
         <span class="profile-badge profile-badge-email">
-          📧 {{ currentUser.email }}
+          <i class="bi bi-envelope me-1"></i>{{ currentUser.email }}
         </span>
         <span class="profile-badge profile-badge-member">
-          📅 Member since {{ memberSince }}
+          <i class="bi bi-calendar me-1"></i>Member since {{ memberSince }}
         </span>
       </div>
     </div>
@@ -225,7 +225,7 @@ export default {
           <div class="card-body p-4">
             <div class="section-header mb-4">
               <span class="profile-section-icon" style="background: rgba(59,130,246,0.15); color: var(--primary-light);">
-                👤
+                <i class="bi bi-person"></i>
               </span>
               <div>
                 <h2 class="mb-0" style="font-size: 1.15rem;">Edit Display Name</h2>
@@ -257,7 +257,8 @@ export default {
                 :disabled="nameLoading || nameUnchanged"
               >
                 <span v-if="nameLoading" class="spinner-border spinner-border-sm me-2"></span>
-                {{ nameLoading ? 'Saving...' : '💾 Save Name' }}
+                <template v-if="nameLoading">Saving...</template>
+                <template v-else><i class="bi bi-floppy me-1"></i>Save Name</template>
               </button>
 
               <p v-if="nameUnchanged && nameTouched" class="text-muted text-center mt-2 mb-0" style="font-size: 0.82rem;">
@@ -277,7 +278,7 @@ export default {
           <div class="card-body p-4">
             <div class="section-header mb-4">
               <span class="profile-section-icon" style="background: rgba(139,92,246,0.15); color: var(--accent-light);">
-                🔒
+                <i class="bi bi-lock"></i>
               </span>
               <div>
                 <h2 class="mb-0" style="font-size: 1.15rem;">Change Password</h2>
@@ -363,7 +364,8 @@ export default {
                 :disabled="pwLoading"
               >
                 <span v-if="pwLoading" class="spinner-border spinner-border-sm me-2"></span>
-                {{ pwLoading ? 'Changing...' : '🔑 Change Password' }}
+                <template v-if="pwLoading">Changing...</template>
+                <template v-else><i class="bi bi-key me-1"></i>Change Password</template>
               </button>
             </form>
           </div>

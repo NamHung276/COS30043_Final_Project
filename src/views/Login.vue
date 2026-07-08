@@ -80,7 +80,7 @@ export default {
                   for="email"
                   class="form-label"
                 >
-                  📧 Email
+                  <i class="bi bi-envelope me-1"></i>Email
                 </label>
                 <input
                   id="email"
@@ -97,7 +97,7 @@ export default {
                   for="password"
                   class="form-label"
                 >
-                  🔒 Password
+                  <i class="bi bi-lock me-1"></i>Password
                 </label>
                 <input
                   id="password"
@@ -114,7 +114,8 @@ export default {
                 class="btn btn-primary w-100"
                 :disabled="loading"
               >
-                {{ loading ? 'Signing in...' : '🎮 Login' }}
+                <template v-if="loading">Signing in...</template>
+                <template v-else><i class="bi bi-controller me-1"></i>Login</template>
               </button>
 
             </form>

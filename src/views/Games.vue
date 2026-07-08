@@ -130,7 +130,7 @@ export default {
       this.error = null
       try {
         const params = {
-          page_size: 40,
+          page_size: 100,
           ordering: this.searchTerm ? '-rating' : '-metacritic',
           // Exclude DLCs, editions, add-ons — only show main games
           exclude_additions: true,

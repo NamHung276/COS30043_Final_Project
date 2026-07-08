@@ -82,14 +82,25 @@ export default {
   methods: {
     platformIcon(name) {
       const n = name.toLowerCase()
-      if (n.includes('pc') || n.includes('windows')) return '💻'
-      if (n.includes('playstation')) return '🎮'
-      if (n.includes('xbox')) return '🟩'
-      if (n.includes('nintendo') || n.includes('switch')) return '🔴'
-      if (n.includes('mac')) return '🍎'
-      if (n.includes('linux')) return '🐧'
-      if (n.includes('android') || n.includes('ios') || n.includes('mobile')) return '📱'
-      return '🕹️'
+      if (n.includes('pc') || n.includes('windows')) return '/logo/pc.svg'
+      if (n.includes('playstation')) return '/logo/playstation_logo.png'
+      if (n.includes('xbox')) return '/logo/xbox_logo.png'
+      if (n.includes('nintendo') || n.includes('switch')) return '/logo/nintendo_logo.png'
+      if (n.includes('mac')) return '/logo/macos.png'
+      if (n.includes('linux')) return '/logo/linux.png'
+      if (n.includes('android') || n.includes('ios') || n.includes('mobile')) return '/logo/mobile.svg'
+      return '/logo/gamepad.svg'
+    },
+
+    formatDate(value) {
+      if (!value) return '—'
+      const date = new Date(value)
+      if (Number.isNaN(date.getTime())) return value
+      return new Intl.DateTimeFormat('en', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      }).format(date)
     },
 
     showFavStatus(message, type = 'success') {
@@ -223,7 +234,8 @@ export default {
               <!-- Platform chips -->
               <div class="d-flex flex-wrap gap-2 mt-2">
                 <span v-for="p in platforms.slice(0, 6)" :key="p.name" class="gd-platform-chip">
-                  {{ p.icon }} {{ p.name }}
+                  <img :src="p.icon" :alt="`${p.name} logo`" class="gd-platform-logo">
+                  <span>{{ p.name }}</span>
                 </span>
               </div>
             </div>
@@ -248,7 +260,7 @@ export default {
                   :alt="`${game.name} screenshot`"
                   class="gd-shot-main-img"
                 >
-                <div class="gd-shot-zoom-hint">🔍 Click to enlarge</div>
+                <div class="gd-shot-zoom-hint">Click to enlarge</div>
               </div>
               <!-- Thumbnail strip -->
               <div class="gd-shot-strip">
@@ -329,16 +341,18 @@ export default {
                   :href="game.website"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="btn btn-primary w-100 mb-2"
+                  class="btn btn-primary w-100 mb-2 gd-action-btn"
                 >
-                  🌐 Official Website
+                  <img src="/logo/pc.svg" alt="" class="gd-action-icon">
+                  <span>Official Website</span>
                 </a>
                 <button
-                  class="btn btn-success w-100 mb-2"
+                  class="btn btn-success w-100 mb-2 gd-action-btn"
                   @click="addToFavorites"
                   aria-label="Add to favorites"
                 >
-                  ⭐ Add to Favorites
+                  <img src="/logo/star.svg" alt="" class="gd-action-icon">
+                  <span>Add to Favorites</span>
                 </button>
 
                 <!-- Status toast -->
@@ -386,7 +400,7 @@ export default {
                 </div>
                 <div class="gd-detail-row" v-if="game.released">
                   <span class="gd-detail-label">Release</span>
-                  <span class="gd-detail-value">{{ game.released }}</span>
+                  <span class="gd-detail-value">{{ formatDate(game.released) }}</span>
                 </div>
                 <div class="gd-detail-row" v-if="game.playtime">
                   <span class="gd-detail-label">Avg Playtime</span>
@@ -605,13 +619,22 @@ export default {
 
 /* Platform chips */
 .gd-platform-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.72rem;
-  padding: 3px 10px;
+  padding: 4px 10px;
   border-radius: 20px;
   background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.12);
   color: rgba(255,255,255,0.7);
   white-space: nowrap;
+}
+.gd-platform-logo {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 /* ── Body Layout ──────────────────────────── */
@@ -621,7 +644,6 @@ export default {
 }
 
 /* ── Screenshots ──────────────────────────── */
-.gd-screenshots-block {}
 .gd-shot-main {
   position: relative;
   border-radius: 12px;
@@ -643,7 +665,7 @@ export default {
   bottom: 14px;
   right: 14px;
   background: rgba(0,0,0,0.6);
-  color: rgba(255,255,255,0.8);
+  color: rgba(255,255,255,0.9);
   font-size: 0.72rem;
   padding: 4px 10px;
   border-radius: 20px;
@@ -682,7 +704,14 @@ export default {
   object-fit: cover; display: block;
 }
 
-/* ── Section headings ─────────────────────── */
+/* ── Section blocks ──────────────────────── */
+.gd-section {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  padding: 20px 22px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
 .gd-section-title {
   font-size: 1rem;
   font-weight: 700;
@@ -698,10 +727,11 @@ export default {
 
 /* ── Description ──────────────────────────── */
 .gd-description {
-  font-size: 0.93rem;
+  font-size: 0.98rem;
   line-height: 1.9;
   color: var(--text-secondary);
   white-space: pre-wrap;
+  max-width: 72ch;
 }
 
 /* ── Tags ─────────────────────────────────── */
@@ -781,7 +811,18 @@ export default {
 }
 
 /* Actions */
-.gd-actions {}
+.gd-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.gd-action-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
 
 .gd-store-btn {
   display: inline-block;

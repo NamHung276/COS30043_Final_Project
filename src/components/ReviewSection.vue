@@ -204,14 +204,14 @@ export default {
 
     <div class="d-flex justify-content-between align-items-center mb-3">
       <div class="section-header mb-0">
-        <span class="section-icon">💬</span>
+        <span class="section-icon"><i class="bi bi-chat-left-text-fill"></i></span>
         <h3 class="mb-0">
           Reviews ({{ reviews.length }})
         </h3>
       </div>
 
       <span v-if="reviews.length" class="text-muted" style="font-size: 0.9rem;">
-        ⭐ {{ averageRating }} average
+        <i class="bi bi-star-fill text-warning me-1"></i>{{ averageRating }} average
       </span>
     </div>
 
@@ -241,7 +241,7 @@ export default {
               class="star"
               @click="setNewRating(star)"
             >
-              {{ star <= newRating ? '⭐' : '☆' }}
+              <i :class="star <= newRating ? 'bi bi-star-fill text-warning' : 'bi bi-star'"></i>
             </span>
           </div>
         </div>
@@ -271,7 +271,8 @@ export default {
           :disabled="submitting"
           @click="submitReview"
         >
-          {{ submitting ? 'Submitting...' : '📝 Submit Review' }}
+          <template v-if="submitting">Submitting...</template>
+          <template v-else><i class="bi bi-pencil-square me-1"></i>Submit Review</template>
         </button>
       </div>
     </div>
@@ -295,7 +296,7 @@ export default {
       v-else-if="reviews.length === 0"
       class="empty-state" style="padding: 30px 20px;"
     >
-      <div class="empty-state-icon" style="font-size: 2.5rem;">💬</div>
+      <div class="empty-state-icon"><i class="bi bi-chat-left-dots" style="font-size:2.5rem;"></i></div>
       <h3 style="font-size: 1.1rem;">No reviews yet</h3>
       <p style="font-size: 0.9rem;">Be the first to share your thoughts!</p>
     </div>
@@ -321,7 +322,7 @@ export default {
                 class="star"
                 @click="setEditRating(star)"
               >
-                {{ star <= editRating ? '⭐' : '☆' }}
+                <i :class="star <= editRating ? 'bi bi-star-fill text-warning' : 'bi bi-star'"></i>
               </span>
             </div>
           </div>
@@ -338,7 +339,7 @@ export default {
               class="btn btn-success btn-sm"
               @click="saveEdit(review.id)"
             >
-              💾 Save
+              <i class="bi bi-floppy me-1"></i>Save
             </button>
             <button
               class="btn btn-outline-secondary btn-sm"
@@ -358,7 +359,9 @@ export default {
               <strong>{{ review.userName }}</strong>
 
               <span class="text-warning ms-2">
-                {{ '⭐'.repeat(review.rating) }}
+                <template v-for="s in review.rating" :key="s">
+                  <i class="bi bi-star-fill"></i>
+                </template>
               </span>
 
               <div
@@ -375,14 +378,16 @@ export default {
               <button
                 class="btn btn-outline-secondary btn-sm"
                 @click="startEdit(review)"
+                aria-label="Edit review"
               >
-                ✏️
+                <i class="bi bi-pencil"></i>
               </button>
               <button
                 class="btn btn-outline-danger btn-sm"
                 @click="deleteReview(review.id)"
+                aria-label="Delete review"
               >
-                🗑️
+                <i class="bi bi-trash"></i>
               </button>
             </div>
           </div>

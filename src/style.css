@@ -260,6 +260,36 @@ a:hover {
   background: var(--bg-glass-hover);
 }
 
+/* Dropdown items with icon badges */
+.nav-dd-item {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px !important;
+  font-size: 0.88rem !important;
+  font-weight: 500;
+  color: rgba(255,255,255,0.8) !important;
+  transition: all 0.18s ease !important;
+}
+.nav-dd-item:hover {
+  color: #fff !important;
+  background: rgba(255,255,255,0.07) !important;
+}
+.nav-dd-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px; height: 26px;
+  border-radius: 7px;
+  flex-shrink: 0;
+  color: #fff;
+}
+.nav-dd-icon-purple { background: linear-gradient(135deg, #5b21b6, #7c3aed); box-shadow: 0 2px 8px rgba(124,58,237,0.4); }
+.nav-dd-icon-green  { background: linear-gradient(135deg, #065f46, #10b981); box-shadow: 0 2px 8px rgba(16,185,129,0.4); }
+.nav-dd-icon-amber  { background: linear-gradient(135deg, #92400e, #f59e0b); box-shadow: 0 2px 8px rgba(245,158,11,0.4); }
+.nav-dd-icon-cyan   { background: linear-gradient(135deg, #0e7490, #06b6d4); box-shadow: 0 2px 8px rgba(6,182,212,0.4); }
+.nav-dd-icon-violet { background: linear-gradient(135deg, #4c1d95, #8b5cf6); box-shadow: 0 2px 8px rgba(139,92,246,0.4); }
+
 /* Navbar user avatar circle */
 .nav-user-avatar {
   display: inline-flex;

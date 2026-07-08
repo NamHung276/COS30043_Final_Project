@@ -102,7 +102,7 @@ export default {
   <div class="container py-4">
 
     <div class="section-header">
-      <span class="section-icon">✏️</span>
+      <span class="section-icon"><i class="bi bi-pencil-square"></i></span>
       <h1 class="mb-0">Submit a News Article</h1>
     </div>
 
@@ -125,7 +125,7 @@ export default {
                 for="title"
                 class="form-label"
               >
-                📝 Title
+                <i class="bi bi-type me-1"></i>Title
               </label>
               <input
                 id="title"
@@ -149,7 +149,7 @@ export default {
                 for="category"
                 class="form-label"
               >
-                🏷️ Category
+                <i class="bi bi-tags me-1"></i>Category
               </label>
               <select
                 id="category"
@@ -172,7 +172,7 @@ export default {
                 for="image"
                 class="form-label"
               >
-                🖼️ Image URL (optional)
+                <i class="bi bi-image me-1"></i>Image URL (optional)
               </label>
               <input
                 id="image"
@@ -191,7 +191,7 @@ export default {
                 for="content"
                 class="form-label"
               >
-                📄 Content
+                <i class="bi bi-file-text me-1"></i>Content
               </label>
               <textarea
                 id="content"
@@ -219,7 +219,8 @@ export default {
                 :disabled="submitting"
                 @click="submitArticle"
               >
-                {{ submitting ? 'Publishing...' : '🚀 Publish Article' }}
+                <template v-if="submitting">Publishing...</template>
+                <template v-else><i class="bi bi-send me-1"></i>Publish Article</template>
               </button>
 
               <router-link
@@ -239,7 +240,7 @@ export default {
       <div class="col-md-5">
         <div class="card sticky-top" style="top: 80px;">
           <div class="card-body text-start">
-            <h6 class="text-muted mb-3">👁️ Live Preview</h6>
+            <h6 class="text-muted mb-3"><i class="bi bi-eye me-1"></i>Live Preview</h6>
 
             <div v-if="title || content" class="card" style="border: 1px solid var(--border-subtle);">
               <div

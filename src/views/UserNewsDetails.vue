@@ -139,7 +139,7 @@ export default {
       <div v-if="editing" class="card auth-card">
         <div class="card-body text-start p-4">
 
-          <h4 class="mb-3">✏️ Edit Article</h4>
+          <h4 class="mb-3"><i class="bi bi-pencil me-2"></i>Edit Article</h4>
 
           <div class="mb-3">
             <label class="form-label">Title</label>
@@ -182,7 +182,8 @@ export default {
               :disabled="saving"
               @click="saveEdit"
             >
-              {{ saving ? 'Saving...' : '💾 Save Changes' }}
+              <template v-if="saving">Saving...</template>
+              <template v-else><i class="bi bi-floppy me-1"></i>Save Changes</template>
             </button>
             <button
               class="btn btn-outline-secondary"
@@ -211,7 +212,7 @@ export default {
             >
               <div class="d-flex gap-2 mb-2">
                 <span class="badge bg-secondary">
-                  👤 Community Post
+                  <i class="bi bi-person me-1"></i>Community Post
                 </span>
                 <span class="badge bg-primary">
                   {{ article.category }}
@@ -245,13 +246,13 @@ export default {
             class="btn btn-outline-secondary"
             @click="startEdit"
           >
-            ✏️ Edit
+            <i class="bi bi-pencil me-1"></i>Edit
           </button>
           <button
             class="btn btn-outline-danger"
             @click="deleteArticle"
           >
-            🗑️ Delete
+            <i class="bi bi-trash me-1"></i>Delete
           </button>
         </div>
 

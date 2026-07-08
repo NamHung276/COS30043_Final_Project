@@ -1,4 +1,3 @@
-// src/views/GameHubNews.vue
 <script>
 import newsData from '../data/news.json'
 import LikeButton from '../components/LikeButton.vue'
@@ -11,37 +10,52 @@ export default {
 
   data() {
     return {
-      staticNews: [],     // read-only articles from news.json
-      userNews: [],       // user-submitted articles from Firestore
+      staticNews: [],
+      userNews: [],
       currentUser: null,
       searchTerm: '',
       selectedCategory: 'All',
       currentPage: 1,
-      itemsPerPage: 5,
-      loadingUserNews: true
+      itemsPerPage: 6,
+      loadingUserNews: true,
+      expandedCategory: null
     }
   },
 
   mounted() {
-    onAuthStateChanged(auth, (user) => {
-      this.currentUser = user
-    })
-
+    onAuthStateChanged(auth, (user) => { this.currentUser = user })
     this.loadStaticNews()
     this.loadUserNews()
   },
 
   computed: {
-    // Combine both sources into one list for display
     allNews() {
       return [...this.userNews, ...this.staticNews]
     },
 
+    // Featured story (first in list)
+    featuredStory() {
+      return this.allNews[0] || null
+    },
+
+    // Top trending stories
+    trendingStories() {
+      return this.allNews.slice(1, 8)
+    },
+
+    // All categories
     categories() {
-      return [
-        'All',
-        ...new Set(this.allNews.map(item => item.category))
-      ]
+      const cats = new Set(this.allNews.map(item => item.category))
+      return Array.from(cats).sort()
+    },
+
+    // News by category
+    newsByCategory() {
+      const result = {}
+      this.categories.forEach(cat => {
+        result[cat] = this.allNews.filter(item => item.category === cat)
+      })
+      return result
     },
 
     filteredNews() {
@@ -52,41 +66,30 @@ export default {
           item.content.toLowerCase().includes(term) ||
           item.category.toLowerCase().includes(term) ||
           item.date.includes(term)
-
         const matchesCategory =
-          this.selectedCategory === 'All' ||
-          item.category === this.selectedCategory
-
+          this.selectedCategory === 'All' || item.category === this.selectedCategory
         return matchesSearch && matchesCategory
       })
     },
 
     totalPages() {
-      return Math.ceil(
-        this.filteredNews.length / this.itemsPerPage
-      )
+      return Math.ceil(this.filteredNews.length / this.itemsPerPage)
     },
 
     paginatedNews() {
       const start = (this.currentPage - 1) * this.itemsPerPage
-      const end = start + this.itemsPerPage
-      return this.filteredNews.slice(start, end)
+      return this.filteredNews.slice(start, start + this.itemsPerPage)
     }
   },
 
   watch: {
-    searchTerm() {
-      this.currentPage = 1
-    },
-    selectedCategory() {
-      this.currentPage = 1
-    }
+    searchTerm() { this.currentPage = 1 },
+    selectedCategory() { this.currentPage = 1 }
   },
 
   methods: {
     loadStaticNews() {
       const savedNews = localStorage.getItem('gamehubNews')
-
       if (savedNews) {
         this.staticNews = JSON.parse(savedNews)
       } else {
@@ -94,13 +97,10 @@ export default {
         localStorage.setItem('gamehubNews', JSON.stringify(newsData))
       }
     },
-
     async loadUserNews() {
       this.loadingUserNews = true
-
       try {
         const snapshot = await getDocs(collection(db, 'news'))
-
         this.userNews = snapshot.docs.map(docSnap => ({
           id: docSnap.id,
           isUserPost: true,
@@ -112,262 +112,582 @@ export default {
         this.loadingUserNews = false
       }
     },
-
     goToPage(page) {
       if (page >= 1 && page <= this.totalPages) {
         this.currentPage = page
         window.scrollTo({ top: 0, behavior: 'smooth' })
       }
     },
-
-    getCategoryColor(category) {
-      switch(category) {
-        case 'FPS':
-          return 'bg-danger'
-        case 'MOBA':
-          return 'bg-success'
-        case 'RPG':
-          return 'bg-warning text-dark'
-        case 'MMO':
-          return 'bg-info text-dark'
-        default:
-          return 'bg-primary'
-      }
+    toggleCategory(category) {
+      this.expandedCategory = this.expandedCategory === category ? null : category
     },
-
-    // Builds the correct detail link depending on article source
+    getCategoryColor(category) {
+      const map = {
+        'FPS': { bg: 'rgba(239,68,68,0.15)', text: '#fca5a5', border: 'rgba(239,68,68,0.3)' },
+        'MOBA': { bg: 'rgba(16,185,129,0.15)', text: '#6ee7b7', border: 'rgba(16,185,129,0.3)' },
+        'RPG': { bg: 'rgba(245,158,11,0.15)', text: '#fde68a', border: 'rgba(245,158,11,0.3)' },
+        'MMO': { bg: 'rgba(6,182,212,0.15)', text: '#67e8f9', border: 'rgba(6,182,212,0.3)' },
+      }
+      return map[category] || { bg: 'rgba(124,58,237,0.15)', text: '#c4b5fd', border: 'rgba(124,58,237,0.3)' }
+    },
+    getCategoryEmoji(category) {
+      const map = {
+        'FPS': '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="1"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>',
+        'MOBA': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.46 15.46 2 4"/><polyline points="13.46 15.46 17 19 2 4"/></svg>',
+        'RPG': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
+        'MMO': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>',
+        'Esports': '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 5 18 12 6 19 6 5"/></svg>',
+        'Strategy': '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08s5.97 1.09 6 3.08c-1.29 1.94-3.5 3.22-6 3.22z"/></svg>',
+      }
+      return map[category] || '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>'
+    },
     detailLink(item) {
-      return item.isUserPost
-        ? `/gamehub-news/user/${item.id}`
-        : `/gamehub-news/${item.id}`
+      return item.isUserPost ? `/gamehub-news/user/${item.id}` : `/gamehub-news/${item.id}`
     }
   }
 }
 </script>
 
 <template>
-  <div class="container py-4">
-
-    <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
-      <div>
-        <div class="section-header mb-1">
-          <span class="section-icon">📰</span>
-          <h1 class="mb-0">GameHub News</h1>
-        </div>
-      </div>
-
-      <router-link
-        to="/gamehub-news/create"
-        class="btn btn-primary"
-      >
-        ✏️ Post Article
-      </router-link>
-    </div>
-
-    <p class="lead text-muted">
-      Discover gaming updates, esports stories,
-      game launches, and industry news.
-    </p>
-
-    <!-- Search and Filter -->
-    <div class="row mb-4 g-3">
-      <div class="col-md-8">
-        <input
-          v-model="searchTerm"
-          type="text"
-          class="form-control"
-          placeholder="🔍 Search by title, content, category or date..."
-        >
-      </div>
-      <div class="col-md-4">
-        <select
-          v-model="selectedCategory"
-          class="form-select"
-        >
-          <option
-            v-for="category in categories"
-            :key="category"
-            :value="category"
-          >
-            {{ category }}
-          </option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Total Results -->
-    <p class="text-muted mb-4" style="font-size: 0.85rem;">
-      Showing {{ filteredNews.length }} articles
-    </p>
-
-    <!-- Featured Article -->
-    <div
-      v-if="allNews.length"
-      class="card mb-5 featured-news overflow-hidden"
-    >
-      <div style="position: relative;">
-        <img
-          v-lazy-img="allNews[0].image"
-          :alt="allNews[0].title"
-          class="card-img-top"
-          style="height:400px;object-fit:cover;"
-        >
-        <div
-          style="position: absolute; bottom: 0; left: 0; right: 0; padding: 32px; background: linear-gradient(transparent, rgba(7,11,20,0.9));"
-        >
-          <div class="d-flex gap-2 mb-2 flex-wrap">
-            <span class="badge" style="background: var(--danger);">
-              ⚡ Featured Story
-            </span>
-            <span
-              v-if="allNews[0].isUserPost"
-              class="badge bg-secondary"
-            >
-              👤 Community Post
-            </span>
-          </div>
-
-          <h2 class="mb-2" style="text-shadow: 0 2px 8px rgba(0,0,0,0.5);">
-            {{ allNews[0].title }}
-          </h2>
-
-          <p class="mb-3 text-muted" style="max-width: 600px;">
-            {{ allNews[0].content.substring(0, 200) }}...
-          </p>
-
-          <div class="d-flex align-items-center gap-2 flex-wrap">
-            <router-link
-              :to="detailLink(allNews[0])"
-              class="btn btn-primary"
-            >
-              Read Full Story →
-            </router-link>
-
-            <LikeButton :article-id="allNews[0].id" />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- No Results -->
-    <div
-      v-if="filteredNews.length === 0"
-      class="empty-state"
-    >
-      <div class="empty-state-icon">📰</div>
-      <h3>No news found</h3>
-      <p>Try adjusting your search or category filter.</p>
-    </div>
-
-    <!-- News List -->
-    <div
-      v-for="(item, index) in paginatedNews"
-      :key="item.id"
-      class="card mb-4 news-card stagger-item"
-      :style="{ animationDelay: `${index * 0.06}s` }"
-    >
-      <div class="row g-0">
-        <div class="col-md-3">
-          <img
-            v-lazy-img="item.image"
-            :alt="item.title"
-            class="img-fluid rounded-start h-100 w-100"
-            style="object-fit: cover; min-height: 180px;"
-          >
-        </div>
-        <div class="col-md-9">
-          <div class="card-body text-start">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-              <div class="d-flex gap-2 flex-wrap">
-                <span
-                  class="badge"
-                  :class="getCategoryColor(item.category)"
-                >
-                  {{ item.category }}
-                </span>
-                <span
-                  v-if="item.isUserPost"
-                  class="badge bg-secondary"
-                >
-                  👤 Community
-                </span>
-              </div>
-              <small class="text-muted">
-                {{ item.date }}
-              </small>
-            </div>
-            <h5 class="card-title">
-              {{ item.title }}
-            </h5>
-            <p class="card-text text-muted" style="font-size: 0.9rem;">
-              {{ item.content.substring(0, 120) }}...
+  <div class="ghn-page">
+    <!-- ══ Header ══ -->
+    <div class="ghn-page-header">
+      <div class="ghn-header-bg" aria-hidden="true"></div>
+      <div class="container ghn-header-content">
+        <div class="ghn-title-row">
+          <span class="ghn-title-icon" aria-hidden="true">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+          </span>
+          <div style="flex:1">
+            <h1 class="ghn-title">GameHub News</h1>
+            <p class="ghn-subtitle">
+              Gaming updates, esports stories, launches &amp; industry news
             </p>
+          </div>
+          <router-link to="/gamehub-news/create" class="ghn-post-btn" aria-label="Post a new article">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Post Article
+          </router-link>
+        </div>
 
-            <div class="d-flex align-items-center gap-2 flex-wrap">
-              <router-link
-                :to="detailLink(item)"
-                class="btn btn-outline-primary btn-sm"
-              >
-                Read More →
-              </router-link>
-
-              <LikeButton :article-id="item.id" />
-            </div>
+        <!-- Search Bar -->
+        <div class="ghn-filter-panel">
+          <div class="ghn-search-wrap">
+            <img src="/logo/search.svg" class="ghn-search-icon" width="16" height="16" alt="" aria-hidden="true">
+            <input v-model="searchTerm" type="text" class="ghn-search-input" placeholder="Search by title, content, category or date…" aria-label="Search GameHub news">
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Pagination -->
-    <nav v-if="totalPages > 1">
-      <ul class="pagination justify-content-center">
+    <!-- ══ Content ══ -->
+    <div class="container ghn-content">
+      <!-- TOP STORIES FEATURED CARD -->
+      <section v-if="featuredStory" class="ghn-featured-section">
+        <router-link :to="detailLink(featuredStory)" class="ghn-featured-card" :aria-label="`Read featured: ${featuredStory.title}`">
+          <div class="ghn-featured-img-wrap">
+            <img v-lazy-img="featuredStory.image" :alt="featuredStory.title" class="ghn-featured-img">
+            <div class="ghn-featured-overlay"></div>
+          </div>
+          <div class="ghn-featured-content">
+            <div class="ghn-featured-badges">
+              <span class="ghn-featured-label">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
+                Top Story
+              </span>
+              <span v-if="featuredStory.isUserPost" class="ghn-community-badge">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                Community
+              </span>
+              <span class="ghn-cat-pill" :style="{ background: getCategoryColor(featuredStory.category).bg, color: getCategoryColor(featuredStory.category).text, border: `1px solid ${getCategoryColor(featuredStory.category).border}` }">
+                <span v-html="getCategoryEmoji(featuredStory.category)" style="display: inline-block; margin-right: 6px;"></span>{{ featuredStory.category }}
+              </span>
+            </div>
+            <h2 class="ghn-featured-title">{{ featuredStory.title }}</h2>
+            <p class="ghn-featured-excerpt">{{ featuredStory.content.substring(0, 200) }}…</p>
+            <div class="ghn-featured-footer">
+              <span class="ghn-featured-date">{{ featuredStory.date }}</span>
+              <span class="ghn-read-cta">
+                Read Full Story
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </span>
+            </div>
+          </div>
+        </router-link>
+        <div class="ghn-featured-like">
+          <LikeButton :article-id="featuredStory.id" />
+        </div>
+      </section>
 
-        <li
-          class="page-item"
-          :class="{ disabled: currentPage === 1 }"
-        >
-          <button
-            class="page-link"
-            @click="goToPage(currentPage - 1)"
-          >
-            ← Previous
+      <!-- SEARCH/FILTER RESULTS -->
+      <section v-if="searchTerm || (selectedCategory !== 'All')" class="ghn-section">
+        <div class="ghn-section-header">
+          <h2 class="ghn-section-title">
+            <span v-if="searchTerm" class="ghn-section-label">Search Results: "{{ searchTerm }}"</span>
+            <span v-else class="ghn-section-label">{{ selectedCategory }} News</span>
+          </h2>
+          <span class="ghn-section-count">{{ filteredNews.length }} articles</span>
+        </div>
+
+        <div v-if="filteredNews.length === 0" class="ghn-state">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" style="opacity:0.3"><path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8L2 8v12a2 2 0 002 2z"/><path d="M8 2v6H2"/><line x1="12" y1="11" x2="16" y2="11"/></svg>
+          <h3>No articles found</h3>
+          <p>Try adjusting your search or category filter.</p>
+        </div>
+
+        <div v-else class="ghn-list">
+          <div v-for="(item, idx) in paginatedNews" :key="item.id" class="ghn-list-card stagger-item" :style="{ animationDelay: `${idx * 0.05}s` }">
+            <router-link :to="detailLink(item)" class="ghn-list-img-link" :aria-label="`Read: ${item.title}`">
+              <div class="ghn-list-img-wrap">
+                <img v-lazy-img="item.image" :alt="item.title" class="ghn-list-img">
+                <div class="ghn-list-img-overlay"></div>
+              </div>
+            </router-link>
+            <div class="ghn-list-content">
+              <div class="ghn-list-meta">
+                <span class="ghn-cat-pill" :style="{ background: getCategoryColor(item.category).bg, color: getCategoryColor(item.category).text, border: `1px solid ${getCategoryColor(item.category).border}` }">
+                  <span v-html="getCategoryEmoji(item.category)" style="display: inline-block; margin-right: 6px;"></span>{{ item.category }}
+                </span>
+                <span v-if="item.isUserPost" class="ghn-community-badge">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  Community
+                </span>
+                <span class="ghn-list-date">{{ item.date }}</span>
+              </div>
+              <router-link :to="detailLink(item)" class="ghn-list-title-link">
+                <h3 class="ghn-list-title">{{ item.title }}</h3>
+              </router-link>
+              <p class="ghn-list-excerpt">{{ item.content.substring(0, 160) }}…</p>
+              <div class="ghn-list-footer">
+                <router-link :to="detailLink(item)" class="ghn-read-btn" :aria-label="`Read more: ${item.title}`">
+                  Read More
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </router-link>
+                <LikeButton :article-id="item.id" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <nav v-if="totalPages > 1" class="ghn-pagination" aria-label="GameHub news pagination">
+          <button class="ghn-page-btn" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">
+            <img src="/logo/arrow-left.svg" width="15" height="15" alt="" aria-hidden="true">
+            Previous
           </button>
-        </li>
-
-        <li
-          v-for="page in totalPages"
-          :key="page"
-          class="page-item"
-          :class="{ active: currentPage === page }"
-        >
-          <button
-            class="page-link"
-            @click="goToPage(page)"
-          >
-            {{ page }}
+          <div class="ghn-page-numbers">
+            <button v-for="page in totalPages" :key="page" class="ghn-page-num" :class="{ active: currentPage === page }" @click="goToPage(page)">{{ page }}</button>
+          </div>
+          <button class="ghn-page-btn" :disabled="currentPage === totalPages" @click="goToPage(currentPage + 1)">
+            Next
+            <img src="/logo/arrow-right.svg" width="15" height="15" alt="" aria-hidden="true">
           </button>
-        </li>
+        </nav>
+      </section>
 
-        <li
-          class="page-item"
-          :class="{ disabled: currentPage === totalPages }"
-        >
-          <button
-            class="page-link"
-            @click="goToPage(currentPage + 1)"
-          >
-            Next →
+      <!-- TRENDING STORIES -->
+      <section v-if="!searchTerm && selectedCategory === 'All' && trendingStories.length" class="ghn-section">
+        <div class="ghn-section-header">
+          <h2 class="ghn-section-title">
+            <span class="ghn-section-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"/></svg></span> Trending Now
+          </h2>
+          <span class="ghn-section-count">{{ trendingStories.length }} stories</span>
+        </div>
+        <div class="ghn-trending-list">
+          <router-link v-for="(article, idx) in trendingStories.slice(0, 7)" :key="article.id" :to="detailLink(article)" class="ghn-trending-item stagger-item" :style="{ animationDelay: `${idx * 0.04}s` }">
+            <div class="ghn-trending-num">{{ idx + 1 }}</div>
+            <div class="ghn-trending-body">
+              <div class="ghn-trending-category"><span v-html="getCategoryEmoji(article.category)" style="display: inline-block; margin-right: 6px;"></span>{{ article.category }}</div>
+              <h4 class="ghn-trending-title">{{ article.title }}</h4>
+              <div class="ghn-trending-meta">
+                <span class="ghn-trending-date">{{ article.date }}</span>
+                <span v-if="article.isUserPost" class="ghn-trending-community">Community</span>
+              </div>
+            </div>
+            <svg class="ghn-trending-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </router-link>
+        </div>
+      </section>
+
+      <!-- CATEGORIES BROWSER -->
+      <section v-if="!searchTerm && selectedCategory === 'All' && categories.length" class="ghn-section">
+        <div class="ghn-section-header">
+          <h2 class="ghn-section-title">
+            <span class="ghn-section-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></span> Browse by Category
+          </h2>
+        </div>
+        <div class="ghn-categories-grid">
+          <button v-for="cat in categories" :key="cat" type="button" class="ghn-category-btn" :class="{ expanded: expandedCategory === cat }" @click="toggleCategory(cat)">
+            <span class="ghn-cat-icon" v-html="getCategoryEmoji(cat)"></span>
+            <span class="ghn-cat-title">{{ cat }}</span>
+            <span class="ghn-cat-count">{{ newsByCategory[cat]?.length || 0 }}</span>
+            <svg class="ghn-cat-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
-        </li>
+        </div>
 
-      </ul>
-    </nav>
-
-    <!-- Page Info -->
-    <p class="text-center text-muted mt-2" style="font-size: 0.85rem;">
-      Page {{ currentPage }} of {{ totalPages }}
-      · {{ filteredNews.length }} articles
-    </p>
-
+        <!-- Expanded Category -->
+        <div v-if="expandedCategory && newsByCategory[expandedCategory]" class="ghn-category-expanded">
+          <div class="ghn-expanded-header">
+            <h3 class="ghn-expanded-title"><span v-html="getCategoryEmoji(expandedCategory)" style="display: inline-block; margin-right: 8px;"></span>{{ expandedCategory }} Stories</h3>
+            <span class="ghn-expanded-count">{{ newsByCategory[expandedCategory].length }} stories</span>
+          </div>
+          <div class="ghn-expanded-cards">
+              <div v-for="(item, idx) in newsByCategory[expandedCategory]" :key="item.id" class="ghn-list-card stagger-item" :style="{ animationDelay: `${(idx % 20) * 0.02}s` }">
+              <router-link :to="detailLink(item)" class="ghn-list-img-link" :aria-label="`Read: ${item.title}`">
+                <div class="ghn-list-img-wrap">
+                  <img v-lazy-img="item.image" :alt="item.title" class="ghn-list-img">
+                  <div class="ghn-list-img-overlay"></div>
+                </div>
+              </router-link>
+              <div class="ghn-list-content">
+                <div class="ghn-list-meta">
+                  <span class="ghn-cat-pill" :style="{ background: getCategoryColor(item.category).bg, color: getCategoryColor(item.category).text, border: `1px solid ${getCategoryColor(item.category).border}` }">
+                    {{ item.category }}
+                  </span>
+                  <span v-if="item.isUserPost" class="ghn-community-badge">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Community
+                  </span>
+                  <span class="ghn-list-date">{{ item.date }}</span>
+                </div>
+                <router-link :to="detailLink(item)" class="ghn-list-title-link">
+                  <h3 class="ghn-list-title">{{ item.title }}</h3>
+                </router-link>
+                <p class="ghn-list-excerpt">{{ item.content.substring(0, 160) }}…</p>
+                <div class="ghn-list-footer">
+                  <router-link :to="detailLink(item)" class="ghn-read-btn" :aria-label="`Read more: ${item.title}`">
+                    Read More
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                  </router-link>
+                  <LikeButton :article-id="item.id" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   </div>
 </template>
+
+<style scoped>
+/* ── Page ─────────────────────────────────────────── */
+.ghn-page { min-height: 100vh; background: var(--bg-deep); }
+
+/* ── Header ───────────────────────────────────────── */
+.ghn-page-header { position: relative; background: var(--bg-base); border-bottom: 1px solid var(--border-glass); overflow: hidden; }
+.ghn-header-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 65% 120% at 90% 50%, rgba(139,92,246,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 80% at 10% 80%, rgba(6,182,212,0.05) 0%, transparent 60%);
+  pointer-events: none;
+}
+.ghn-header-content { position: relative; z-index: 1; padding-top: 40px; padding-bottom: 0; }
+
+/* Title */
+.ghn-title-row { display: flex; align-items: flex-start; gap: 18px; margin-bottom: 20px; }
+.ghn-title-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 54px; height: 54px; border-radius: 16px; flex-shrink: 0; margin-top: 2px;
+  background: linear-gradient(135deg, #4c1d95, #7c3aed);
+  color: #fff; box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+}
+.ghn-title { font-size: 2.1rem; font-weight: 800; color: #f0f4ff !important; margin: 0 0 6px; line-height: 1; }
+.ghn-subtitle { font-size: 0.85rem; color: #8b9cc8 !important; margin: 0; }
+
+/* Post button */
+.ghn-post-btn {
+  display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;
+  padding: 10px 20px; border-radius: 10px; border: none;
+  background: var(--gradient-primary); color: #fff !important;
+  font-size: 0.88rem; font-weight: 700; font-family: var(--font-family);
+  text-decoration: none; cursor: pointer; transition: opacity 0.2s, transform 0.2s;
+  box-shadow: 0 4px 16px rgba(124,58,237,0.4);
+  align-self: center;
+}
+.ghn-post-btn:hover { opacity: 0.88; transform: translateY(-1px); color: #fff !important; }
+
+/* Filter panel */
+.ghn-filter-panel {
+  background: rgba(15,23,42,0.6); border: 1px solid var(--border-glass); border-bottom: none;
+  border-radius: 14px 14px 0 0; padding: 18px 24px;
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.ghn-search-wrap { position: relative; width: 100%; }
+.ghn-search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; opacity: 0.6; }
+.ghn-search-input {
+  width: 100%; background: rgba(15,23,42,0.7); border: 1px solid var(--border-glass);
+  border-radius: var(--radius-sm); color: #f0f4ff !important; padding: 10px 14px 10px 38px;
+  font-size: 0.88rem; font-family: var(--font-family); outline: none; transition: border-color 0.2s;
+}
+.ghn-search-input::placeholder { color: #4a5580; }
+.ghn-search-input:focus { border-color: var(--primary-light); }
+
+/* ── Content ──────────────────────────────────────── */
+.ghn-content { padding-top: 24px; padding-bottom: 60px; }
+
+/* ── Section ──────────────────────────────────────── */
+.ghn-section { margin-bottom: 52px; }
+.ghn-section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid rgba(124,58,237,0.2);
+}
+.ghn-section-title {
+  font-size: 1.6rem; font-weight: 800; color: #f0f4ff !important; margin: 0;
+  display: flex; align-items: center; gap: 10px;
+}
+.ghn-section-label { font-size: 1rem; font-weight: 600; }
+.ghn-section-icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; color: #7c3aed; }
+.ghn-section-icon svg { width: 28px; height: 28px; stroke-width: 2; }
+.ghn-section-count {
+  font-size: 0.8rem; padding: 4px 12px; border-radius: 20px;
+  background: rgba(124,58,237,0.15); color: #c4b5fd !important;
+  font-weight: 600;
+}
+
+/* ── FEATURED SECTION ─────────────────────────────── */
+.ghn-featured-section {
+  position: relative; border-radius: 18px; overflow: hidden;
+  border: 1px solid rgba(124,58,237,0.25); margin-bottom: 48px;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.ghn-featured-section:hover {
+  box-shadow: 0 20px 60px rgba(124,58,237,0.2);
+  border-color: rgba(124,58,237,0.45);
+}
+
+.ghn-featured-card { display: block; text-decoration: none; position: relative; }
+.ghn-featured-img-wrap { height: 420px; overflow: hidden; }
+.ghn-featured-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s ease; }
+.ghn-featured-section:hover .ghn-featured-img { transform: scale(1.04); }
+.ghn-featured-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(5,8,20,0.95) 0%, rgba(5,8,20,0.3) 50%, transparent 80%);
+}
+
+.ghn-featured-content {
+  position: absolute; bottom: 0; left: 0; right: 0; padding: 32px 36px 28px;
+}
+.ghn-featured-badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.ghn-featured-label {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--gradient-primary); color: #fff !important;
+  font-size: 0.72rem; font-weight: 700; padding: 4px 12px; border-radius: 20px;
+  letter-spacing: 0.3px;
+}
+.ghn-community-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(100,116,139,0.25); border: 1px solid rgba(100,116,139,0.4);
+  color: #94a3b8 !important; font-size: 0.7rem; font-weight: 600; padding: 3px 10px; border-radius: 20px;
+}
+.ghn-cat-pill {
+  display: inline-block; font-size: 0.7rem; font-weight: 700; padding: 3px 10px;
+  border-radius: 20px; letter-spacing: 0.3px;
+}
+.ghn-featured-title {
+  font-size: 1.85rem; font-weight: 800; color: #fff !important; margin: 0 0 12px;
+  line-height: 1.25; text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.ghn-featured-excerpt {
+  font-size: 0.88rem; color: rgba(255,255,255,0.65) !important; line-height: 1.6;
+  margin: 0 0 16px; max-width: 680px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.ghn-featured-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ghn-featured-date { font-size: 0.75rem; color: rgba(255,255,255,0.45) !important; }
+.ghn-read-cta {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.85rem; font-weight: 700; color: #fff !important;
+  padding: 8px 20px; border-radius: 30px;
+  background: var(--gradient-primary); box-shadow: 0 4px 16px rgba(124,58,237,0.4);
+  transition: opacity 0.2s;
+}
+.ghn-featured-section:hover .ghn-read-cta { opacity: 0.88; }
+.ghn-featured-like { position: absolute; top: 16px; right: 16px; z-index: 2; }
+
+/* ── TRENDING LIST ────────────────────────────────── */
+.ghn-trending-list { display: flex; flex-direction: column; gap: 12px; }
+.ghn-trending-item {
+  display: flex; align-items: center; gap: 14px; padding: 14px; text-decoration: none;
+  border-radius: 10px; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(15,23,42,0.4);
+}
+.ghn-trending-item:hover {
+  background: rgba(15,23,42,0.6); border-color: rgba(124,58,237,0.2); transform: translateX(6px);
+}
+.ghn-trending-num {
+  font-size: 1.4rem; font-weight: 900; color: #7c3aed !important; min-width: 30px; text-align: center;
+}
+.ghn-trending-body { flex: 1; min-width: 0; }
+.ghn-trending-category {
+  font-size: 0.68rem; font-weight: 700; color: #7c3aed !important; text-transform: uppercase;
+  letter-spacing: 0.3px; margin-bottom: 3px;
+}
+.ghn-trending-title {
+  font-size: 0.98rem; font-weight: 700; color: #f0f4ff !important; margin: 0 0 6px;
+  line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ghn-trending-meta {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.ghn-trending-date {
+  font-size: 0.7rem; color: #4a5580 !important;
+}
+.ghn-trending-community {
+  font-size: 0.68rem; font-weight: 600; color: #94a3b8 !important;
+  padding: 2px 6px; border-radius: 4px; background: rgba(100,116,139,0.2);
+}
+.ghn-trending-arrow {
+  color: #7c3aed; opacity: 0; transition: opacity 0.2s; flex-shrink: 0;
+}
+.ghn-trending-item:hover .ghn-trending-arrow { opacity: 1; }
+
+/* ── CATEGORIES ───────────────────────────────────── */
+.ghn-categories-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;
+}
+.ghn-category-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;
+  padding: 12px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(15,23,42,0.5); color: #8b9cc8 !important;
+  font-size: 0.85rem; font-weight: 600; font-family: var(--font-family); cursor: pointer;
+  transition: all 0.2s;
+}
+.ghn-category-btn:hover {
+  background: rgba(15,23,42,0.8); border-color: rgba(124,58,237,0.2);
+}
+.ghn-category-btn.expanded {
+  background: rgba(124,58,237,0.15); border-color: rgba(124,58,237,0.4); color: #c4b5fd !important;
+}
+.ghn-cat-icon { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; color: currentColor; }
+.ghn-cat-icon svg { width: 20px; height: 20px; stroke-width: 2; }
+.ghn-cat-title { flex: 1; text-align: left; }
+.ghn-cat-count {
+  font-size: 0.72rem; padding: 2px 6px; border-radius: 4px;
+  background: rgba(124,58,237,0.15); color: #c4b5fd !important;
+}
+.ghn-cat-chevron { transition: transform 0.2s; flex-shrink: 0; }
+.ghn-category-btn.expanded .ghn-cat-chevron { transform: scaleY(-1); }
+
+/* Expanded Category */
+.ghn-category-expanded {
+  margin-top: 28px; padding: 20px; border-radius: 12px;
+  background: rgba(15,23,42,0.4); border: 1px solid rgba(124,58,237,0.15);
+  animation: slideDown 0.3s ease;
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.ghn-expanded-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(124,58,237,0.2);
+}
+.ghn-expanded-title {
+  font-size: 1.1rem; font-weight: 700; color: #f0f4ff !important; margin: 0;
+}
+.ghn-expanded-count {
+  font-size: 0.75rem; padding: 3px 10px; border-radius: 20px;
+  background: rgba(124,58,237,0.15); color: #c4b5fd !important; font-weight: 600;
+}
+.ghn-expanded-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
+
+/* ── State ────────────────────────────────────────── */
+.ghn-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; min-height: 200px; gap: 12px; color: #6b7fa8 !important;
+}
+.ghn-state h3 { color: #f0f4ff !important; font-size: 1.2rem; margin: 0; }
+.ghn-state p { color: #6b7fa8 !important; font-size: 0.88rem; margin: 0; }
+
+/* ── LIST ─────────────────────────────────────────── */
+.ghn-list { display: flex; flex-direction: column; gap: 16px; }
+.ghn-list-card {
+  display: flex; gap: 0; border-radius: 14px; overflow: hidden;
+  background: rgba(15,23,42,0.55); border: 1px solid rgba(255,255,255,0.07);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.ghn-list-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 36px rgba(124,58,237,0.15), 0 4px 16px rgba(0,0,0,0.3);
+  border-color: rgba(124,58,237,0.25);
+}
+
+/* Image */
+.ghn-list-img-link { flex-shrink: 0; width: 240px; }
+.ghn-list-img-wrap { position: relative; height: 100%; min-height: 180px; overflow: hidden; }
+.ghn-list-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s ease; }
+.ghn-list-card:hover .ghn-list-img { transform: scale(1.05); }
+.ghn-list-img-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to right, transparent 60%, rgba(10,15,30,0.5) 100%);
+  pointer-events: none;
+}
+
+/* Content */
+.ghn-list-content { flex: 1; padding: 20px 22px; display: flex; flex-direction: column; gap: 10px; }
+.ghn-list-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ghn-list-date { font-size: 0.72rem; color: #4a5580 !important; margin-left: auto; }
+.ghn-list-title-link { text-decoration: none; }
+.ghn-list-title {
+  font-size: 1.08rem; font-weight: 700; color: #f0f4ff !important; margin: 0;
+  line-height: 1.4; transition: color 0.2s;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.ghn-list-title-link:hover .ghn-list-title { color: #c4b5fd !important; }
+.ghn-list-excerpt {
+  font-size: 0.83rem; color: #6b7fa8 !important; line-height: 1.65; flex: 1; margin: 0;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.ghn-list-footer { display: flex; align-items: center; gap: 12px; margin-top: auto; }
+.ghn-read-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.8rem; font-weight: 700; color: #8b9cc8 !important;
+  text-decoration: none; transition: color 0.2s; padding: 0;
+}
+.ghn-list-card:hover .ghn-read-btn { color: #c4b5fd !important; }
+
+/* ── Pagination ───────────────────────────────────── */
+.ghn-pagination { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 32px 0 8px; flex-wrap: wrap; }
+.ghn-page-btn {
+  display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px;
+  border-radius: 8px; border: 1px solid var(--border-glass);
+  background: rgba(15,23,42,0.6); color: #8b9cc8 !important;
+  font-size: 0.83rem; font-weight: 600; font-family: var(--font-family); cursor: pointer; transition: all 0.2s;
+}
+.ghn-page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.ghn-page-btn:not(:disabled):hover { border-color: rgba(124,58,237,0.4); color: #c4b5fd !important; }
+.ghn-page-numbers { display: flex; align-items: center; gap: 4px; }
+.ghn-page-num {
+  width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border-glass);
+  background: rgba(15,23,42,0.5); color: #8b9cc8 !important;
+  font-size: 0.83rem; font-weight: 600; font-family: var(--font-family); cursor: pointer; transition: all 0.18s;
+}
+.ghn-page-num:hover { border-color: rgba(124,58,237,0.35); color: #c4b5fd !important; }
+.ghn-page-num.active {
+  background: var(--gradient-primary); border-color: transparent; color: #fff !important;
+  box-shadow: 0 2px 12px rgba(124,58,237,0.4);
+}
+.ghn-page-info { text-align: center; font-size: 0.78rem; color: #4a5580 !important; margin: 8px 0 0; }
+
+/* ── Stagger Animation ────────────────────────────── */
+.stagger-item {
+  animation: fadeInUp 0.5s ease both;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .ghn-list-img-link { width: 140px; }
+  .ghn-featured-title { font-size: 1.4rem; }
+  .ghn-featured-img-wrap { height: 280px; }
+  .ghn-post-btn span { display: none; }
+}
+</style>

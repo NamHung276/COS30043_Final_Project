@@ -121,8 +121,8 @@ export default {
     :disabled="loading"
     @click.stop="toggleLike"
   >
-    <span v-if="isLiked">❤️</span>
-    <span v-else>🤍</span>
+    <span v-if="isLiked"><i class="bi bi-heart-fill"></i></span>
+    <span v-else><i class="bi bi-heart"></i></span>
     {{ likeCount }}
   </button>
 </template>

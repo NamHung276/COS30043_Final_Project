@@ -3,7 +3,7 @@
   <footer class="footer mt-5 py-4">
     <div class="container text-center">
 
-      <h5>🎮 GameHub</h5>
+      <h5><i class="bi bi-controller me-2"></i>GameHub</h5>
 
       <p class="mb-3" style="max-width: 480px; margin: 0 auto 16px; color: var(--text-secondary);">
         Discover free-to-play games and stay updated with gaming news.

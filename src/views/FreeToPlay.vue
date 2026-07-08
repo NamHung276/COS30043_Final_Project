@@ -3,7 +3,6 @@
 import { freeToGameApi } from '../api'
 import SkeletonCard from '../components/SkeletonCard.vue'
 
-// All FreeToGame supported categories
 const ALL_CATEGORIES = [
   'mmorpg','shooter','strategy','moba','racing','sports','social',
   'sandbox','open-world','survival','pvp','pve','pixel','voxel',
@@ -22,30 +21,19 @@ export default {
       games: [],
       loading: false,
       error: null,
-
-      // API-level filters
       platform: 'all',
       category: '',
       sortBy: 'relevance',
-
-      // Multi-tag mode (uses /filter endpoint)
       selectedTags: [],
       tagMode: false,
-
-      // Client-side search (FreeToGame has no search endpoint)
       searchTerm: '',
-
-      // Pagination
       currentPage: 1,
       itemsPerPage: 12,
-
-      // Constants
       allCategories: ALL_CATEGORIES
     }
   },
 
   computed: {
-    // Apply client-side text search on top of API results
     filteredGames() {
       const term = this.searchTerm.toLowerCase().trim()
       if (!term) return this.games
@@ -54,16 +42,13 @@ export default {
         (g.short_description || '').toLowerCase().includes(term)
       )
     },
-
     totalPages() {
       return Math.ceil(this.filteredGames.length / this.itemsPerPage)
     },
-
     paginatedGames() {
       const start = (this.currentPage - 1) * this.itemsPerPage
       return this.filteredGames.slice(start, start + this.itemsPerPage)
     },
-
     visiblePages() {
       const total = this.totalPages
       const pages = []
@@ -80,8 +65,6 @@ export default {
       }
       return pages
     },
-
-    // Shows the active filter summary under the panel
     activeSummary() {
       const parts = []
       if (this.tagMode && this.selectedTags.length)
@@ -101,9 +84,19 @@ export default {
 
   methods: {
     platformIcon(platform) {
-      if (!platform) return '🎮'
-      if (platform.toLowerCase().includes('browser')) return '🌐'
-      return '💻'
+      if (!platform) return '/logo/pc.svg'
+      if (platform.toLowerCase().includes('browser')) return null // use inline SVG
+      return '/logo/pc.svg'
+    },
+
+    isBrowser(platform) {
+      return platform && platform.toLowerCase().includes('browser')
+    },
+
+    platformLabel(platform) {
+      if (!platform) return 'PC'
+      if (platform.toLowerCase().includes('browser')) return 'Browser'
+      return 'PC (Windows)'
     },
 
     goToPage(page) {
@@ -134,16 +127,13 @@ export default {
       this.currentPage = 1
       try {
         let data
-
         if (this.tagMode && this.selectedTags.length) {
-          // ── Multi-tag filter endpoint ──
           const params = { tag: this.selectedTags.join('.') }
           if (this.platform !== 'all') params.platform = this.platform
           if (this.sortBy !== 'relevance') params.sort = this.sortBy
           const res = await freeToGameApi.get('/filter', { params })
           data = res.data
         } else {
-          // ── Standard games list endpoint ──
           const params = {}
           if (this.platform !== 'all') params.platform = this.platform
           if (this.category) params.category = this.category
@@ -151,7 +141,6 @@ export default {
           const res = await freeToGameApi.get('/games', { params })
           data = res.data
         }
-
         this.games = Array.isArray(data) ? data : []
       } catch (err) {
         console.error(err)
@@ -163,346 +152,725 @@ export default {
     }
   },
 
-  mounted() {
-    this.fetchGames()
-  }
+  mounted() { this.fetchGames() }
 }
 </script>
 
 <template>
-  <div class="container py-4">
+  <div class="ftg-page">
 
-    <!-- Header -->
-    <div class="section-header">
-      <span class="section-icon">🆓</span>
-      <h1 class="mb-0">Free to Play</h1>
-    </div>
-    <p class="text-muted mb-4">
-      {{ games.length > 0 ? filteredGames.length.toLocaleString() + ' games' : 'Loading games…' }}
-      — browser &amp; PC titles, no cost required.
-      <span style="opacity:0.6;">(Powered by FreeToGame)</span>
-    </p>
-
-    <!-- ══ Filter Panel ═══════════════════════════════════════════════ -->
-    <div class="card ftg-filter-panel mb-3">
-      <div class="card-body">
-
-        <!-- Row 1: Search + Platform + Sort -->
-        <div class="row g-3 mb-3">
-
-          <div class="col-md-4">
-            <label class="filter-label">🔍 Search</label>
-            <input
-              v-model="searchTerm"
-              type="text"
-              class="form-control"
-              placeholder="Search by title or description…"
-            >
+    <!-- ══ Page Header ══ -->
+    <div class="ftg-page-header">
+      <div class="ftg-header-bg" aria-hidden="true"></div>
+      <div class="container ftg-header-content">
+        <div class="ftg-title-row">
+          <span class="ftg-title-icon" aria-hidden="true">
+            <img src="/logo/gamepad.svg" width="28" height="28" alt="">
+          </span>
+          <div>
+            <h1 class="ftg-title">Free to Play</h1>
+            <p class="ftg-subtitle">
+              <strong>{{ filteredGames.length.toLocaleString() }}</strong> browser &amp; PC titles — no cost required
+              <span class="ftg-powered">· Powered by FreeToGame</span>
+            </p>
           </div>
+        </div>
 
-          <div class="col-md-3">
-            <label class="filter-label">🖥️ Platform</label>
-            <div class="btn-group w-100" role="group" aria-label="Platform filter">
+        <!-- ══ Filter Panel ══ -->
+        <div class="ftg-filter-panel">
+
+          <!-- Row 1: Search + Platform + Sort + Clear -->
+          <div class="ftg-filter-row">
+
+            <!-- Search -->
+            <div class="ftg-search-wrap">
+              <img src="/logo/search.svg" class="ftg-search-icon" width="16" height="16" alt="" aria-hidden="true">
+              <input
+                v-model="searchTerm"
+                type="text"
+                class="ftg-search-input"
+                placeholder="Search by title or description…"
+                aria-label="Search free-to-play games"
+              >
+            </div>
+
+            <!-- Platform tabs -->
+            <div class="ftg-platform-group" role="group" aria-label="Platform filter">
               <button
                 v-for="p in ['all','windows','browser']"
                 :key="p"
                 type="button"
-                class="btn btn-sm"
-                :class="platform === p ? 'btn-primary' : 'btn-outline-secondary'"
+                class="ftg-platform-btn"
+                :class="{ active: platform === p }"
                 @click="platform = p; fetchGames()"
               >
-                {{ p === 'all' ? '🌍 All' : p === 'windows' ? '💻 Windows' : '🌐 Browser' }}
+                <img
+                  v-if="p === 'windows'"
+                  src="/logo/pc.svg"
+                  width="14" height="14" alt="Windows" class="ftg-platform-btn-icon"
+                >
+                <svg v-else-if="p === 'browser'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ftg-platform-btn-icon" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <span>{{ p === 'all' ? 'All' : p === 'windows' ? 'Windows' : 'Browser' }}</span>
               </button>
             </div>
-          </div>
 
-          <div class="col-md-3">
-            <label class="filter-label">📊 Sort By</label>
-            <select
-              v-model="sortBy"
-              class="form-select"
-              @change="fetchGames()"
-            >
-              <option value="relevance">🔥 Relevance</option>
-              <option value="popularity">👥 Popularity</option>
-              <option value="release-date">📅 Release Date</option>
-              <option value="alphabetical">🔤 Alphabetical</option>
+            <!-- Sort -->
+            <select v-model="sortBy" class="ftg-sort-select" @change="fetchGames()" aria-label="Sort games by">
+              <option value="relevance">Relevance</option>
+              <option value="popularity">Popularity</option>
+              <option value="release-date">Release Date</option>
+              <option value="alphabetical">Alphabetical</option>
             </select>
-          </div>
 
-          <div class="col-md-2 d-flex flex-column justify-content-end">
-            <button
-              class="btn btn-outline-danger btn-sm"
-              @click="clearFilters"
-              title="Reset all filters"
-            >
-              ✕ Clear
+            <!-- Clear -->
+            <button class="ftg-clear-btn" @click="clearFilters" title="Reset all filters" aria-label="Clear filters">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              Clear
             </button>
           </div>
 
-        </div>
-
-        <!-- Row 2: Category OR Multi-tag toggle -->
-        <div class="row g-3 align-items-start">
-
-          <!-- Mode toggle -->
-          <div class="col-12 mb-1">
-            <div class="d-flex align-items-center gap-3">
-              <span class="filter-label mb-0">Filter Mode:</span>
-              <div class="form-check form-switch mb-0">
+          <!-- Row 2: Mode toggle + Category / Tag Cloud -->
+          <div class="ftg-filter-row-2">
+            <div class="ftg-mode-toggle">
+              <span class="ftg-filter-label">Filter Mode:</span>
+              <label class="ftg-switch-label">
                 <input
-                  class="form-check-input"
                   type="checkbox"
+                  class="ftg-switch-input"
                   id="tagModeSwitch"
                   v-model="tagMode"
                   @change="selectedTags = []; category = ''; fetchGames()"
                 >
-                <label class="form-check-label" for="tagModeSwitch" style="font-size:0.85rem;">
-                  {{ tagMode ? '🏷️ Multi-tag mode' : '📂 Category mode' }}
-                </label>
-              </div>
+                <span class="ftg-switch-track"></span>
+                <span class="ftg-switch-text">{{ tagMode ? 'Multi-tag mode' : 'Category mode' }}</span>
+              </label>
             </div>
-          </div>
 
-          <!-- Category mode -->
-          <div class="col-md-5" v-if="!tagMode">
-            <label class="filter-label">📂 Category</label>
-            <select
-              v-model="category"
-              class="form-select"
-              @change="fetchGames()"
-            >
-              <option value="">All Categories</option>
-              <option
-                v-for="cat in allCategories"
-                :key="cat"
-                :value="cat"
-              >
-                {{ cat.charAt(0).toUpperCase() + cat.slice(1).replace(/-/g, ' ') }}
-              </option>
-            </select>
-          </div>
+            <!-- Category dropdown -->
+            <div v-if="!tagMode" class="ftg-category-wrap">
+              <span class="ftg-filter-label">Category</span>
+              <select v-model="category" class="ftg-sort-select" @change="fetchGames()" aria-label="Filter by category">
+                <option value="">All Categories</option>
+                <option v-for="cat in allCategories" :key="cat" :value="cat">
+                  {{ cat.charAt(0).toUpperCase() + cat.slice(1).replace(/-/g, ' ') }}
+                </option>
+              </select>
+            </div>
 
-          <!-- Multi-tag mode -->
-          <div class="col-12" v-else>
-            <label class="filter-label">
-              🏷️ Tags
-              <span class="text-muted" style="font-size:0.75rem; font-weight:400;">
-                (select multiple — uses FreeToGame /filter endpoint)
-              </span>
-            </label>
-            <div class="ftg-tag-cloud">
-              <button
-                v-for="tag in allCategories"
-                :key="tag"
-                type="button"
-                class="ftg-tag-chip"
-                :class="{ active: selectedTags.includes(tag) }"
-                @click="toggleTag(tag); fetchGames()"
-              >
-                {{ tag }}
-              </button>
+            <!-- Multi-tag cloud -->
+            <div v-else class="ftg-tag-wrap">
+              <span class="ftg-filter-label">Tags <small class="ftg-tag-hint">(select multiple)</small></span>
+              <div class="ftg-tag-cloud">
+                <button
+                  v-for="tag in allCategories"
+                  :key="tag"
+                  type="button"
+                  class="ftg-tag-chip"
+                  :class="{ active: selectedTags.includes(tag) }"
+                  @click="toggleTag(tag); fetchGames()"
+                >
+                  {{ tag }}
+                </button>
+              </div>
             </div>
           </div>
 
         </div>
 
+        <!-- Active summary + result count -->
+        <div class="ftg-summary-row">
+          <span class="ftg-summary-text">{{ activeSummary }}</span>
+          <span v-if="!loading" class="ftg-results-badge">{{ filteredGames.length }} results</span>
+        </div>
       </div>
     </div>
 
-    <!-- Active filter summary -->
-    <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
-      <small class="text-muted ftg-summary">{{ activeSummary }}</small>
-      <span v-if="!loading" class="badge ms-auto" style="background:var(--gradient-primary);">
-        {{ filteredGames.length }} results
-      </span>
-    </div>
+    <!-- ══ Content Area ══ -->
+    <div class="container ftg-content">
 
-    <!-- Skeleton Loading -->
-    <div v-if="loading" class="row">
-      <div class="col-md-4 mb-4" v-for="n in 12" :key="n">
-        <SkeletonCard />
+      <!-- Skeleton Loading -->
+      <div v-if="loading" class="ftg-grid">
+        <SkeletonCard v-for="n in 12" :key="n" />
       </div>
-    </div>
 
-    <!-- Error -->
-    <div v-else-if="error" class="alert alert-danger">{{ error }}</div>
+      <!-- Error -->
+      <div v-else-if="error" class="ftg-error">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+        <h3>Something went wrong</h3>
+        <p>{{ error }}</p>
+        <button class="ftg-primary-btn" @click="fetchGames()">Try Again</button>
+      </div>
 
-    <!-- Empty State -->
-    <div v-else-if="filteredGames.length === 0" class="empty-state">
-      <div class="empty-state-icon">🔍</div>
-      <h3>No games found</h3>
-      <p>Try adjusting your filters or clearing the search term.</p>
-      <button class="btn btn-primary" @click="clearFilters">Clear All Filters</button>
-    </div>
+      <!-- Empty State -->
+      <div v-else-if="filteredGames.length === 0" class="ftg-empty">
+        <img src="/logo/search.svg" width="60" height="60" alt="" aria-hidden="true" style="opacity:0.35;">
+        <h3>No games found</h3>
+        <p>Try adjusting your filters or clearing the search term.</p>
+        <button class="ftg-primary-btn" @click="clearFilters">Clear All Filters</button>
+      </div>
 
-    <!-- Games Grid -->
-    <div v-else class="row">
-      <div
-        class="col-md-4 mb-4"
-        v-for="(game, index) in paginatedGames"
-        :key="game.id"
-      >
-        <router-link :to="`/free-to-play/${game.id}`" class="text-decoration-none">
-          <div
-            class="card h-100 ftg-card stagger-item"
-            :style="{ animationDelay: `${(index % 12) * 0.04}s` }"
-          >
+      <!-- Games Grid -->
+      <div v-else class="ftg-grid">
+        <router-link
+          v-for="(game, index) in paginatedGames"
+          :key="game.id"
+          :to="`/free-to-play/${game.id}`"
+          class="ftg-card stagger-item"
+          :style="{ animationDelay: `${(index % 12) * 0.04}s` }"
+          :aria-label="`View details for ${game.title}`"
+        >
+          <!-- Thumbnail -->
+          <div class="ftg-card-img-wrap">
+            <img
+              v-lazy-img="game.thumbnail"
+              class="ftg-card-img"
+              :alt="`${game.title} thumbnail`"
+            >
+            <div class="ftg-card-img-overlay" aria-hidden="true"></div>
 
-            <!-- Thumbnail -->
-            <div style="position:relative; overflow:hidden;">
-              <img
-                v-lazy-img="game.thumbnail"
-                class="card-img-top"
-                :alt="`${game.title} thumbnail`"
-                style="height:180px; object-fit:cover;"
-              >
-              <span class="ftg-free-badge">FREE</span>
-              <span
-                class="badge"
-                style="position:absolute; bottom:8px; left:8px; background:rgba(0,0,0,0.7); font-size:0.7rem;"
-              >
-                {{ platformIcon(game.platform) }} {{ game.platform }}
+            <!-- FREE badge -->
+            <span class="ftg-free-badge">FREE</span>
+
+            <!-- Platform badge -->
+            <span class="ftg-platform-badge">
+              <svg v-if="isBrowser(game.platform)" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              <img v-else :src="platformIcon(game.platform)" width="11" height="11" :alt="platformLabel(game.platform)">
+              {{ platformLabel(game.platform) }}
+            </span>
+          </div>
+
+          <!-- Card Body -->
+          <div class="ftg-card-body">
+            <h3 class="ftg-card-title">{{ game.title }}</h3>
+
+            <p class="ftg-card-desc">{{ game.short_description }}</p>
+
+            <div class="ftg-card-footer">
+              <span class="ftg-genre-tag">{{ game.genre }}</span>
+              <span class="ftg-details-link">
+                Details
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
               </span>
             </div>
-
-            <div class="card-body d-flex flex-column">
-              <h5 class="card-title" style="font-size:0.95rem; line-height:1.35;">
-                {{ game.title }}
-              </h5>
-
-              <p
-                class="card-text text-muted mb-3"
-                style="font-size:0.82rem; flex:1; display:-webkit-box; line-clamp:2; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;"
-              >
-                {{ game.short_description }}
-              </p>
-
-              <div class="d-flex align-items-center justify-content-between">
-                <span class="badge bg-primary" style="font-size:0.7rem;">
-                  {{ game.genre }}
-                </span>
-                <span class="btn btn-sm ftg-play-btn" style="font-size:0.75rem; padding:3px 12px;">
-                  See Details →
-                </span>
-              </div>
-            </div>
-
           </div>
         </router-link>
       </div>
+
+      <!-- Pagination -->
+      <nav v-if="!loading && totalPages > 1" class="ftg-pagination" aria-label="Free-to-play games pagination">
+        <button class="ftg-page-btn" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">
+          <img src="/logo/arrow-left.svg" width="15" height="15" alt="" aria-hidden="true">
+          Previous
+        </button>
+        <div class="ftg-page-numbers">
+          <template v-for="(page, index) in visiblePages" :key="index">
+            <span v-if="page === '...'" class="ftg-page-ellipsis">&#8230;</span>
+            <button v-else class="ftg-page-num-btn" :class="{ active: currentPage === page }" @click="goToPage(page)">{{ page }}</button>
+          </template>
+        </div>
+        <button class="ftg-page-btn" :disabled="currentPage === totalPages" @click="goToPage(currentPage + 1)">
+          Next
+          <img src="/logo/arrow-right.svg" width="15" height="15" alt="" aria-hidden="true">
+        </button>
+      </nav>
+
+      <p v-if="!loading && totalPages > 1" class="ftg-page-info">
+        Page {{ currentPage }} of {{ totalPages }} · {{ filteredGames.length }} games shown
+      </p>
+
     </div>
-
-    <!-- Pagination -->
-    <nav v-if="!loading && totalPages > 1">
-      <ul class="pagination justify-content-center">
-        <li class="page-item" :class="{ disabled: currentPage === 1 }">
-          <button class="page-link" @click="goToPage(currentPage - 1)">← Previous</button>
-        </li>
-        <li
-          v-for="(page, i) in visiblePages"
-          :key="i"
-          class="page-item"
-          :class="{ active: currentPage === page }"
-        >
-          <span v-if="page === '...'" class="page-link">...</span>
-          <button v-else class="page-link" @click="goToPage(page)">{{ page }}</button>
-        </li>
-        <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-          <button class="page-link" @click="goToPage(currentPage + 1)">Next →</button>
-        </li>
-      </ul>
-    </nav>
-
-    <p v-if="!loading && totalPages > 1" class="text-center text-muted mt-2" style="font-size:0.85rem;">
-      Showing {{ paginatedGames.length }} of {{ filteredGames.length }} games
-    </p>
-
   </div>
 </template>
 
 <style scoped>
-/* Filter panel */
-.ftg-filter-panel {
-  border: 1px solid var(--border-glass, rgba(255,255,255,0.1));
+/* ── Page ─────────────────────────────────────────── */
+.ftg-page { min-height: 100vh; background: var(--bg-deep); }
+
+/* ── Header ───────────────────────────────────────── */
+.ftg-page-header {
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--border-glass);
 }
-.filter-label {
-  display: block;
-  font-size: 0.78rem;
-  color: var(--text-muted, #94a3b8);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 6px;
+.ftg-header-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 120% at 90% 50%, rgba(16,185,129,0.07) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 80% at 10% 80%, rgba(124,58,237,0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+.ftg-header-content {
+  position: relative;
+  z-index: 1;
+  padding-top: 40px;
+  padding-bottom: 0;
 }
 
+/* Title row */
+.ftg-title-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+.ftg-title-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px; height: 54px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #059669, #10b981);
+  flex-shrink: 0;
+  box-shadow: 0 4px 20px rgba(16,185,129,0.4);
+}
+.ftg-title {
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: #f0f4ff !important;
+  margin: 0 0 4px;
+  line-height: 1;
+}
+.ftg-subtitle {
+  font-size: 0.85rem;
+  color: #8b9cc8 !important;
+  margin: 0;
+}
+.ftg-subtitle strong { color: #f0f4ff !important; }
+.ftg-powered { opacity: 0.55; }
+
+/* ── Filter Panel ─────────────────────────────────── */
+.ftg-filter-panel {
+  background: rgba(15,23,42,0.6);
+  border: 1px solid var(--border-glass);
+  border-bottom: none;
+  border-radius: 14px 14px 0 0;
+  padding: 20px 24px 16px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  margin-bottom: 0;
+}
+
+.ftg-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.ftg-filter-row-2 {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.ftg-filter-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #6b7fa8 !important;
+  margin-bottom: 8px;
+}
+
+/* Search */
+.ftg-search-wrap { flex: 1; min-width: 200px; position: relative; }
+.ftg-search-icon {
+  position: absolute;
+  left: 13px; top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  opacity: 0.6;
+}
+.ftg-search-input {
+  width: 100%;
+  background: rgba(15,23,42,0.7);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-sm);
+  color: #f0f4ff !important;
+  padding: 10px 14px 10px 38px;
+  font-size: 0.88rem;
+  font-family: var(--font-family);
+  outline: none;
+  transition: border-color 0.2s;
+}
+.ftg-search-input::placeholder { color: #4a5580; }
+.ftg-search-input:focus { border-color: var(--primary-light); }
+
+/* Platform buttons */
+.ftg-platform-group { display: flex; gap: 6px; }
+.ftg-platform-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-glass);
+  background: rgba(15,23,42,0.6);
+  color: #8b9cc8 !important;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.ftg-platform-btn:hover { border-color: rgba(16,185,129,0.4); color: #6ee7b7 !important; }
+.ftg-platform-btn.active {
+  background: linear-gradient(135deg, #059669, #10b981);
+  border-color: transparent;
+  color: #fff !important;
+  box-shadow: 0 2px 14px rgba(16,185,129,0.35);
+}
+.ftg-platform-btn-icon { filter: brightness(0.7); transition: filter 0.2s; }
+.ftg-platform-btn:hover .ftg-platform-btn-icon,
+.ftg-platform-btn.active .ftg-platform-btn-icon { filter: brightness(1.2); }
+
+/* Sort select */
+.ftg-sort-select {
+  background: rgba(15,23,42,0.7);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-sm);
+  color: #f0f4ff !important;
+  padding: 9px 14px;
+  font-size: 0.88rem;
+  font-family: var(--font-family);
+  outline: none;
+  cursor: pointer;
+  min-width: 150px;
+  transition: border-color 0.2s;
+}
+.ftg-sort-select:focus { border-color: var(--primary-light); }
+
+/* Clear button */
+.ftg-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(239,68,68,0.3);
+  background: rgba(239,68,68,0.08);
+  color: #f87171 !important;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.ftg-clear-btn:hover { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.5); }
+
+/* Mode toggle (custom switch) */
+.ftg-mode-toggle { display: flex; align-items: center; gap: 12px; padding-top: 4px; }
+.ftg-switch-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+.ftg-switch-input { display: none; }
+.ftg-switch-track {
+  width: 38px; height: 20px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid var(--border-glass);
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.ftg-switch-track::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: #6b7fa8;
+  transition: transform 0.2s, background 0.2s;
+}
+.ftg-switch-input:checked + .ftg-switch-track {
+  background: linear-gradient(135deg, #059669, #10b981);
+  border-color: transparent;
+}
+.ftg-switch-input:checked + .ftg-switch-track::after {
+  transform: translateX(18px);
+  background: #fff;
+}
+.ftg-switch-text { font-size: 0.82rem; color: #8b9cc8 !important; font-weight: 500; }
+
+/* Category wrap */
+.ftg-category-wrap { display: flex; flex-direction: column; }
+
 /* Tag cloud */
+.ftg-tag-wrap { flex: 1; display: flex; flex-direction: column; }
+.ftg-tag-hint { color: #4a5580 !important; font-size: 0.72rem; font-weight: 400; }
 .ftg-tag-cloud {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  max-height: 140px;
+  max-height: 110px;
   overflow-y: auto;
   padding: 4px 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(16,185,129,0.3) transparent;
 }
 .ftg-tag-chip {
-  padding: 3px 12px;
+  padding: 4px 12px;
   border-radius: 20px;
-  font-size: 0.75rem;
-  border: 1px solid var(--border-glass, rgba(255,255,255,0.15));
-  background: var(--bg-glass, rgba(255,255,255,0.05));
-  color: var(--text-muted, #94a3b8);
+  font-size: 0.74rem;
+  border: 1px solid var(--border-glass);
+  background: rgba(15,23,42,0.5);
+  color: #8b9cc8 !important;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.15s;
   white-space: nowrap;
+  font-family: var(--font-family);
 }
-.ftg-tag-chip:hover {
-  border-color: var(--accent-primary, #6366f1);
-  color: #fff;
-}
+.ftg-tag-chip:hover { border-color: rgba(16,185,129,0.4); color: #6ee7b7 !important; }
 .ftg-tag-chip.active {
-  background: var(--gradient-primary, linear-gradient(135deg, #6366f1, #8b5cf6));
+  background: linear-gradient(135deg, #059669, #10b981);
   border-color: transparent;
-  color: #fff;
+  color: #fff !important;
   font-weight: 600;
 }
 
-/* Active summary */
-.ftg-summary {
-  font-size: 0.8rem;
-  opacity: 0.75;
-  font-style: italic;
+/* Summary row */
+.ftg-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 24px;
+  background: rgba(15,23,42,0.4);
+  border: 1px solid var(--border-glass);
+  border-top: none;
+  border-radius: 0 0 0 0;
+  margin-bottom: 0;
+}
+.ftg-summary-text { font-size: 0.78rem; color: #4a5580 !important; font-style: italic; }
+.ftg-results-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 20px;
+  background: var(--gradient-primary);
+  color: #fff !important;
+  letter-spacing: 0.3px;
 }
 
-/* Cards */
+/* ── Content ──────────────────────────────────────── */
+.ftg-content { padding-top: 28px; padding-bottom: 60px; }
+
+/* ── Grid ─────────────────────────────────────────── */
+.ftg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 22px;
+}
+
+/* ── Game Card ────────────────────────────────────── */
 .ftg-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  background: rgba(15,23,42,0.55);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px;
+  overflow: hidden;
+  text-decoration: none;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 .ftg-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 16px 48px rgba(16,185,129,0.18), 0 4px 20px rgba(0,0,0,0.4);
+  border-color: rgba(16,185,129,0.3);
 }
 
+/* Image */
+.ftg-card-img-wrap { position: relative; overflow: hidden; height: 190px; flex-shrink: 0; }
+.ftg-card-img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.35s ease;
+}
+.ftg-card:hover .ftg-card-img { transform: scale(1.06); }
+.ftg-card-img-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(10,15,30,0.75) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+/* FREE badge */
 .ftg-free-badge {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background: linear-gradient(135deg, #4ade80, #16a34a);
-  color: #fff;
-  font-weight: 700;
-  font-size: 0.72rem;
-  padding: 3px 9px;
+  top: 10px; right: 10px;
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #fff !important;
+  font-weight: 800;
+  font-size: 0.67rem;
+  padding: 3px 10px;
   border-radius: 20px;
-  letter-spacing: 0.8px;
-  box-shadow: 0 2px 8px rgba(74,222,128,0.45);
+  letter-spacing: 1px;
+  box-shadow: 0 2px 10px rgba(16,185,129,0.5);
 }
 
-.ftg-play-btn {
-  background: var(--gradient-primary, linear-gradient(135deg, #6366f1, #8b5cf6));
-  color: #fff;
-  border: none;
+/* Platform badge on image */
+.ftg-platform-badge {
+  position: absolute;
+  bottom: 10px; left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(5,10,25,0.75);
+  border: 1px solid rgba(255,255,255,0.1);
+  backdrop-filter: blur(6px);
+  color: rgba(255,255,255,0.85) !important;
+  font-size: 0.67rem;
+  font-weight: 600;
+  padding: 3px 8px;
   border-radius: 20px;
+}
+
+/* Card body */
+.ftg-card-body { padding: 14px 16px 16px; display: flex; flex-direction: column; flex: 1; }
+.ftg-card-title {
+  font-size: 0.97rem;
+  font-weight: 700;
+  color: #f0f4ff !important;
+  margin: 0 0 8px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ftg-card-desc {
+  font-size: 0.79rem;
+  color: #6b7fa8 !important;
+  line-height: 1.6;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.ftg-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ftg-genre-tag {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(16,185,129,0.12);
+  border: 1px solid rgba(16,185,129,0.25);
+  color: #6ee7b7 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 130px;
+}
+.ftg-details-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #8b9cc8 !important;
+  transition: color 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.ftg-card:hover .ftg-details-link { color: #6ee7b7 !important; }
+
+/* ── Error ────────────────────────────────────────── */
+.ftg-error, .ftg-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 300px;
+  gap: 12px;
+  color: #6b7fa8 !important;
+}
+.ftg-error svg, .ftg-empty img { opacity: 0.4; }
+.ftg-error h3, .ftg-empty h3 { color: #f0f4ff !important; font-size: 1.2rem; margin: 0; }
+.ftg-error p, .ftg-empty p { color: #6b7fa8 !important; font-size: 0.88rem; margin: 0; }
+
+/* Primary action button */
+.ftg-primary-btn {
+  margin-top: 8px;
+  padding: 10px 24px;
+  border-radius: 30px;
+  border: none;
+  background: var(--gradient-primary);
+  color: #fff !important;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: var(--font-family);
+  cursor: pointer;
   transition: opacity 0.2s;
 }
-.ftg-play-btn:hover { opacity: 0.85; color: #fff; }
+.ftg-primary-btn:hover { opacity: 0.85; }
+
+/* ── Pagination ───────────────────────────────────── */
+.ftg-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 0 8px;
+  flex-wrap: wrap;
+}
+.ftg-page-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--border-glass);
+  background: rgba(15,23,42,0.6);
+  color: #8b9cc8 !important;
+  font-size: 0.83rem;
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ftg-page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.ftg-page-btn:not(:disabled):hover { border-color: rgba(16,185,129,0.4); color: #6ee7b7 !important; }
+.ftg-page-numbers { display: flex; align-items: center; gap: 4px; }
+.ftg-page-num-btn {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border-glass);
+  background: rgba(15,23,42,0.5);
+  color: #8b9cc8 !important;
+  font-size: 0.83rem;
+  font-weight: 600;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.ftg-page-num-btn:hover { border-color: rgba(16,185,129,0.35); color: #6ee7b7 !important; }
+.ftg-page-num-btn.active {
+  background: linear-gradient(135deg, #059669, #10b981);
+  border-color: transparent;
+  color: #fff !important;
+  box-shadow: 0 2px 12px rgba(16,185,129,0.4);
+}
+.ftg-page-ellipsis { color: #4a5580 !important; padding: 0 4px; font-size: 0.88rem; }
+.ftg-page-info { text-align: center; font-size: 0.78rem; color: #4a5580 !important; margin: 8px 0 0; }
 </style>

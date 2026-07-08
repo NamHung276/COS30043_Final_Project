@@ -169,7 +169,7 @@ export default {
     <!-- Page Header -->
     <div class="admin-header mb-4">
       <div class="d-flex align-items-center gap-3 flex-wrap">
-        <div class="admin-header-icon">🛡️</div>
+        <div class="admin-header-icon"><i class="bi bi-shield-fill"></i></div>
         <div>
           <h1 class="mb-0" style="font-size: 1.8rem;">Admin Dashboard</h1>
           <p class="text-muted mb-0" style="font-size: 0.88rem;">
@@ -187,7 +187,7 @@ export default {
         @click="activeTab = 'overview'"
         id="tab-overview"
       >
-        📊 Overview
+        <i class="bi bi-bar-chart me-1"></i>Overview
       </button>
       <button
         class="admin-tab-btn"
@@ -195,7 +195,7 @@ export default {
         @click="activeTab = 'users'"
         id="tab-users"
       >
-        👥 Users
+        <i class="bi bi-people me-1"></i>Users
         <span v-if="totalUsers > 0" class="admin-tab-count">{{ totalUsers }}</span>
       </button>
       <button
@@ -204,7 +204,7 @@ export default {
         @click="activeTab = 'content'"
         id="tab-content"
       >
-        📰 Content
+        <i class="bi bi-newspaper me-1"></i>Content
         <span v-if="totalPosts > 0" class="admin-tab-count">{{ totalPosts }}</span>
       </button>
     </div>
@@ -218,7 +218,7 @@ export default {
       <div class="row g-4 mb-5">
         <div class="col-6 col-md-3">
           <div class="card admin-stat-card" style="--stat-accent: #3b82f6;">
-            <div class="admin-stat-icon" style="background: rgba(59,130,246,0.15); color: #60a5fa;">👥</div>
+            <div class="admin-stat-icon" style="background: rgba(59,130,246,0.15); color: #60a5fa;"><i class="bi bi-people"></i></div>
             <div class="admin-stat-number" style="background: linear-gradient(135deg, #3b82f6, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
               <span v-if="loadingUsers" class="admin-stat-skeleton"></span>
               <template v-else>{{ totalUsers }}</template>
@@ -228,7 +228,7 @@ export default {
         </div>
         <div class="col-6 col-md-3">
           <div class="card admin-stat-card" style="--stat-accent: #8b5cf6;">
-            <div class="admin-stat-icon" style="background: rgba(139,92,246,0.15); color: #a78bfa;">📰</div>
+            <div class="admin-stat-icon" style="background: rgba(139,92,246,0.15); color: #a78bfa;"><i class="bi bi-newspaper"></i></div>
             <div class="admin-stat-number" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
               <span v-if="loadingPosts" class="admin-stat-skeleton"></span>
               <template v-else>{{ totalPosts }}</template>
@@ -238,7 +238,7 @@ export default {
         </div>
         <div class="col-6 col-md-3">
           <div class="card admin-stat-card" style="--stat-accent: #f59e0b;">
-            <div class="admin-stat-icon" style="background: rgba(245,158,11,0.15); color: #fcd34d;">🛡️</div>
+            <div class="admin-stat-icon" style="background: rgba(245,158,11,0.15); color: #fcd34d;"><i class="bi bi-shield-fill"></i></div>
             <div class="admin-stat-number" style="background: linear-gradient(135deg, #f59e0b, #fcd34d); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
               <span v-if="loadingUsers" class="admin-stat-skeleton"></span>
               <template v-else>{{ adminCount }}</template>
@@ -248,7 +248,7 @@ export default {
         </div>
         <div class="col-6 col-md-3">
           <div class="card admin-stat-card" style="--stat-accent: #22c55e;">
-            <div class="admin-stat-icon" style="background: rgba(34,197,94,0.15); color: #86efac;">✅</div>
+            <div class="admin-stat-icon" style="background: rgba(34,197,94,0.15); color: #86efac;"><i class="bi bi-check-circle-fill"></i></div>
             <div class="admin-stat-number" style="background: linear-gradient(135deg, #22c55e, #86efac); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
               <span v-if="loadingUsers" class="admin-stat-skeleton"></span>
               <template v-else>{{ totalUsers - adminCount }}</template>
@@ -266,7 +266,7 @@ export default {
           <div class="card h-100">
             <div class="card-body">
               <div class="d-flex align-items-center justify-content-between mb-3">
-                <h5 class="card-title mb-0">🕐 Recent Signups</h5>
+                <h5 class="card-title mb-0"><i class="bi bi-clock me-1"></i>Recent Signups</h5>
                 <button
                   v-if="!loadingUsers && recentUsers.length > 0"
                   class="btn btn-sm btn-ghost-primary"
@@ -290,7 +290,7 @@ export default {
 
               <!-- Empty state -->
               <div v-else-if="recentUsers.length === 0" class="admin-empty-state">
-                <div class="admin-empty-icon">👥</div>
+                <div class="admin-empty-icon"><i class="bi bi-people"></i></div>
                 <p class="admin-empty-text">No users yet.</p>
                 <p class="admin-empty-sub">Users will appear here after they register.</p>
               </div>
@@ -306,9 +306,10 @@ export default {
                     <div class="admin-user-name">{{ u.displayName || '—' }}</div>
                     <div class="admin-user-email">{{ u.email }}</div>
                   </div>
-                  <span class="admin-role-badge" :class="u.role === 'admin' ? 'role-admin' : 'role-user'">
-                    {{ u.role === 'admin' ? '🛡️ Admin' : '👤 User' }}
-                  </span>
+                    <span class="admin-role-badge" :class="u.role === 'admin' ? 'role-admin' : 'role-user'">
+                      <template v-if="u.role === 'admin'"><i class="bi bi-shield-fill me-1"></i>Admin</template>
+                      <template v-else><i class="bi bi-person me-1"></i>User</template>
+                    </span>
                 </div>
               </div>
             </div>
@@ -320,7 +321,7 @@ export default {
           <div class="card h-100">
             <div class="card-body">
               <div class="d-flex align-items-center justify-content-between mb-3">
-                <h5 class="card-title mb-0">🕐 Recent Posts</h5>
+                <h5 class="card-title mb-0"><i class="bi bi-clock me-1"></i>Recent Posts</h5>
                 <button
                   v-if="!loadingPosts && recentPosts.length > 0"
                   class="btn btn-sm btn-ghost-primary"
@@ -344,7 +345,7 @@ export default {
 
               <!-- Empty state -->
               <div v-else-if="recentPosts.length === 0" class="admin-empty-state">
-                <div class="admin-empty-icon">📰</div>
+                <div class="admin-empty-icon"><i class="bi bi-newspaper"></i></div>
                 <p class="admin-empty-text">No posts yet.</p>
                 <p class="admin-empty-sub">Community posts will appear here once submitted.</p>
               </div>
@@ -355,7 +356,7 @@ export default {
                   :key="p.id"
                   class="admin-list-item admin-list-item-hoverable"
                 >
-                  <div class="admin-post-icon">📰</div>
+                  <div class="admin-post-icon"><i class="bi bi-newspaper"></i></div>
                   <div class="flex-grow-1 min-w-0">
                     <RouterLink
                       :to="{ name: 'UserNewsDetails', params: { id: p.id } }"
@@ -371,7 +372,7 @@ export default {
                       class="btn-icon-danger"
                       title="Delete post"
                       @click="askDeletePost(p)"
-                    >🗑</button>
+                    ><i class="bi bi-trash"></i></button>
                   </div>
                 </div>
               </div>
@@ -393,7 +394,7 @@ export default {
       </div>
 
       <div v-else-if="users.length === 0" class="admin-empty-state-full">
-        <div class="admin-empty-icon-lg">👥</div>
+        <div class="admin-empty-icon-lg"><i class="bi bi-people"></i></div>
         <h3>No users found</h3>
         <p class="text-muted">Users will appear here after they register.</p>
       </div>
@@ -422,7 +423,8 @@ export default {
                   <td class="text-muted" style="font-size: 0.85rem;">{{ u.email }}</td>
                   <td>
                     <span class="admin-role-badge" :class="u.role === 'admin' ? 'role-admin' : 'role-user'">
-                      {{ u.role === 'admin' ? '🛡️ Admin' : '👤 User' }}
+                      <template v-if="u.role === 'admin'"><i class="bi bi-shield-fill me-1"></i>Admin</template>
+                      <template v-else><i class="bi bi-person me-1"></i>User</template>
                     </span>
                   </td>
                   <td class="text-muted" style="font-size: 0.82rem;">{{ formatDate(u.createdAt) }}</td>
@@ -457,7 +459,7 @@ export default {
       </div>
 
       <div v-else-if="posts.length === 0" class="admin-empty-state-full">
-        <div class="admin-empty-icon-lg">📰</div>
+        <div class="admin-empty-icon-lg"><i class="bi bi-newspaper"></i></div>
         <h3>No community posts yet</h3>
         <p class="text-muted">Posts submitted by users will appear here.</p>
       </div>
@@ -494,7 +496,7 @@ export default {
                   <td class="text-muted" style="font-size: 0.82rem;">{{ p.date || formatDate(p.createdAt) }}</td>
                   <td class="text-end">
                     <button class="btn btn-sm btn-outline-danger" @click="askDeletePost(p)">
-                      🗑 Delete
+                      <i class="bi bi-trash me-1"></i>Delete
                     </button>
                   </td>
                 </tr>
@@ -509,7 +511,7 @@ export default {
     <Teleport to="body">
       <div v-if="confirmDelete" class="admin-modal-backdrop" @click.self="confirmDelete = null">
         <div class="admin-modal">
-          <div class="admin-modal-icon">🗑️</div>
+          <div class="admin-modal-icon"><i class="bi bi-trash3"></i></div>
           <h4>Delete Post?</h4>
           <p class="text-muted">
             Are you sure you want to permanently delete<br>
@@ -528,7 +530,10 @@ export default {
     <Teleport to="body">
       <div v-if="confirmRole" class="admin-modal-backdrop" @click.self="confirmRole = null">
         <div class="admin-modal">
-          <div class="admin-modal-icon">{{ confirmRole.newRole === 'admin' ? '🛡️' : '👤' }}</div>
+          <div class="admin-modal-icon">
+            <template v-if="confirmRole.newRole === 'admin'"><i class="bi bi-shield-fill"></i></template>
+            <template v-else><i class="bi bi-person"></i></template>
+          </div>
           <h4>{{ confirmRole.newRole === 'admin' ? 'Promote to Admin?' : 'Demote to User?' }}</h4>
           <p class="text-muted">
             <strong>{{ confirmRole.displayName }}</strong> will be changed to

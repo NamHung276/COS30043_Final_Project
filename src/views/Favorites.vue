@@ -101,13 +101,13 @@ export default {
       v-else-if="favorites.length === 0"
       class="empty-state"
     >
-      <div class="empty-state-icon">⭐</div>
+      <div class="empty-state-icon"><i class="bi bi-star" style="font-size:2.5rem;"></i></div>
       <h3>No favorites yet</h3>
       <p>
         Browse games and add your favorites to build your personal collection!
       </p>
       <router-link to="/games" class="btn btn-primary">
-        🎮 Browse Games
+        <i class="bi bi-joystick me-1"></i>Browse Games
       </router-link>
     </div>
 

@@ -199,7 +199,7 @@ export default {
                   for="name"
                   class="form-label"
                 >
-                  👤 Name
+                  <i class="bi bi-person me-1"></i>Name
                 </label>
                 <input
                   id="name"
@@ -227,7 +227,7 @@ export default {
                   for="regEmail"
                   class="form-label"
                 >
-                  📧 Email
+                  <i class="bi bi-envelope me-1"></i>Email
                 </label>
                 <input
                   id="regEmail"
@@ -255,7 +255,7 @@ export default {
                   for="regPassword"
                   class="form-label"
                 >
-                  🔒 Password
+                  <i class="bi bi-lock me-1"></i>Password
                 </label>
                 <input
                   id="regPassword"
@@ -303,7 +303,7 @@ export default {
                   for="confirmPassword"
                   class="form-label"
                 >
-                  🔒 Confirm Password
+                  <i class="bi bi-lock me-1"></i>Confirm Password
                 </label>
                 <input
                   id="confirmPassword"
@@ -330,7 +330,8 @@ export default {
                 class="btn btn-primary w-100"
                 :disabled="loading"
               >
-                {{ loading ? 'Creating account...' : '🎮 Register' }}
+                <template v-if="loading">Creating account...</template>
+                <template v-else><i class="bi bi-controller me-1"></i>Register</template>
               </button>
 
             </form>

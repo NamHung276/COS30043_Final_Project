@@ -168,7 +168,7 @@ export default {
               <div class="d-flex gap-2 flex-wrap mb-2">
                 <span class="badge bg-primary">{{ game.genre }}</span>
                 <span class="badge" style="background:rgba(74,222,128,0.25); color:#4ade80;">
-                  🆓 Free to Play
+                  <i class="bi bi-gift me-1"></i>Free to Play
                 </span>
                 <span class="badge" style="background:rgba(255,255,255,0.15);">
                   {{ game.platform }}
@@ -242,7 +242,7 @@ export default {
                   rel="noopener noreferrer"
                   class="btn btn-primary"
                 >
-                  🎮 {{ game.platform && game.platform.toLowerCase().includes('browser') ? 'Play in Browser' : 'Download Free' }}
+                  <i class="bi bi-play-circle me-1"></i>{{ game.platform && game.platform.toLowerCase().includes('browser') ? 'Play in Browser' : 'Download Free' }}
                 </a>
 
                 <!-- Add to Favorites -->
@@ -251,7 +251,7 @@ export default {
                   aria-label="Add game to favorites"
                   @click="addToFavorites"
                 >
-                  ⭐ Add to Favorites
+                  <i class="bi bi-star me-1"></i>Add to Favorites
                 </button>
 
                 <!-- Inline status message -->
@@ -276,7 +276,7 @@ export default {
                   class="btn btn-sm"
                   style="background:var(--bg-glass); border:1px solid var(--border-glass); font-size:0.78rem;"
                 >
-                  🔗 View on FreeToGame
+                  <i class="bi bi-box-arrow-up-right me-1"></i>View on FreeToGame
                 </a>
               </div>
             </div>
@@ -287,7 +287,7 @@ export default {
       <!-- Minimum System Requirements -->
       <div v-if="hasSystemReqs" class="mt-4">
         <div class="section-header">
-          <span class="section-icon">🖥️</span>
+          <span class="section-icon"><i class="bi bi-display"></i></span>
           <h3 class="mb-0">Minimum System Requirements</h3>
         </div>
         <div class="card">
@@ -336,7 +336,7 @@ export default {
       <!-- Screenshots -->
       <div v-if="game.screenshots && game.screenshots.length" class="mt-5">
         <div class="section-header">
-          <span class="section-icon">📸</span>
+          <span class="section-icon"><i class="bi bi-camera"></i></span>
           <h3 class="mb-0">Screenshots</h3>
         </div>
         <div class="row g-3">

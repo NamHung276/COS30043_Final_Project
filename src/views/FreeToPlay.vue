@@ -79,7 +79,16 @@ export default {
   },
 
   watch: {
-    searchTerm() { this.currentPage = 1 }
+    searchTerm() { this.currentPage = 1 },
+
+    // React when navigating between genre tiles (query param changes)
+    '$route.query.category'(newCat) {
+      const cat = newCat || ''
+      if (cat !== this.category) {
+        this.category = cat
+        this.fetchGames()
+      }
+    }
   },
 
   methods: {
@@ -152,7 +161,14 @@ export default {
     }
   },
 
-  mounted() { this.fetchGames() }
+  mounted() {
+    // Pick up ?category= from the URL if coming from a genre tile
+    const queryCat = this.$route.query.category
+    if (queryCat && typeof queryCat === 'string') {
+      this.category = queryCat
+    }
+    this.fetchGames()
+  }
 }
 </script>
 
@@ -429,7 +445,7 @@ export default {
 .ftg-title {
   font-size: 2.1rem;
   font-weight: 800;
-  color: #f0f4ff !important;
+  color: var(--text-primary) !important;
   margin: 0 0 4px;
   line-height: 1;
 }
@@ -438,7 +454,7 @@ export default {
   color: #8b9cc8 !important;
   margin: 0;
 }
-.ftg-subtitle strong { color: #f0f4ff !important; }
+.ftg-subtitle strong { color: var(--text-primary) !important; }
 .ftg-powered { opacity: 0.55; }
 
 /* ── Filter Panel ─────────────────────────────────── */
@@ -490,7 +506,7 @@ export default {
   background: rgba(15,23,42,0.7);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-sm);
-  color: #f0f4ff !important;
+  color: var(--text-primary) !important;
   padding: 10px 14px 10px 38px;
   font-size: 0.88rem;
   font-family: var(--font-family);
@@ -534,7 +550,7 @@ export default {
   background: rgba(15,23,42,0.7);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-sm);
-  color: #f0f4ff !important;
+  color: var(--text-primary) !important;
   padding: 9px 14px;
   font-size: 0.88rem;
   font-family: var(--font-family);
@@ -675,8 +691,8 @@ export default {
 .ftg-card {
   display: flex;
   flex-direction: column;
-  background: rgba(15,23,42,0.55);
-  border: 1px solid rgba(255,255,255,0.07);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
   border-radius: 14px;
   overflow: hidden;
   text-decoration: none;
@@ -727,10 +743,10 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: rgba(5,10,25,0.75);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
   backdrop-filter: blur(6px);
-  color: rgba(255,255,255,0.85) !important;
+  color: var(--text-primary) !important;
   font-size: 0.67rem;
   font-weight: 600;
   padding: 3px 8px;
@@ -742,7 +758,7 @@ export default {
 .ftg-card-title {
   font-size: 0.97rem;
   font-weight: 700;
-  color: #f0f4ff !important;
+  color: var(--text-primary) !important;
   margin: 0 0 8px;
   line-height: 1.4;
   display: -webkit-box;
@@ -806,7 +822,7 @@ export default {
   color: #6b7fa8 !important;
 }
 .ftg-error svg, .ftg-empty img { opacity: 0.4; }
-.ftg-error h3, .ftg-empty h3 { color: #f0f4ff !important; font-size: 1.2rem; margin: 0; }
+.ftg-error h3, .ftg-empty h3 { color: var(--text-primary) !important; font-size: 1.2rem; margin: 0; }
 .ftg-error p, .ftg-empty p { color: #6b7fa8 !important; font-size: 0.88rem; margin: 0; }
 
 /* Primary action button */

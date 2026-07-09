@@ -1,7 +1,7 @@
-// src/views/Games.vue
+// src/views/PaidGames.vue
 <script>
 import SkeletonCard from '../components/SkeletonCard.vue'
-import { rawgApi, freeToGameApi } from '../api'
+import { rawgApi } from '../api'
 
 // RAWG parent_platform IDs
 const PLATFORMS = [
@@ -11,14 +11,6 @@ const PLATFORMS = [
   { key: 'xbox',       label: 'Xbox',          icon: '/logo/xbox_logo.png',       id: 3    },
   { key: 'nintendo',   label: 'Nintendo',      icon: '/logo/nintendo_logo.png',   id: 7    },
   { key: 'mobile',     label: 'Mobile',        icon: '/logo/mobile.svg',          id: '4,8' },
-]
-
-const ALL_GENRES = [
-  'All',
-  'Action', 'Adventure', 'Anime', 'Arcade', 'Battle Royale', 'Card', 'Casual', 
-  'Fantasy', 'Fighting', 'Horror', 'Indie', 'MMORPG', 'MOBA', 'Platformer', 
-  'Puzzle', 'Racing', 'RPG', 'Sci-Fi', 'Shooter', 'Simulation', 'Sports', 
-  'Strategy', 'Survival'
 ]
 
 export default {
@@ -32,7 +24,7 @@ export default {
       searchTerm: '',
       selectedGenre: 'All',
       selectedPlatform: 'all',
-      genres: ALL_GENRES,
+      genres: ['All'],
       platforms: PLATFORMS,
       currentPage: 1,
       itemsPerPage: 12,
@@ -43,7 +35,11 @@ export default {
 
   computed: {
     filteredGames() {
-      return this.games
+      let list = this.games
+      if (this.selectedGenre !== 'All') {
+        list = list.filter(g => g.genres?.some(genre => genre.name === this.selectedGenre))
+      }
+      return list
     },
 
     totalPages() {
@@ -77,12 +73,6 @@ export default {
   },
 
   watch: {
-    '$route.query.genre': {
-      immediate: true,
-      handler(newVal) {
-        if (newVal) this.selectedGenre = newVal
-      }
-    },
     searchTerm() {
       this.currentPage = 1
       clearTimeout(this.searchTimeout)
@@ -92,7 +82,6 @@ export default {
     },
     selectedGenre() {
       this.currentPage = 1
-      this.fetchGames()
     },
     selectedPlatform() {
       this.currentPage = 1
@@ -159,70 +148,16 @@ export default {
           params.parent_platforms = plat.id
         }
 
-        let ftgParams = { 'sort-by': 'popularity' }
-        if (plat && plat.key === 'pc') ftgParams.platform = 'pc'
-        if (plat && plat.key === 'mobile') ftgParams.platform = 'browser'
+        const { data } = await rawgApi.get('/games', { params })
+        this.games = data.results || []
+        this.totalCount = data.count || 0
 
-        // Server-side Genre filtering
-        if (this.selectedGenre !== 'All') {
-          // FreeToGame category mappings (lowercase, replace spaces)
-          ftgParams.category = this.selectedGenre.toLowerCase().replace(' ', '-')
-          
-          // RAWG genre mapping
-          const rawgGenreMap = {
-            'Shooter': 'shooter', 'Strategy': 'strategy', 'Racing': 'racing', 
-            'Sports': 'sports', 'Action': 'action', 'RPG': 'role-playing-games-rpg',
-            'Adventure': 'adventure', 'Simulation': 'simulation', 'Puzzle': 'puzzle', 
-            'Arcade': 'arcade', 'Platformer': 'platformer', 'Fighting': 'fighting', 
-            'MMORPG': 'massively-multiplayer', 'Indie': 'indie', 'Casual': 'casual', 
-            'Card': 'card'
-          }
-          const rawgTagMap = {
-            'Anime': 'anime', 'Battle Royale': 'battle-royale', 'MOBA': 'moba', 
-            'Survival': 'survival', 'Fantasy': 'fantasy', 'Sci-Fi': 'sci-fi', 'Horror': 'horror'
-          }
-
-          if (rawgGenreMap[this.selectedGenre]) {
-            params.genres = rawgGenreMap[this.selectedGenre]
-          } else if (rawgTagMap[this.selectedGenre]) {
-            params.tags = rawgTagMap[this.selectedGenre]
-          }
-        }
-
-        const rawgReq = rawgApi.get('/games', { params }).catch(() => ({ data: { results: [], count: 0 } }))
-        const ftgReq = freeToGameApi.get('/games', { params: ftgParams }).catch(() => ({ data: [] }))
-
-        const [rawgRes, ftgRes] = await Promise.all([rawgReq, ftgReq])
-        
-        let rawgList = (rawgRes.data.results || []).map(g => ({ ...g, itemType: 'rawg' }))
-        
-        let ftgList = (ftgRes.data || []).map(g => ({
-          ...g,
-          itemType: 'f2p',
-          name: g.title,
-          background_image: g.thumbnail,
-          genres: [{ name: g.genre }],
-          platforms: [{ platform: { id: 4, name: 'PC', slug: 'pc' } }],
-          metacritic: null,
-          rating: 0
-        }))
-        
-        if (this.searchTerm) {
-          const lowerSearch = this.searchTerm.toLowerCase()
-          ftgList = ftgList.filter(g => g.name.toLowerCase().includes(lowerSearch))
-        }
-
-        // Interleave them loosely
-        let combined = []
-        let rIdx = 0, fIdx = 0
-        while (rIdx < rawgList.length || fIdx < ftgList.length) {
-          if (rIdx < rawgList.length) combined.push(rawgList[rIdx++])
-          if (rIdx < rawgList.length) combined.push(rawgList[rIdx++])
-          if (fIdx < ftgList.length) combined.push(ftgList[fIdx++])
-        }
-
-        this.games = combined
-        this.totalCount = (rawgRes.data.count || 0) + (ftgRes.data?.length || 0)
+        // Build genre list from results
+        const genreSet = new Set()
+        this.games.forEach(g => g.genres?.forEach(genre => genreSet.add(genre.name)))
+        this.genres = ['All', ...Array.from(genreSet).sort()]
+        // Reset genre if no longer available
+        if (!this.genres.includes(this.selectedGenre)) this.selectedGenre = 'All'
       } catch (err) {
         console.error(err)
         this.error = 'Failed to load games. Please try again later.'
@@ -250,11 +185,11 @@ export default {
             <img src="/logo/gamepad.svg" width="28" height="28" alt="" aria-hidden="true">
           </span>
           <div>
-            <h1 class="games-title">All Games</h1>
+            <h1 class="games-title">Paid Games</h1>
             <p class="games-subtitle">
-              Mix of Premium and Free-To-Play titles
+              Powered by <a href="https://rawg.io" target="_blank" rel="noopener noreferrer">RAWG</a>
               &nbsp;&middot;&nbsp;
-              <strong>{{ totalCount.toLocaleString() }}</strong> games matched
+              <strong>{{ totalCount.toLocaleString() }}</strong> premium games in database
             </p>
           </div>
         </div>
@@ -317,8 +252,8 @@ export default {
       <div v-else class="games-grid">
         <router-link
           v-for="(game, index) in paginatedGames"
-          :key="game.itemType + game.id"
-          :to="game.itemType === 'f2p' ? `/free-to-play/${game.id}` : `/games/${game.id}`"
+          :key="game.id"
+          :to="`/games/${game.id}`"
           class="game-card stagger-item"
           :style="{ animationDelay: `${(index % 12) * 0.05}s` }"
           :aria-label="`View details for ${game.name}`"
@@ -441,13 +376,13 @@ export default {
 .games-title {
   font-size: 2.1rem;
   font-weight: 800;
-  color: var(--text-primary) !important;
+  color: #f0f4ff !important;
   margin: 0 0 4px;
   line-height: 1;
 }
 .games-subtitle { font-size: 0.85rem; color: #8b9cc8 !important; margin: 0; }
 .games-subtitle a { color: var(--accent-light); text-decoration: none; }
-.games-subtitle strong { color: var(--text-primary) !important; }
+.games-subtitle strong { color: #f0f4ff !important; }
 
 /* Filters */
 .games-filters {
@@ -577,9 +512,9 @@ export default {
   -webkit-backdrop-filter: blur(12px);
 }
 .game-card:hover {
-  transform: translateY(-6px) scale(1.01);
-  box-shadow: 0 16px 48px rgba(124,58,237,0.15), 0 4px 20px rgba(0,0,0,0.4);
-  border-color: rgba(124,58,237,0.3);
+  transform: translateY(-8px) scale(1.015);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 40px rgba(124,58,237,0.18);
+  border-color: rgba(124,58,237,0.4);
   color: var(--text-primary);
 }
 

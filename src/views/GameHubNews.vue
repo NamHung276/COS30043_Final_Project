@@ -393,7 +393,7 @@ export default {
   background: linear-gradient(135deg, #4c1d95, #7c3aed);
   color: #fff; box-shadow: 0 4px 20px rgba(124,58,237,0.4);
 }
-.ghn-title { font-size: 2.1rem; font-weight: 800; color: #f0f4ff !important; margin: 0 0 6px; line-height: 1; }
+.ghn-title { font-size: 2.1rem; font-weight: 800; color: var(--text-primary) !important; margin: 0 0 6px; line-height: 1; }
 .ghn-subtitle { font-size: 0.85rem; color: #8b9cc8 !important; margin: 0; }
 
 /* Post button */
@@ -418,7 +418,7 @@ export default {
 .ghn-search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; opacity: 0.6; }
 .ghn-search-input {
   width: 100%; background: rgba(15,23,42,0.7); border: 1px solid var(--border-glass);
-  border-radius: var(--radius-sm); color: #f0f4ff !important; padding: 10px 14px 10px 38px;
+  border-radius: var(--radius-sm); color: var(--text-primary) !important; padding: 10px 14px 10px 38px;
   font-size: 0.88rem; font-family: var(--font-family); outline: none; transition: border-color 0.2s;
 }
 .ghn-search-input::placeholder { color: #4a5580; }
@@ -434,7 +434,7 @@ export default {
   margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid rgba(124,58,237,0.2);
 }
 .ghn-section-title {
-  font-size: 1.6rem; font-weight: 800; color: #f0f4ff !important; margin: 0;
+  font-size: 1.6rem; font-weight: 800; color: var(--text-primary) !important; margin: 0;
   display: flex; align-items: center; gap: 10px;
 }
 .ghn-section-label { font-size: 1rem; font-weight: 600; }
@@ -526,7 +526,7 @@ export default {
   letter-spacing: 0.3px; margin-bottom: 3px;
 }
 .ghn-trending-title {
-  font-size: 0.98rem; font-weight: 700; color: #f0f4ff !important; margin: 0 0 6px;
+  font-size: 0.98rem; font-weight: 700; color: var(--text-primary) !important; margin: 0 0 6px;
   line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -587,7 +587,7 @@ export default {
   margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(124,58,237,0.2);
 }
 .ghn-expanded-title {
-  font-size: 1.1rem; font-weight: 700; color: #f0f4ff !important; margin: 0;
+  font-size: 1.1rem; font-weight: 700; color: var(--text-primary) !important; margin: 0;
 }
 .ghn-expanded-count {
   font-size: 0.75rem; padding: 3px 10px; border-radius: 20px;
@@ -600,7 +600,7 @@ export default {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   text-align: center; min-height: 200px; gap: 12px; color: #6b7fa8 !important;
 }
-.ghn-state h3 { color: #f0f4ff !important; font-size: 1.2rem; margin: 0; }
+.ghn-state h3 { color: var(--text-primary) !important; font-size: 1.2rem; margin: 0; }
 .ghn-state p { color: #6b7fa8 !important; font-size: 0.88rem; margin: 0; }
 
 /* ── LIST ─────────────────────────────────────────── */
@@ -634,7 +634,7 @@ export default {
 .ghn-list-date { font-size: 0.72rem; color: #4a5580 !important; margin-left: auto; }
 .ghn-list-title-link { text-decoration: none; }
 .ghn-list-title {
-  font-size: 1.08rem; font-weight: 700; color: #f0f4ff !important; margin: 0;
+  font-size: 1.08rem; font-weight: 700; color: var(--text-primary) !important; margin: 0;
   line-height: 1.4; transition: color 0.2s;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }

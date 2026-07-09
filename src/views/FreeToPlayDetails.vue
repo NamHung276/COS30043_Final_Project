@@ -5,11 +5,7 @@ import { auth, db } from '../firebase'
 import { freeToGameApi } from '../api'
 import { onAuthStateChanged } from 'firebase/auth'
 import {
-  collection,
-  query,
-  where,
-  getDocs,
-  addDoc
+  collection, query, where, getDocs, addDoc
 } from 'firebase/firestore'
 import ReviewSection from '../components/ReviewSection.vue'
 
@@ -26,25 +22,83 @@ export default {
       game: null,
       loading: true,
       currentUser: null,
-      activeScreenshot: null,
-      favStatus: { visible: false, message: '', type: 'success' }
+      activeShot: 0,
+      lightboxSrc: null,
+      favStatus: { visible: false, message: '', type: 'success' },
+      discoverMoreGames: [],
+      recentGames: [],
+      carouselInterval: null
     }
   },
 
   computed: {
-    hasSystemReqs() {
+    heroImage() {
+      if (this.game?.screenshots?.length && this.game.screenshots[this.activeShot]) {
+        return this.game.screenshots[this.activeShot].image
+      }
+      return this.game?.thumbnail
+    },
+    
+    platforms() {
+      if (!this.game?.platform) return []
+      const parts = this.game.platform.split(',').map(s => s.trim())
+      return parts.map(p => ({
+        name: p,
+        icon: this.platformIcon(p)
+      }))
+    },
+    
+    screenshots() {
+      return this.game?.screenshots || []
+    },
+
+    sysReqs() {
       const r = this.game?.minimum_system_requirements
-      return r && Object.values(r).some(v => v)
+      if (!r || !Object.values(r).some(v => v)) return null
+      return [
+        { label: 'OS', value: r.os },
+        { label: 'Processor', value: r.processor },
+        { label: 'Memory', value: r.memory },
+        { label: 'Graphics', value: r.graphics },
+        { label: 'Storage', value: r.storage }
+      ].filter(req => req.value && req.value !== '?')
+    }
+  },
+
+  watch: {
+    '$route.params.id': {
+      immediate: true,
+      handler(newId) {
+        if (newId) {
+          this.fetchData(newId)
+        }
+      }
     }
   },
 
   methods: {
+    platformIcon(name) {
+      const n = name.toLowerCase()
+      if (n.includes('pc') || n.includes('windows')) return '/logo/pc.svg'
+      if (n.includes('browser') || n.includes('web')) return '/logo/search.svg'
+      return '/logo/gamepad.svg'
+    },
+
+    formatDate(value) {
+      if (!value) return '—'
+      const date = new Date(value)
+      if (Number.isNaN(date.getTime())) return value
+      return new Intl.DateTimeFormat('en', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      }).format(date)
+    },
+
     showFavStatus(message, type = 'success') {
       this.favStatus = { visible: true, message, type }
       clearTimeout(this._favTimer)
-      this._favTimer = setTimeout(() => {
-        this.favStatus.visible = false
-      }, 3000)
+      this._favTimer = setTimeout(() => { this.favStatus.visible = false }, 3000)
     },
 
     async addToFavorites() {
@@ -53,60 +107,113 @@ export default {
         setTimeout(() => this.$router.push('/login'), 1500)
         return
       }
-
       try {
-        const existingQuery = query(
+        const snap = await getDocs(query(
           collection(db, 'favorites'),
           where('userId', '==', this.currentUser.uid),
           where('gameId', '==', this.game.id),
           where('source', '==', 'freetogame')
-        )
-        const existingSnapshot = await getDocs(existingQuery)
-
-        if (!existingSnapshot.empty) {
-          this.showFavStatus('⚠️ Already in your favorites!', 'warning')
-          return
-        }
-
+        ))
+        if (!snap.empty) { this.showFavStatus('⚠️ Already in your favorites!', 'warning'); return }
+        
         await addDoc(collection(db, 'favorites'), {
           userId: this.currentUser.uid,
           gameId: this.game.id,
           title: this.game.title,
           thumbnail: this.game.thumbnail,
           genre: this.game.genre,
-          source: 'freetogame'           // ← distinguishes from RAWG favorites
+          source: 'freetogame'
         })
-
         this.showFavStatus('⭐ Added to favorites!', 'success')
-      } catch (error) {
-        console.error('Failed to add favorite:', error)
+      } catch (err) {
+        console.error(err)
         this.showFavStatus('Something went wrong. Please try again.', 'error')
       }
     },
 
-    openScreenshot(img) {
-      this.activeScreenshot = img
+    openLightbox(src) { 
+      this.lightboxSrc = src 
+      this.stopCarousel()
+    },
+    closeLightbox()   { 
+      this.lightboxSrc = null 
+      this.startCarousel()
     },
 
-    closeScreenshot() {
-      this.activeScreenshot = null
+    selectShot(i) { 
+      this.activeShot = i 
+      this.startCarousel()
+    },
+    
+    startCarousel() {
+      this.stopCarousel()
+      this.carouselInterval = setInterval(() => {
+        if (this.screenshots && this.screenshots.length > 0 && !this.lightboxSrc) {
+          this.activeShot = (this.activeShot + 1) % this.screenshots.length
+        }
+      }, 4000)
+    },
+    
+    stopCarousel() {
+      if (this.carouselInterval) {
+        clearInterval(this.carouselInterval)
+        this.carouselInterval = null
+      }
+    },
+
+    async fetchData(id) {
+      this.loading = true
+      this.game = null
+      this.activeShot = 0
+      
+      try {
+        const { data } = await freeToGameApi.get('/game', { params: { id } })
+        this.game = data
+        
+        const genre = this.game.genre ? this.game.genre.toLowerCase() : null
+        
+        const discoverPromise = genre
+          ? freeToGameApi.get('/games', { params: { category: genre } })
+          : Promise.resolve({ data: [] })
+          
+        const recentPromise = freeToGameApi.get('/games', { params: { 'sort-by': 'release-date' } })
+        
+        const [discoverRes, recentRes] = await Promise.all([discoverPromise, recentPromise])
+        
+        const discoverAll = (discoverRes.data || []).filter(g => g.id !== Number(id))
+        this.discoverMoreGames = discoverAll.sort(() => 0.5 - Math.random()).slice(0, 6)
+        
+        this.recentGames = (recentRes.data || []).filter(g => g.id !== Number(id)).slice(0, 6)
+        
+        document.title = `${this.game.title} | GameHub`
+
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        this.startCarousel()
+      } catch (err) {
+        console.error(err)
+      } finally {
+        this.loading = false
+      }
     }
   },
 
-  async mounted() {
-    onAuthStateChanged(auth, (user) => {
-      this.currentUser = user
-    })
-
-    try {
-      const id = this.$route.params.id
-      const { data } = await freeToGameApi.get('/game', { params: { id } })
-      this.game = data
-    } catch (error) {
-      console.error(error)
-    } finally {
-      this.loading = false
+  watch: {
+    '$route.params.id': {
+      immediate: true,
+      handler(newId) {
+        if (newId && this.$route.name === 'FreeToPlayDetails') {
+          this.fetchData(newId)
+        }
+      }
     }
+  },
+
+  mounted() {
+    onAuthStateChanged(auth, user => { this.currentUser = user })
+  },
+  
+  beforeUnmount() {
+    this.stopCarousel()
   }
 }
 </script>
@@ -114,148 +221,206 @@ export default {
 <template>
   <div>
 
-    <!-- Loading -->
-    <div v-if="loading" class="text-center py-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
+    <!-- ── Loading ───────────────────────────────── -->
+    <div v-if="loading" class="gd-loader">
+      <div class="gd-loader-inner">
+        <div class="gd-spinner"></div>
+        <p class="text-muted mt-3" style="font-size:0.9rem;">Loading game data…</p>
       </div>
     </div>
 
-    <!-- Not found -->
+    <!-- ── Not Found ─────────────────────────────── -->
     <div v-else-if="!game" class="container mt-4">
       <div class="alert alert-danger">Game not found.</div>
-      <router-link to="/free-to-play" class="btn btn-outline-secondary">
-        ← Back to Free to Play
-      </router-link>
+      <router-link to="/free-to-play" class="btn btn-outline-secondary">← Back to Free to Play</router-link>
     </div>
 
-    <div v-else class="container mt-4">
+    <!-- ── Game Page ─────────────────────────────── -->
+    <div v-else>
 
-      <router-link to="/free-to-play" class="btn btn-outline-secondary mb-3">
-        ← Back to Free to Play
-      </router-link>
-
-      <!-- Hero banner -->
-      <div
-        class="mb-4 rounded"
-        style="position:relative; height:320px; overflow:hidden; isolation:isolate; contain:layout;"
-      >
-        <!-- Blurred background -->
-        <div style="position:absolute; inset:0; overflow:hidden; contain:strict;">
-          <img
-            v-if="game.thumbnail"
-            :src="game.thumbnail"
-            alt=""
-            aria-hidden="true"
-            style="width:100%; height:100%; object-fit:cover; filter:blur(20px) brightness(0.3); transform:scale(1.1); display:block;"
-          >
+      <!-- ══════════ CINEMATIC HERO ══════════ -->
+      <div class="gd-hero">
+        <!-- Blurred background art -->
+        <div class="gd-hero-bg" aria-hidden="true">
+          <img :src="heroImage || game.thumbnail" alt="">
         </div>
 
-        <!-- Foreground content -->
-        <div style="position:absolute; inset:0; display:flex; align-items:center; padding:32px;">
-          <div class="d-flex align-items-start gap-4 flex-wrap">
+        <!-- Gradient overlay -->
+        <div class="gd-hero-overlay" aria-hidden="true"></div>
+
+        <!-- Content -->
+        <div class="container gd-hero-content">
+          <router-link to="/free-to-play" class="gd-back-btn">
+            ← Free to Play
+          </router-link>
+
+          <div class="gd-hero-bottom">
+            <!-- Cover thumbnail -->
             <img
               v-if="game.thumbnail"
               v-lazy-img="game.thumbnail"
-              class="rounded"
-              :alt="`${game.title} thumbnail`"
-              style="width:200px; height:130px; object-fit:cover; box-shadow:0 8px 30px rgba(0,0,0,0.6); position:relative; z-index:1;"
+              class="gd-cover"
+              :alt="`${game.title} cover`"
             >
-            <div style="position:relative; z-index:1;">
-              <h1 class="mb-2" style="color:#fff; text-shadow:0 2px 16px rgba(0,0,0,0.9);">
-                {{ game.title }}
-              </h1>
-              <div class="d-flex gap-2 flex-wrap mb-2">
-                <span class="badge bg-primary">{{ game.genre }}</span>
-                <span class="badge" style="background:rgba(74,222,128,0.25); color:#4ade80;">
+
+            <!-- Title + meta -->
+            <div class="gd-hero-info">
+              <div class="d-flex flex-wrap gap-2 mb-2">
+                <span class="gd-badge-genre">{{ game.genre }}</span>
+                <span class="gd-badge-esrb" style="background:rgba(74,222,128,0.25); color:#4ade80; border-color:rgba(74,222,128,0.4);">
                   <i class="bi bi-gift me-1"></i>Free to Play
                 </span>
-                <span class="badge" style="background:rgba(255,255,255,0.15);">
-                  {{ game.platform }}
+              </div>
+              <h1 class="gd-title">{{ game.title }}</h1>
+
+              <!-- Platform chips -->
+              <div class="d-flex flex-wrap gap-2 mt-2">
+                <span v-for="p in platforms" :key="p.name" class="gd-platform-chip">
+                  <img :src="p.icon" :alt="`${p.name} logo`" class="gd-platform-logo">
+                  <span>{{ p.name }}</span>
                 </span>
                 <span
                   v-if="game.status"
-                  class="badge"
-                  style="background:rgba(34,197,94,0.2); color:#86efac;"
+                  class="gd-platform-chip"
+                  style="background:rgba(34,197,94,0.15); border-color:rgba(34,197,94,0.3); color:#86efac;"
                 >
                   {{ game.status }}
                 </span>
               </div>
-              <small style="color:rgba(255,255,255,0.7);">
-                Released: {{ game.release_date }} · by {{ game.developer }}
-              </small>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Main content row -->
-      <div class="row mb-4">
+      <!-- ══════════ MAIN BODY ══════════ -->
+      <div class="container gd-body">
 
-        <!-- Description -->
-        <div class="col-md-8">
-          <div class="card">
-            <div class="card-body text-start">
-              <h3 class="mb-3">About</h3>
-              <p style="line-height:1.8; white-space:pre-line;">
-                {{ game.description || game.short_description || 'No description available.' }}
-              </p>
+        <div class="row g-4">
+
+          <!-- ── LEFT: Screenshots + About + Tags ── -->
+          <div class="col-lg-8">
+
+            <!-- Screenshot Viewer -->
+            <div v-if="screenshots.length" class="gd-screenshots-block mb-4">
+              <!-- Main featured shot -->
+              <div class="gd-shot-main" @click="openLightbox(screenshots[activeShot].image)">
+                <img
+                  v-lazy-img="screenshots[activeShot].image"
+                  :alt="`${game.title} screenshot`"
+                  class="gd-shot-main-img"
+                >
+                <div class="gd-shot-zoom-hint">Click to enlarge</div>
+              </div>
+              <!-- Thumbnail strip -->
+              <div class="gd-shot-strip">
+                <div
+                  v-for="(shot, i) in screenshots"
+                  :key="shot.id"
+                  class="gd-shot-thumb"
+                  :class="{ active: i === activeShot }"
+                  @click="selectShot(i)"
+                >
+                  <img v-lazy-img="shot.image" :alt="`Screenshot ${i + 1}`">
+                </div>
+              </div>
             </div>
+
+            <!-- About -->
+            <div class="gd-section mb-4">
+              <h2 class="gd-section-title">About this game</h2>
+              <div class="gd-description">
+                {{ game.description || 'No description available.' }}
+              </div>
+            </div>
+
+            <!-- Tags -->
+            <div v-if="game.genre" class="gd-section mb-4">
+              <h2 class="gd-section-title">Tags</h2>
+              <div class="gd-tags">
+                <span class="gd-tag">{{ game.genre }}</span>
+              </div>
+            </div>
+
+            <!-- System Requirements -->
+            <div v-if="sysReqs" class="gd-section mb-4">
+              <h2 class="gd-section-title">Minimum System Requirements</h2>
+              <div class="table-responsive">
+                <table class="table table-dark table-striped mb-0 gd-table" style="font-size:0.85rem;">
+                  <tbody>
+                    <tr v-for="req in sysReqs" :key="req.label">
+                      <th scope="row" style="width:120px; color:var(--text-muted); font-weight:600;">{{ req.label }}</th>
+                      <td style="color:var(--text-secondary);">{{ req.value }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Discover More -->
+            <div v-if="discoverMoreGames.length" class="gd-section mb-4">
+              <h2 class="gd-section-title">More Games to Discover</h2>
+              <div class="gd-similar-grid">
+                <router-link
+                  v-for="g in discoverMoreGames"
+                  :key="g.id"
+                  :to="`/free-to-play/${g.id}`"
+                  class="gd-similar-card"
+                >
+                  <img v-lazy-img="g.thumbnail" :alt="g.title" class="gd-similar-img">
+                  <div class="gd-similar-body">
+                    <p class="gd-similar-title">{{ g.title }}</p>
+                  </div>
+                </router-link>
+              </div>
+            </div>
+
+            <!-- Recent Releases -->
+            <div v-if="recentGames.length" class="gd-section mb-4">
+              <h2 class="gd-section-title">Recent Releases</h2>
+              <div class="gd-similar-grid">
+                <router-link
+                  v-for="g in recentGames"
+                  :key="g.id"
+                  :to="`/free-to-play/${g.id}`"
+                  class="gd-similar-card"
+                >
+                  <img v-lazy-img="g.thumbnail" :alt="g.title" class="gd-similar-img">
+                  <div class="gd-similar-body">
+                    <p class="gd-similar-title">{{ g.title }}</p>
+                  </div>
+                </router-link>
+              </div>
+            </div>
+
           </div>
-        </div>
 
-        <!-- Sidebar -->
-        <div class="col-md-4">
-          <div class="card">
-            <div class="card-body text-start">
-              <h5 class="mb-3">Details</h5>
+          <!-- ── RIGHT: Sidebar ── -->
+          <div class="col-lg-4">
+            <div class="gd-sidebar">
 
-              <div class="mb-2">
-                <small class="text-muted d-block">Developer</small>
-                <strong>{{ game.developer || '—' }}</strong>
-              </div>
-              <div class="mb-2">
-                <small class="text-muted d-block">Publisher</small>
-                <strong>{{ game.publisher || '—' }}</strong>
-              </div>
-              <div class="mb-2">
-                <small class="text-muted d-block">Release Date</small>
-                <strong>{{ game.release_date || '—' }}</strong>
-              </div>
-              <div class="mb-2">
-                <small class="text-muted d-block">Platform</small>
-                <strong>{{ game.platform || '—' }}</strong>
-              </div>
-              <div class="mb-3">
-                <small class="text-muted d-block">Genre</small>
-                <strong>{{ game.genre || '—' }}</strong>
-              </div>
-
-              <hr style="border-color:var(--border-glass);">
-
-              <div class="d-grid gap-2">
-                <!-- Play / Download button -->
+              <!-- Actions -->
+              <div class="gd-actions mb-4">
                 <a
                   v-if="game.game_url"
                   :href="game.game_url"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="btn btn-primary"
+                  class="btn btn-primary w-100 mb-2 gd-action-btn"
                 >
-                  <i class="bi bi-play-circle me-1"></i>{{ game.platform && game.platform.toLowerCase().includes('browser') ? 'Play in Browser' : 'Download Free' }}
+                  <img src="/logo/pc.svg" alt="" class="gd-action-icon">
+                  <span>Play Now (FreeToGame)</span>
                 </a>
-
-                <!-- Add to Favorites -->
                 <button
-                  class="btn btn-success"
-                  aria-label="Add game to favorites"
+                  class="btn btn-success w-100 mb-2 gd-action-btn"
                   @click="addToFavorites"
+                  aria-label="Add to favorites"
                 >
-                  <i class="bi bi-star me-1"></i>Add to Favorites
+                  <img src="/logo/star.svg" alt="" class="gd-action-icon">
+                  <span>Add to Favorites</span>
                 </button>
 
-                <!-- Inline status message -->
-                <transition name="fav-status">
+                <!-- Status toast -->
+                <transition name="fav-fade">
                   <div
                     v-if="favStatus.visible"
                     class="fav-status-msg"
@@ -266,123 +431,55 @@ export default {
                     {{ favStatus.message }}
                   </div>
                 </transition>
-
-                <!-- FreeToGame profile link -->
-                <a
-                  v-if="game.freetogame_profile_url"
-                  :href="game.freetogame_profile_url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="btn btn-sm"
-                  style="background:var(--bg-glass); border:1px solid var(--border-glass); font-size:0.78rem;"
-                >
-                  <i class="bi bi-box-arrow-up-right me-1"></i>View on FreeToGame
-                </a>
               </div>
+
+              <!-- Details table -->
+              <div class="gd-details-card">
+                <h5 class="gd-details-heading">Game Info</h5>
+
+                <div class="gd-detail-row" v-if="game.developer">
+                  <span class="gd-detail-label">Developer</span>
+                  <span class="gd-detail-value">{{ game.developer }}</span>
+                </div>
+                <div class="gd-detail-row" v-if="game.publisher">
+                  <span class="gd-detail-label">Publisher</span>
+                  <span class="gd-detail-value">{{ game.publisher }}</span>
+                </div>
+                <div class="gd-detail-row" v-if="game.release_date">
+                  <span class="gd-detail-label">Release</span>
+                  <span class="gd-detail-value">{{ formatDate(game.release_date) }}</span>
+                </div>
+                <div class="gd-detail-row">
+                  <span class="gd-detail-label">Platform</span>
+                  <span class="gd-detail-value">{{ game.platform }}</span>
+                </div>
+              </div>
+
             </div>
           </div>
+
         </div>
+
+        <!-- ══════════ REVIEWS ══════════ -->
+        <div class="gd-reviews-section">
+          <ReviewSection :game-id="game.id" />
+        </div>
+
       </div>
-
-      <!-- Minimum System Requirements -->
-      <div v-if="hasSystemReqs" class="mt-4">
-        <div class="section-header">
-          <span class="section-icon"><i class="bi bi-display"></i></span>
-          <h3 class="mb-0">Minimum System Requirements</h3>
-        </div>
-        <div class="card">
-          <div class="card-body p-0">
-            <table
-              class="table table-bordered mb-0"
-              :aria-label="`Minimum system requirements for ${game.title}`"
-              style="border-color:var(--border-glass);"
-            >
-              <caption class="visually-hidden">
-                Minimum system requirements for {{ game.title }}
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col" style="width:35%;">Component</th>
-                  <th scope="col">Requirement</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-if="game.minimum_system_requirements.os">
-                  <th scope="row">Operating System</th>
-                  <td>{{ game.minimum_system_requirements.os }}</td>
-                </tr>
-                <tr v-if="game.minimum_system_requirements.processor">
-                  <th scope="row">Processor</th>
-                  <td>{{ game.minimum_system_requirements.processor }}</td>
-                </tr>
-                <tr v-if="game.minimum_system_requirements.memory">
-                  <th scope="row">Memory</th>
-                  <td>{{ game.minimum_system_requirements.memory }}</td>
-                </tr>
-                <tr v-if="game.minimum_system_requirements.graphics">
-                  <th scope="row">Graphics</th>
-                  <td>{{ game.minimum_system_requirements.graphics }}</td>
-                </tr>
-                <tr v-if="game.minimum_system_requirements.storage">
-                  <th scope="row">Storage</th>
-                  <td>{{ game.minimum_system_requirements.storage }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Screenshots -->
-      <div v-if="game.screenshots && game.screenshots.length" class="mt-5">
-        <div class="section-header">
-          <span class="section-icon"><i class="bi bi-camera"></i></span>
-          <h3 class="mb-0">Screenshots</h3>
-        </div>
-        <div class="row g-3">
-          <div
-            v-for="shot in game.screenshots"
-            :key="shot.id"
-            class="col-md-4"
-          >
-            <img
-              v-lazy-img="shot.image"
-              :alt="`${game.title} screenshot`"
-              class="img-thumbnail w-100 ftg-screenshot"
-              style="height:200px; object-fit:cover; cursor:pointer;"
-              @click="openScreenshot(shot.image)"
-            >
-          </div>
-        </div>
-      </div>
-
-      <hr class="my-5" style="border-color:var(--border-glass);">
-
-      <ReviewSection :game-id="game.id" />
-
     </div>
 
-    <!-- Lightbox overlay -->
-    <transition name="lightbox">
+    <!-- ── Lightbox ───────────────────────────── -->
+    <transition name="lb">
       <div
-        v-if="activeScreenshot"
-        class="ftg-lightbox"
-        @click="closeScreenshot"
+        v-if="lightboxSrc"
+        class="gd-lightbox"
+        @click="closeLightbox"
         role="dialog"
         aria-modal="true"
         aria-label="Screenshot preview"
       >
-        <button
-          class="ftg-lightbox-close"
-          @click.stop="closeScreenshot"
-          aria-label="Close screenshot"
-        >✕</button>
-        <img
-          :src="activeScreenshot"
-          alt="Screenshot enlarged"
-          class="ftg-lightbox-img"
-          @click.stop
-        >
+        <button class="gd-lb-close" @click.stop="closeLightbox" aria-label="Close">✕</button>
+        <img :src="lightboxSrc" alt="Screenshot enlarged" class="gd-lb-img" @click.stop>
       </div>
     </transition>
 
@@ -390,19 +487,346 @@ export default {
 </template>
 
 <style scoped>
-.ftg-screenshot {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* ── Loading ──────────────────────────────── */
+.gd-loader {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.ftg-screenshot:hover {
-  transform: scale(1.02);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+.gd-loader-inner { text-align: center; }
+.gd-spinner {
+  width: 48px; height: 48px;
+  border: 3px solid rgba(124,58,237,0.2);
+  border-top-color: #7c3aed;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Hero ──────────────────────────────────── */
+.gd-hero {
+  position: relative;
+  min-height: 380px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  isolation: isolate;
+}
+.gd-hero-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.gd-hero-bg img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  filter: blur(2px) brightness(0.35) saturate(0.7);
+  transform: scale(1.05);
+  display: block;
+}
+.gd-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, var(--bg-deep) 0%, rgba(5,7,15,0.6) 50%, rgba(5,7,15,0.2) 100%),
+    linear-gradient(to right, rgba(5,7,15,0.7) 0%, transparent 60%);
+}
+.gd-hero-content {
+  position: relative;
+  z-index: 2;
+  padding-bottom: 32px;
+  width: 100%;
+}
+.gd-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255,255,255,0.75);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  margin-bottom: 28px;
+  transition: all 0.2s;
+  margin-top: 20px;
+  backdrop-filter: blur(8px);
+}
+.gd-back-btn:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.14);
+  border-color: rgba(255,255,255,0.25);
 }
 
-/* Lightbox */
-.ftg-lightbox {
+.gd-hero-bottom {
+  display: flex;
+  align-items: flex-end;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+.gd-cover {
+  width: 180px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+  flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.1);
+}
+.gd-hero-info { flex: 1; min-width: 240px; }
+.gd-title {
+  font-size: clamp(1.6rem, 4vw, 2.8rem);
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.8);
+  line-height: 1.1;
+}
+
+/* Genre/ESRB badges */
+.gd-badge-genre {
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(124,58,237,0.3);
+  border: 1px solid rgba(124,58,237,0.4);
+  color: #c4b5fd;
+}
+.gd-badge-esrb {
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7);
+}
+
+/* Platform chips */
+.gd-platform-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.7);
+  white-space: nowrap;
+}
+.gd-platform-logo {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* ── Body Layout ──────────────────────────── */
+.gd-body {
+  padding-top: 32px;
+  padding-bottom: 60px;
+}
+
+/* ── Screenshots ──────────────────────────── */
+.gd-shot-main {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: zoom-in;
+  background: var(--bg-glass);
+  margin-bottom: 10px;
+}
+.gd-shot-main-img {
+  width: 100%;
+  height: 380px;
+  object-fit: cover;
+  display: block;
+  transition: filter 0.2s ease;
+}
+.gd-shot-main:hover .gd-shot-main-img { filter: brightness(0.85); }
+.gd-shot-zoom-hint {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  background: rgba(0,0,0,0.6);
+  color: rgba(255,255,255,0.9);
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.gd-shot-main:hover .gd-shot-zoom-hint { opacity: 1; }
+
+.gd-shot-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124,58,237,0.3) transparent;
+}
+.gd-shot-thumb {
+  flex: 0 0 100px;
+  height: 64px;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s ease;
+  opacity: 0.6;
+}
+.gd-shot-thumb:hover { opacity: 0.85; }
+.gd-shot-thumb.active {
+  border-color: var(--primary);
+  opacity: 1;
+  box-shadow: 0 0 12px rgba(124,58,237,0.5);
+}
+.gd-shot-thumb img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+}
+
+/* ── Section blocks ──────────────────────── */
+.gd-section {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  padding: 20px 22px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.gd-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-glass);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+/* ── Description ──────────────────────────── */
+.gd-description {
+  font-size: 0.98rem;
+  line-height: 1.9;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  max-width: 72ch;
+}
+
+/* ── Tags ─────────────────────────────────── */
+.gd-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.gd-tag {
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: rgba(124,58,237,0.1);
+  border: 1px solid rgba(124,58,237,0.2);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  cursor: default;
+}
+.gd-tag:hover {
+  background: rgba(124,58,237,0.22);
+  border-color: rgba(124,58,237,0.4);
+  color: var(--text-primary);
+}
+
+/* ── Similar games grid ───────────────────── */
+.gd-similar-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.gd-similar-card {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-glass);
+  text-decoration: none;
+  background: var(--bg-glass);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: block;
+}
+.gd-similar-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(124,58,237,0.35);
+  border-color: rgba(124,58,237,0.4);
+}
+.gd-similar-img { width: 100%; height: 80px; object-fit: cover; display: block; }
+.gd-similar-body { padding: 8px; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.gd-similar-title {
+  font-size: 0.72rem; font-weight: 600;
+  color: var(--text-primary); margin: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  flex: 1;
+}
+
+/* ── Sidebar ──────────────────────────────── */
+.gd-sidebar { position: sticky; top: 80px; }
+
+/* Actions */
+.gd-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.gd-action-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* Details card */
+.gd-details-card {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.gd-details-heading {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  padding: 14px 18px 10px;
+  margin: 0;
+  border-bottom: 1px solid var(--border-glass);
+}
+.gd-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.85rem;
+}
+.gd-detail-row:last-child { border-bottom: none; }
+.gd-detail-label { color: var(--text-muted); flex-shrink: 0; }
+.gd-detail-value { color: var(--text-primary); font-weight: 600; text-align: right; }
+
+/* ── Reviews ──────────────────────────────── */
+.gd-reviews-section { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border-glass); }
+
+/* ── Lightbox ─────────────────────────────── */
+.gd-lightbox {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.88);
+  background: rgba(0,0,0,0.92);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -410,33 +834,41 @@ export default {
   padding: 24px;
   cursor: zoom-out;
 }
-.ftg-lightbox-img {
-  max-width: 90vw;
-  max-height: 85vh;
-  border-radius: 10px;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.7);
+.gd-lb-img {
+  max-width: 92vw;
+  max-height: 88vh;
+  border-radius: 12px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.8);
   cursor: default;
 }
-.ftg-lightbox-close {
+.gd-lb-close {
   position: absolute;
-  top: 20px;
-  right: 24px;
+  top: 20px; right: 24px;
   background: rgba(255,255,255,0.1);
   border: 1px solid rgba(255,255,255,0.2);
   color: #fff;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 40px; height: 40px;
   font-size: 1rem;
   cursor: pointer;
   transition: background 0.2s;
+  display: flex; align-items: center; justify-content: center;
 }
-.ftg-lightbox-close:hover { background: rgba(255,255,255,0.25); }
+.gd-lb-close:hover { background: rgba(255,255,255,0.25); }
 
 /* Transitions */
-.lightbox-enter-active, .lightbox-leave-active { transition: opacity 0.2s ease; }
-.lightbox-enter-from, .lightbox-leave-to       { opacity: 0; }
+.lb-enter-active, .lb-leave-active { transition: opacity 0.2s ease; }
+.lb-enter-from, .lb-leave-to       { opacity: 0; }
 
-.fav-status-enter-active, .fav-status-leave-active { transition: all 0.3s ease; }
-.fav-status-enter-from, .fav-status-leave-to       { opacity: 0; transform: translateY(-6px); }
+.fav-fade-enter-active, .fav-fade-leave-active { transition: all 0.3s ease; }
+.fav-fade-enter-from, .fav-fade-leave-to       { opacity: 0; transform: translateY(-6px); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .gd-hero { min-height: 280px; }
+  .gd-cover { width: 120px; height: 80px; }
+  .gd-title { font-size: 1.4rem; }
+  .gd-shot-main-img { height: 220px; }
+  .gd-sidebar { position: static; }
+}
 </style>

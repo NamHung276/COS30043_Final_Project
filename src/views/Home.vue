@@ -3,18 +3,18 @@
 import { rawgApi, freeToGameApi, cheapSharkApi } from '../api'
 
 const GENRES = [
-  { label: 'MMORPG',       icon: 'bi-shield-shaded', color: 'violet', cat: 'mmorpg',        link: '/free-to-play' },
-  { label: 'Shooter',      icon: 'bi-crosshair',     color: 'coral',  cat: 'shooter',       link: '/free-to-play' },
-  { label: 'Battle Royale',icon: 'bi-trophy',        color: 'gold',   cat: 'battle-royale', link: '/free-to-play' },
-  { label: 'MOBA',         icon: 'bi-people-fill',   color: 'cyan',   cat: 'moba',          link: '/free-to-play' },
-  { label: 'Strategy',     icon: 'bi-grid-3x3-gap',  color: 'green',  cat: 'strategy',      link: '/free-to-play' },
-  { label: 'Racing',       icon: 'bi-speedometer2',  color: 'pink',   cat: 'racing',        link: '/free-to-play' },
-  { label: 'Sports',       icon: 'bi-dribbble',      color: 'cyan',   cat: 'sports',        link: '/free-to-play' },
-  { label: 'Anime',        icon: 'bi-stars',         color: 'pink',   cat: 'anime',         link: '/free-to-play' },
-  { label: 'Survival',     icon: 'bi-tree',          color: 'green',  cat: 'survival',      link: '/free-to-play' },
-  { label: 'Fantasy',      icon: 'bi-lightning',     color: 'violet', cat: 'fantasy',       link: '/free-to-play' },
-  { label: 'Sci-Fi',       icon: 'bi-rocket',        color: 'cyan',   cat: 'sci-fi',        link: '/free-to-play' },
-  { label: 'Horror',       icon: 'bi-eye-slash',     color: 'coral',  cat: 'horror',        link: '/free-to-play' },
+  { label: 'MMORPG',       icon: '/game_icon/mmorpg.png',        color: 'violet', cat: 'mmorpg',        link: '/games?genre=MMORPG' },
+  { label: 'Shooter',      icon: '/game_icon/shooter.png',       color: 'coral',  cat: 'shooter',       link: '/games?genre=Shooter' },
+  { label: 'Battle Royale',icon: '/game_icon/battle_royale.png', color: 'gold',   cat: 'battle-royale', link: '/games?genre=Battle Royale' },
+  { label: 'MOBA',         iconClass: 'bi bi-shield-sword',      color: 'cyan',   cat: 'moba',          link: '/games?genre=MOBA' },
+  { label: 'Strategy',     icon: '/game_icon/strategy.png',      color: 'green',  cat: 'strategy',      link: '/games?genre=Strategy' },
+  { label: 'Racing',       icon: '/game_icon/racing.png',        color: 'pink',   cat: 'racing',        link: '/games?genre=Racing' },
+  { label: 'Sports',       icon: '/game_icon/sports.png',        color: 'cyan',   cat: 'sports',        link: '/games?genre=Sports' },
+  { label: 'Anime',        icon: '/game_icon/anime.png',         color: 'pink',   cat: 'anime',         link: '/games?genre=Anime' },
+  { label: 'Survival',     icon: '/game_icon/survival.png',      color: 'green',  cat: 'survival',      link: '/games?genre=Survival' },
+  { label: 'Fantasy',      icon: '/game_icon/fantasy.png',       color: 'violet', cat: 'fantasy',       link: '/games?genre=Fantasy' },
+  { label: 'Sci-Fi',       icon: '/game_icon/sci-fi.png',        color: 'cyan',   cat: 'sci-fi',        link: '/games?genre=Sci-Fi' },
+  { label: 'Horror',       icon: '/game_icon/horror.png',        color: 'coral',  cat: 'horror',        link: '/games?genre=Horror' },
 ]
 
 export default {
@@ -30,10 +30,19 @@ export default {
 
       // New Releases strip (RAWG)
       newReleases: [],
+      comingSoon: [],
+
+      trendingFree: [],
+
+      // Tabbed section
+      activeTab: 'newReleases', // 'newReleases', 'comingSoon', 'trendingFree'
+      hoveredGame: null,
 
       // Loading states
       carouselLoading: true,
       releasesLoading: true,
+      comingSoonLoading: true,
+      trendingFreeLoading: true,
 
       // Stats counter
       statsVisible: false,
@@ -53,25 +62,40 @@ export default {
       return this.featuredGames[this.activeIndex] || null
     },
     currentDetail() {
-      return this.currentGame ? this.detailCache[this.currentGame.id] : null
+      if (!this.currentGame) return null
+      return this.detailCache[this.currentGame.itemType + this.currentGame.id]
     },
     screenshots() {
-      if (this.currentDetail?.screenshots?.length) {
+      if (this.currentGame?.itemType === 'f2p' && this.currentDetail?.screenshots?.length) {
         return this.currentDetail.screenshots.slice(0, 4).map(s => s.image)
+      } else if (this.currentGame?.itemType === 'rawg' && this.currentGame.short_screenshots?.length) {
+        return this.currentGame.short_screenshots.slice(1, 5).map(s => s.image)
       }
-      return this.currentGame ? Array(4).fill(this.currentGame.thumbnail) : []
+      return this.currentGame ? Array(4).fill(this.currentGame.displayThumb) : []
     },
     shortDesc() {
-      return this.currentDetail?.short_description
-        || `A free-to-play ${this.currentGame?.genre || ''} experience you won't want to miss.`
+      if (this.currentGame?.itemType === 'f2p') {
+        return this.currentDetail?.short_description
+          || `A free-to-play ${this.currentGame.displayGenre || ''} experience you won't want to miss.`
+      } else {
+        const desc = this.currentDetail?.description_raw || `An amazing ${this.currentGame?.displayGenre || ''} game you shouldn't miss.`
+        if (desc.length <= 150) return desc
+        return desc.substring(0, 150).split(' ').slice(0, -1).join(' ') + '...'
+      }
+    },
+    activeTabGames() {
+      if (this.activeTab === 'newReleases') return this.newReleases.slice(0, 10)
+      if (this.activeTab === 'comingSoon') return this.comingSoon.slice(0, 10)
+      if (this.activeTab === 'trendingFree') return this.trendingFree.slice(0, 10)
+      return []
     }
   },
 
   watch: {
     activeIndex(newIdx) {
       const game = this.featuredGames[newIdx]
-      if (game && !this.detailCache[game.id]) {
-        this.fetchDetail(game.id)
+      if (game) {
+        this.fetchDetail(game)
       }
     }
   },
@@ -81,6 +105,7 @@ export default {
     await Promise.allSettled([
       this.loadFeatured(),
       this.loadNewReleases(),
+      this.loadComingSoon(),
       this.loadHotDeals(),
     ])
 
@@ -110,23 +135,62 @@ export default {
   methods: {
     async loadFeatured() {
       try {
-        const { data } = await freeToGameApi.get('/games', { params: { 'sort-by': 'popularity' } })
-        this.featuredGames = data.sort(() => 0.5 - Math.random()).slice(0, 10)
+        const f2pReq = freeToGameApi.get('/games', { params: { 'sort-by': 'popularity' } }).catch(() => ({ data: [] }))
+        const rawgReq = rawgApi.get('/games', { params: { ordering: '-added', page_size: 20 } }).catch(() => ({ data: { results: [] } }))
+        
+        const [f2pRes, rawgRes] = await Promise.all([f2pReq, rawgReq])
+        
+        const f2pGames = (f2pRes.data || []).sort(() => 0.5 - Math.random()).slice(0, 5).map(g => ({
+          ...g,
+          itemType: 'f2p',
+          displayTitle: g.title,
+          displayThumb: g.thumbnail,
+          displayGenre: g.genre,
+          displayLink: '/free-to-play/' + g.id
+        }))
+        
+        const rawgGames = (rawgRes.data.results || []).sort(() => 0.5 - Math.random()).slice(0, 5).map(g => ({
+          ...g,
+          itemType: 'rawg',
+          displayTitle: g.name,
+          displayThumb: g.background_image,
+          displayGenre: g.genres?.[0]?.name || 'Action',
+          displayLink: '/games/' + g.id
+        }))
+
+        this.featuredGames = [...f2pGames, ...rawgGames].sort(() => 0.5 - Math.random())
+        
+        // Populate trendingFree for the tabbed section
+        this.trendingFree = (f2pRes.data || []).slice(0, 10).map(g => ({
+          ...g,
+          itemType: 'f2p',
+          name: g.title,
+          background_image: g.thumbnail,
+          genres: [{ name: g.genre }],
+          id: g.id
+        }))
+
         if (this.featuredGames.length) {
-          this.fetchDetail(this.featuredGames[0].id)
+          this.fetchDetail(this.featuredGames[0])
           this.$nextTick(() => this.startAutoplay())
         }
       } catch (e) {
         console.error(e)
       } finally {
         this.carouselLoading = false
+        this.trendingFreeLoading = false
       }
     },
 
     async loadNewReleases() {
       try {
+        const today = new Date().toISOString().split('T')[0]
+        const past = new Date()
+        past.setDate(past.getDate() - 90)
+        const pastStr = past.toISOString().split('T')[0]
+
         const { data } = await rawgApi.get('/games', {
-          params: { ordering: '-released', page_size: 20, dates: '2024-01-01,2099-01-01' }
+          params: { ordering: '-released', page_size: 20, dates: `${pastStr},${today}` }
         })
         this.newReleases = data.results || []
       } catch (e) {
@@ -136,12 +200,38 @@ export default {
       }
     },
 
+    async loadComingSoon() {
+      try {
+        const today = new Date().toISOString().split('T')[0]
+        const future = new Date()
+        future.setFullYear(future.getFullYear() + 1)
+        const futureStr = future.toISOString().split('T')[0]
+
+        const { data } = await rawgApi.get('/games', {
+          params: { ordering: '-added', page_size: 20, dates: `${today},${futureStr}` }
+        })
+        this.comingSoon = data.results || []
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.comingSoonLoading = false
+      }
+    },
+
     async loadHotDeals() {
       try {
         const { data } = await cheapSharkApi.get('/deals', {
           params: { sortBy: 'DealRating', pageSize: 12, onSale: 1, upperPrice: 30 }
         })
-        this.hotDeals = (data || []).slice(0, 8)
+        const uniqueDeals = []
+        const seenIds = new Set()
+        for (const deal of (data || [])) {
+          if (!seenIds.has(deal.gameID)) {
+            uniqueDeals.push(deal)
+            seenIds.add(deal.gameID)
+          }
+        }
+        this.hotDeals = uniqueDeals.slice(0, 8)
       } catch (e) {
         console.error(e)
       } finally {
@@ -149,12 +239,19 @@ export default {
       }
     },
 
-    async fetchDetail(id) {
-      if (this.detailCache[id]) return
+    async fetchDetail(game) {
+      if (!game) return
+      const cacheKey = game.itemType + game.id
+      if (this.detailCache[cacheKey]) return
       try {
-        const res = await fetch(`https://www.freetogame.com/api/game?id=${id}`)
-        const data = await res.json()
-        this.detailCache = { ...this.detailCache, [id]: data }
+        if (game.itemType === 'f2p') {
+          const res = await fetch(`https://www.freetogame.com/api/game?id=${game.id}`)
+          const data = await res.json()
+          this.detailCache = { ...this.detailCache, [cacheKey]: data }
+        } else {
+          const { data } = await rawgApi.get(`/games/${game.id}`)
+          this.detailCache = { ...this.detailCache, [cacheKey]: data }
+        }
       } catch {}
     },
 
@@ -189,6 +286,14 @@ export default {
       const date = new Date(value)
       if (Number.isNaN(date.getTime())) return value
       return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', year: 'numeric' }).format(date)
+    },
+    
+    setTab(tabName) {
+      this.activeTab = tabName
+      this.hoveredGame = null
+    },
+    setHoveredGame(game) {
+      this.hoveredGame = game
     }
   }
 }
@@ -198,148 +303,22 @@ export default {
   <div>
 
     <!-- ══════════════════════════════════════
-         HERO V2 — Immersive
+         HERO V2 — Welcome Banner
          ══════════════════════════════════════ -->
-    <section class="hero-v2" aria-label="GameHub hero banner">
-      <!-- Animated floating orbs -->
-      <div class="hero-orb hero-orb-1" aria-hidden="true"></div>
-      <div class="hero-orb hero-orb-2" aria-hidden="true"></div>
-      <div class="hero-orb hero-orb-3" aria-hidden="true"></div>
 
-      <div class="hero-v2-content">
-        <div class="hero-eyebrow"><i class="bi bi-controller me-2"></i>The Ultimate Gaming Hub</div>
 
-        <h1 class="hero-v2-title">
-          Discover Your<br>
-          <span class="gradient-text">Next Adventure</span>
-        </h1>
-
-        <p class="hero-v2-sub">
-          Browse 500,000+ games, catch live news, score the best deals
-          — all in one place, completely free.
-        </p>
-
-        <div class="hero-v2-actions">
-          <router-link to="/games" class="btn btn-primary hero-cta-primary" aria-label="Browse all games">
-            <i class="bi bi-joystick me-1"></i>Browse Games
-          </router-link>
-          <router-link to="/free-to-play" class="btn btn-outline-light hero-cta-secondary" aria-label="Browse free to play games">
-            <i class="bi bi-gift me-1"></i>Free to Play
-          </router-link>
-          <router-link to="/deals" class="btn btn-outline-light hero-cta-secondary" aria-label="View game deals">
-            <i class="bi bi-tag me-1"></i>Game Deals
-          </router-link>
-        </div>
-
-        <!-- Inline stats -->
-        <div class="hero-stats">
-          <div class="hero-stat">
-            <span class="hero-stat-num">500K+</span>
-            <span class="hero-stat-label">Games</span>
-          </div>
-          <div class="hero-stat-divider"></div>
-          <div class="hero-stat">
-            <span class="hero-stat-num">400+</span>
-            <span class="hero-stat-label">Free to Play</span>
-          </div>
-          <div class="hero-stat-divider"></div>
-          <div class="hero-stat">
-            <span class="hero-stat-num">Live</span>
-            <span class="hero-stat-label">Game News</span>
-          </div>
-          <div class="hero-stat-divider"></div>
-          <div class="hero-stat">
-            <span class="hero-stat-num">100%</span>
-            <span class="hero-stat-label">Free</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <div class="container py-5">
-
-      <!-- ══════════════════════════════════════
-           NEW RELEASES — Horizontal Scroll Strip
-           ══════════════════════════════════════ -->
-      <div class="mb-5">
-        <div class="section-header mb-3">
-          <span class="section-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+    <!-- ══════════════════════════════════════
+         HERO V2 — Full-Bleed Carousel
+         ══════════════════════════════════════ -->
+    <div class="steam-hero-fullbleed" :style="{ backgroundImage: `url(${currentGame?.displayThumb || ''})` }">
+      <div class="steam-hero-blur-overlay"></div>
+      <div class="container py-5" style="position: relative; z-index: 2;">
+        <div class="section-header mb-3" style="color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+          <span class="section-icon" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
           </span>
-          <h2 class="mb-0">New Releases</h2>
-          <router-link
-            to="/games"
-            class="ms-auto btn btn-sm"
-            style="background:rgba(124,58,237,0.15); border:1px solid rgba(124,58,237,0.3); color:var(--primary-light); font-size:0.8rem; border-radius:20px; padding:4px 16px;"
-          >
-            View All →
-          </router-link>
+          <h2 class="mb-0">Featured &amp; Recommended</h2>
         </div>
-
-        <!-- Skeleton -->
-        <div v-if="releasesLoading" class="h-scroll-strip">
-          <div
-            v-for="n in 10" :key="n"
-            class="h-scroll-card"
-            style="background: var(--bg-glass);"
-          >
-            <div class="skeleton" style="height:120px; width:100%;"></div>
-            <div class="h-scroll-card-body">
-              <div class="skeleton" style="height:12px; width:80%; border-radius:4px; margin-bottom:6px;"></div>
-              <div class="skeleton" style="height:10px; width:50%; border-radius:4px;"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Strip -->
-        <div v-else class="h-scroll-strip">
-          <router-link
-            v-for="game in newReleases"
-            :key="game.id"
-            :to="`/games/${game.id}`"
-            class="h-scroll-card stagger-item"
-          >
-            <div class="h-scroll-img-wrap">
-              <img
-                v-lazy-img="game.background_image"
-                :alt="game.name"
-              >
-              <div class="h-card-badges">
-                <span v-if="game.metacritic" class="h-badge h-badge-verified">
-                  <img src="/logo/star.svg" alt="Verified">Verified
-                </span>
-                <span v-if="game.website" class="h-badge h-badge-official">
-                  <img src="/logo/search.svg" alt="Official">Official
-                </span>
-              </div>
-            </div>
-            <div class="h-scroll-card-body">
-              <p class="h-scroll-card-title">{{ game.name }}</p>
-              <div class="h-scroll-card-meta">
-                <span
-                  v-if="game.metacritic"
-                  class="badge"
-                  :class="metacriticClass(game.metacritic)"
-                  style="font-size:0.65rem; padding:2px 6px;"
-                >
-                  {{ game.metacritic }}
-                </span>
-                <span>{{ formatDate(game.released) }}</span>
-              </div>
-            </div>
-          </router-link>
-        </div>
-      </div>
-
-      <!-- ══════════════════════════════════════
-           FEATURED & RECOMMENDED — Steam Carousel
-           ══════════════════════════════════════ -->
-      <div class="section-header mb-3">
-        <span class="section-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
-        </span>
-        <h2 class="mb-0">Featured &amp; Recommended</h2>
-      </div>
 
       <!-- Skeleton -->
       <div v-if="carouselLoading" class="steam-carousel-skeleton">
@@ -367,20 +346,21 @@ export default {
 
         <div class="steam-main-panel">
           <transition :name="direction === 'next' ? 'slide-left' : 'slide-right'" mode="out-in">
-            <router-link :key="currentGame.id" :to="'/free-to-play/' + currentGame.id" class="steam-hero-link">
-              <img :src="currentGame.thumbnail" :alt="currentGame.title" class="steam-hero-img">
+            <router-link :key="currentGame.itemType + currentGame.id" :to="currentGame.displayLink" class="steam-hero-link">
+              <img :src="currentGame.displayThumb" :alt="currentGame.displayTitle" class="steam-hero-img">
               <div class="steam-hero-overlay"></div>
             </router-link>
           </transition>
         </div>
 
         <transition :name="direction === 'next' ? 'fade-up' : 'fade-down'" mode="out-in">
-          <div class="steam-info-panel" :key="'info-' + currentGame.id">
+          <div class="steam-info-panel" :key="'info-' + currentGame.itemType + currentGame.id">
             <div class="steam-info-top">
-              <h3 class="steam-title">{{ currentGame.title }}</h3>
+              <h3 class="steam-title">{{ currentGame.displayTitle }}</h3>
               <div class="steam-meta-row">
-                <span class="steam-badge-genre">{{ currentGame.genre }}</span>
-                <span class="steam-badge-free">Free to Play</span>
+                <span class="steam-badge-genre">{{ currentGame.displayGenre }}</span>
+                <span v-if="currentGame.itemType === 'f2p'" class="steam-badge-free">Free to Play</span>
+                <span v-else class="steam-badge-free" style="background:var(--primary-color)">Premium Game</span>
               </div>
               <p class="steam-desc">{{ shortDesc }}</p>
             </div>
@@ -388,7 +368,7 @@ export default {
             <div class="steam-screenshots-grid">
               <template v-if="screenshots.length">
                 <div v-for="(src, i) in screenshots" :key="i" class="steam-screenshot">
-                  <img :src="src" :alt="`${currentGame.title} screenshot ${i + 1}`">
+                  <img :src="src" :alt="`${currentGame.displayTitle} screenshot ${i + 1}`">
                 </div>
               </template>
               <template v-else>
@@ -397,11 +377,11 @@ export default {
             </div>
 
             <div class="steam-info-bottom">
-              <div class="steam-dev-info" v-if="currentDetail?.developer">
+              <div class="steam-dev-info" v-if="currentDetail?.developer || currentDetail?.developers?.length">
                 <span class="steam-dev-label">Developer</span>
-                <span class="steam-dev-value">{{ currentDetail.developer }}</span>
+                <span class="steam-dev-value">{{ currentDetail?.developer || currentDetail?.developers[0]?.name }}</span>
               </div>
-              <router-link :to="'/free-to-play/' + currentGame.id" class="btn steam-play-btn">
+              <router-link :to="currentGame.displayLink" class="btn steam-play-btn">
                 View Game →
               </router-link>
             </div>
@@ -412,12 +392,92 @@ export default {
 
         <div class="steam-dots">
           <button
-            v-for="(game, i) in featuredGames" :key="game.id"
+            v-for="(game, i) in featuredGames" :key="game.itemType + game.id"
             class="steam-dot"
             :class="{ active: i === activeIndex }"
             @click="goTo(i, i > activeIndex ? 'next' : 'prev')"
-            :aria-label="`Go to ${game.title}`"
+            :aria-label="`Go to ${game.displayTitle}`"
           ></button>
+        </div>
+        </div>
+      </div>
+    </div> <!-- /steam-hero-fullbleed -->
+
+    <div class="container steam-main-container pb-5">
+
+      <!-- ══════════════════════════════════════
+           TABBED DISCOVERY
+           ══════════════════════════════════════ -->
+      <div class="mb-5 steam-tabs-container">
+        <!-- Tabs -->
+        <div class="steam-tabs-header">
+          <button class="steam-tab-btn" :class="{ active: activeTab === 'newReleases' }" @click="setTab('newReleases')">Popular New Releases</button>
+          <button class="steam-tab-btn" :class="{ active: activeTab === 'comingSoon' }" @click="setTab('comingSoon')">Popular Upcoming</button>
+          <button class="steam-tab-btn" :class="{ active: activeTab === 'trendingFree' }" @click="setTab('trendingFree')">Trending Free</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="steam-tab-content">
+          <div class="row g-0">
+            <!-- Left List -->
+            <div class="col-md-7 col-lg-8 steam-tab-list">
+              <template v-if="activeTab === 'newReleases' && releasesLoading">
+                <div v-for="n in 5" :key="n" class="skeleton steam-tab-item-skeleton"></div>
+              </template>
+              <template v-else-if="activeTab === 'comingSoon' && comingSoonLoading">
+                <div v-for="n in 5" :key="n" class="skeleton steam-tab-item-skeleton"></div>
+              </template>
+              <template v-else-if="activeTab === 'trendingFree' && trendingFreeLoading">
+                <div v-for="n in 5" :key="n" class="skeleton steam-tab-item-skeleton"></div>
+              </template>
+              <template v-else>
+                <router-link
+                  v-for="(game, index) in activeTabGames"
+                  :key="game.id"
+                  :to="game.itemType === 'f2p' ? `/free-to-play/${game.id}` : `/games/${game.id}`"
+                  class="steam-tab-item"
+                  @mouseenter="setHoveredGame(game)"
+                >
+                  <div class="steam-tab-item-img">
+                    <img :src="game.background_image" :alt="game.name">
+                  </div>
+                  <div class="steam-tab-item-info">
+                    <div class="steam-tab-item-title">{{ game.name }}</div>
+                    <div class="steam-tab-item-tags">
+                      <span v-for="(genre, i) in (game.genres || []).slice(0,3)" :key="i" class="steam-tab-tag">{{ genre.name }}</span>
+                    </div>
+                  </div>
+                  <div class="steam-tab-item-meta d-none d-sm-flex">
+                    <span v-if="game.itemType === 'f2p'" class="steam-tab-free">Free to Play</span>
+                    <span v-else-if="game.price" class="steam-tab-price">${{ game.price }}</span>
+                  </div>
+                </router-link>
+              </template>
+            </div>
+
+            <!-- Right Preview Panel (only visible on hover and md+ screens) -->
+            <div class="col-md-5 col-lg-4 d-none d-md-block steam-tab-preview-col">
+              <div class="steam-tab-preview" v-if="hoveredGame">
+                <h4 class="steam-preview-title">{{ hoveredGame.name }}</h4>
+                <div class="steam-preview-reviews" v-if="hoveredGame.metacritic">
+                  <span class="preview-mc" :class="metacriticClass(hoveredGame.metacritic)">{{ hoveredGame.metacritic }}</span>
+                  <span style="color:#8f98a0; font-size:0.75rem;">Metacritic</span>
+                </div>
+                <div class="steam-preview-screenshots">
+                  <img v-if="hoveredGame.background_image" :src="hoveredGame.background_image" alt="" class="preview-img-main">
+                  <div class="preview-tags mt-2">
+                    <span v-for="(genre, i) in (hoveredGame.genres || []).slice(0, 4)" :key="i" class="steam-tab-tag">{{ genre.name }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="steam-tab-preview" style="display:flex; align-items:center; justify-content:center; opacity:0.5; height:100%;" v-else>
+                <div style="text-align:center;">
+                  <i class="bi bi-controller" style="font-size:2rem; display:block; margin-bottom:10px;"></i>
+                  <span>Hover over a game for details</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -432,17 +492,20 @@ export default {
           <h2 class="mb-0">Explore by Genre</h2>
         </div>
 
-        <div class="genre-explorer">
+        <div class="steam-genre-explorer">
           <router-link
             v-for="(g, i) in genres"
             :key="g.label"
             :to="g.link"
-            :class="['genre-tile', `genre-tile-${g.color}`, 'stagger-item']"
+            :class="['steam-genre-card', `sgc-${g.color}`, 'stagger-item']"
             :style="{ animationDelay: `${i * 0.04}s` }"
             :aria-label="`Browse ${g.label} games`"
           >
-            <span class="genre-tile-icon"><i :class="['bi', g.icon]"></i></span>
-            <span class="genre-tile-label">{{ g.label }}</span>
+            <div class="sgc-bg"></div>
+            <div class="sgc-content">
+              <span class="sgc-label">{{ g.label }}</span>
+            </div>
+            <img :src="g.icon" :alt="g.label" class="sgc-icon">
           </router-link>
         </div>
       </div>
@@ -455,7 +518,7 @@ export default {
           <span class="section-icon" style="background: linear-gradient(135deg, #92400e, #f59e0b); box-shadow: 0 4px 16px rgba(245,158,11,0.4);">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
           </span>
-          <h2 class="mb-0">Hot Deals</h2>
+          <h2 class="mb-0">Special Offers</h2>
           <router-link
             to="/deals"
             class="ms-auto btn btn-sm"
@@ -467,11 +530,11 @@ export default {
 
         <!-- Skeleton -->
         <div v-if="dealsLoading" class="h-scroll-strip">
-          <div v-for="n in 8" :key="n" class="deal-scroll-card" style="background: var(--bg-glass);">
+          <div v-for="n in 8" :key="n" class="steam-special-offer-card" style="background: var(--bg-glass);">
             <div class="skeleton" style="height:120px; width:100%;"></div>
-            <div class="h-scroll-card-body">
-              <div class="skeleton" style="height:12px; width:85%; border-radius:4px; margin-bottom:6px;"></div>
-              <div class="skeleton" style="height:10px; width:50%; border-radius:4px;"></div>
+            <div class="sso-body">
+              <div class="skeleton" style="height:12px; width:85%; margin-bottom:6px;"></div>
+              <div class="skeleton" style="height:24px; width:100%;"></div>
             </div>
           </div>
         </div>
@@ -484,19 +547,20 @@ export default {
             :href="`https://www.cheapshark.com/redirect?dealID=${deal.dealID}`"
             target="_blank"
             rel="noopener noreferrer"
-            class="deal-scroll-card stagger-item"
+            class="steam-special-offer-card stagger-item"
             :aria-label="`${deal.title} — ${deal.salePrice === '0.00' ? 'Free' : '$' + deal.salePrice}`"
           >
-            <div class="deal-scroll-img-wrap">
+            <div class="sso-img-wrap">
               <img :src="deal.thumb" :alt="deal.title" loading="lazy">
-              <div class="deal-scroll-overlay" aria-hidden="true"></div>
-              <span class="deal-scroll-savings">-{{ Math.round(parseFloat(deal.savings)) }}%</span>
             </div>
-            <div class="h-scroll-card-body">
-              <p class="h-scroll-card-title">{{ deal.title }}</p>
-              <div class="deal-scroll-price">
-                <span class="deal-scroll-orig">${{ deal.normalPrice }}</span>
-                <span class="deal-scroll-sale">{{ deal.salePrice === '0.00' ? 'FREE' : `$${deal.salePrice}` }}</span>
+            <div class="sso-body">
+              <p class="sso-title">{{ deal.title }}</p>
+              <div class="sso-price-row">
+                <div class="sso-discount">-{{ Math.round(parseFloat(deal.savings)) }}%</div>
+                <div class="sso-prices">
+                  <span class="sso-orig">${{ deal.normalPrice }}</span>
+                  <span class="sso-sale">{{ deal.salePrice === '0.00' ? 'FREE' : `$${deal.salePrice}` }}</span>
+                </div>
               </div>
             </div>
           </a>
@@ -637,5 +701,81 @@ export default {
 .deal-scroll-price { display:flex; align-items:center; gap:8px; margin-top:4px; }
 .deal-scroll-orig { text-decoration:line-through; color:var(--text-muted); font-size:0.75rem; }
 .deal-scroll-sale { font-weight:800; font-size:0.95rem; color:#fbbf24; }
+/* --- SUMMER SALE HERO --- */
+.summer-sale-hero { position: relative; width: 100%; height: 500px; display: flex; align-items: center; justify-content: center; text-align: center; overflow: hidden; margin-top: -70px; margin-bottom: 0; }
+.summer-sale-bg { position: absolute; inset: 0; background: radial-gradient(circle at center, #0070d1, #002b66 80%); z-index: 1; }
+.summer-sale-bg::after { content: ''; position: absolute; inset: 0; background: url('https://gmedia.playstation.com/is/image/SIEPDC/ps-store-hero-bg-light') center/cover; opacity: 0.1; mix-blend-mode: overlay; }
+.summer-sale-content { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; }
+.summer-sale-title-container { text-transform: uppercase; letter-spacing: 2px; }
+.ss-steam { font-size: 1.5rem; font-weight: 800; color: #bae6fd; display: block; margin-bottom: -10px; }
+.summer-sale-title { font-size: 5.5rem; font-weight: 900; color: #fff; text-shadow: 0 4px 20px rgba(0,0,0,0.2); margin: 0; line-height: 1.1; }
+.summer-sale-subtitle { font-size: 1.1rem; color: #e0f2fe; letter-spacing: 4px; font-weight: 600; margin-top: 1rem; }
+
+@media (max-width: 768px) {
+  .summer-sale-title { font-size: 3.5rem; }
+  .summer-sale-subtitle { font-size: 0.9rem; letter-spacing: 2px; }
+}
+
+/* --- STEAM TABBED DISCOVERY --- */
+.steam-tabs-container { background: #ffffff; border-radius: 8px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.steam-tabs-header { display: flex; background: #f8fafc; border-bottom: 1px solid #e5e7eb; }
+.steam-tab-btn { flex: 1; background: transparent; border: none; color: #4b5563; font-weight: 600; font-size: 0.95rem; padding: 16px; cursor: pointer; transition: all 0.2s ease; border-bottom: 2px solid transparent; text-align: center; }
+.steam-tab-btn:hover { color: #00439c; background: #f1f5f9; }
+.steam-tab-btn.active { color: #00439c; border-bottom-color: #00439c; background: #fff; }
+.steam-tab-content { background: #fff; min-height: 400px; }
+.steam-tab-list { max-height: 500px; overflow-y: auto; }
+.steam-tab-list::-webkit-scrollbar { width: 8px; }
+.steam-tab-list::-webkit-scrollbar-track { background: #f1f5f9; }
+.steam-tab-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.steam-tab-list::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+.steam-tab-item { display: flex; align-items: center; padding: 12px 16px; text-decoration: none; border-bottom: 1px solid #e5e7eb; transition: background 0.15s ease; color: inherit; }
+.steam-tab-item:hover { background: #f8fafc; cursor: pointer; }
+.steam-tab-item-img { width: 140px; height: 65px; flex-shrink: 0; overflow: hidden; border-radius: 4px; background: #e2e8f0; }
+.steam-tab-item-img img { width: 100%; height: 100%; object-fit: cover; }
+.steam-tab-item-info { flex: 1; min-width: 0; padding: 0 16px; }
+.steam-tab-item-title { color: #111827; font-weight: 600; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+.steam-tab-item-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.steam-tab-tag { font-size: 0.65rem; background: #f1f5f9; color: #475569; padding: 2px 6px; border-radius: 4px; }
+.steam-tab-item-meta { display: flex; align-items: center; justify-content: flex-end; width: 100px; }
+.steam-tab-free { color: #00439c; font-weight: 700; font-size: 0.9rem; }
+.steam-tab-price { color: #111827; font-weight: 700; font-size: 0.9rem; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; }
+.steam-tab-preview-col { background: #f8fafc; border-left: 1px solid #e5e7eb; }
+.steam-tab-preview { padding: 24px; position: sticky; top: 0; }
+.steam-preview-title { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 12px; }
+.steam-preview-reviews { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.preview-mc { padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 0.85rem; }
+.preview-img-main { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 12px; }
+
+/* --- STEAM SPECIAL OFFERS --- */
+.steam-special-offer-card { width: 280px; flex: 0 0 280px; background: #ffffff; display: flex; flex-direction: column; text-decoration: none; color: inherit; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-radius: 6px; overflow: hidden; border: 1px solid #e5e7eb; }
+.steam-special-offer-card:hover { transform: scale(1.03); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+.sso-img-wrap { width: 100%; height: 130px; }
+.sso-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.sso-body { padding: 12px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+.sso-title { color: #111827; font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sso-price-row { display: flex; align-items: stretch; height: 34px; background: #f1f5f9; border-radius: 4px; overflow: hidden; width: fit-content; }
+.sso-discount { background: #facc15; color: #111827; font-weight: 700; font-size: 0.95rem; padding: 0 8px; display: flex; align-items: center; }
+.sso-prices { background: transparent; display: flex; flex-direction: column; justify-content: center; padding: 0 8px; }
+.sso-orig { color: #64748b; text-decoration: line-through; font-size: 0.65rem; line-height: 1; margin-bottom: 2px; }
+.sso-sale { color: #111827; font-size: 0.85rem; font-weight: 700; line-height: 1; }
+
+/* --- STEAM GENRE CARDS --- */
+.steam-genre-explorer { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.steam-genre-card { position: relative; height: 140px; border-radius: 8px; overflow: hidden; text-decoration: none; color: #fff; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.steam-genre-card:hover { transform: scale(1.05); box-shadow: 0 12px 24px rgba(0,0,0,0.2); z-index: 2; }
+.sgc-bg { position: absolute; inset: 0; background: linear-gradient(135deg, #00439c, #002b66); z-index: 1; transition: opacity 0.3s; }
+.sgc-content { position: absolute; inset: 0; z-index: 3; display: flex; align-items: flex-end; padding: 16px; background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 60%); }
+.sgc-label { font-size: 1.25rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+.sgc-icon { position: absolute; top: 16px; right: 16px; width: 64px; height: 64px; object-fit: contain; z-index: 2; opacity: 0.5; transition: transform 0.3s, opacity 0.3s; filter: brightness(0) invert(1); }
+.steam-genre-card:hover .sgc-icon { transform: scale(1.1) rotate(5deg); opacity: 0.9; }
+
+.sgc-violet .sgc-bg { background: linear-gradient(135deg, #6366f1, #4338ca); }
+.sgc-coral .sgc-bg { background: linear-gradient(135deg, #f43f5e, #be123c); }
+.sgc-gold .sgc-bg { background: linear-gradient(135deg, #f59e0b, #b45309); }
+.sgc-cyan .sgc-bg { background: linear-gradient(135deg, #06b6d4, #0e7490); }
+.sgc-green .sgc-bg { background: linear-gradient(135deg, #10b981, #047857); }
+.sgc-pink .sgc-bg { background: linear-gradient(135deg, #ec4899, #be185d); }
+
+.h-scroll-strip { padding-bottom: 16px; }
 
 </style>

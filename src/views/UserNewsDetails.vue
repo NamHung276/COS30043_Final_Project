@@ -48,6 +48,7 @@ export default {
 
       if (docSnap.exists()) {
         this.article = { id: docSnap.id, ...docSnap.data() }
+        document.title = `${this.article.title} | GameHub`
       } else {
         this.article = null
       }

@@ -46,13 +46,21 @@
             >
               Games
             </a>
-            <ul class="dropdown-menu dropdown-menu-dark">
+            <ul class="dropdown-menu shadow-sm border-0">
               <li>
                 <router-link class="dropdown-item nav-dd-item" to="/games" @click="closeMenu">
                   <span class="nav-dd-icon nav-dd-icon-purple">
                     <img src="/logo/gamepad.svg" width="15" height="15" alt="" aria-hidden="true">
                   </span>
                   All Games
+                </router-link>
+              </li>
+              <li>
+                <router-link class="dropdown-item nav-dd-item" to="/paid-games" @click="closeMenu">
+                  <span class="nav-dd-icon nav-dd-icon-cyan">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 100 4h4a2 2 0 110 4H8"/><path d="M12 18V6"/></svg>
+                  </span>
+                  Paid Games
                 </router-link>
               </li>
               <li>
@@ -85,7 +93,7 @@
             >
               News
             </a>
-            <ul class="dropdown-menu dropdown-menu-dark">
+            <ul class="dropdown-menu shadow-sm border-0">
               <li>
                 <router-link class="dropdown-item nav-dd-item" to="/live-news" @click="closeMenu">
                   <span class="nav-dd-icon nav-dd-icon-cyan">

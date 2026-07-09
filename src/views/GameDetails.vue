@@ -26,7 +26,10 @@ export default {
       currentUser: null,
       activeShot: 0,
       lightboxSrc: null,
-      favStatus: { visible: false, message: '', type: 'success' }
+      favStatus: { visible: false, message: '', type: 'success' },
+      discoverMoreGames: [],
+      recentGames: [],
+      carouselInterval: null
     }
   },
 
@@ -76,6 +79,17 @@ export default {
         return this.screenshots[this.activeShot].image
       }
       return this.game?.background_image
+    }
+  },
+
+  watch: {
+    '$route.params.id': {
+      immediate: true,
+      handler(newId) {
+        if (newId) {
+          this.fetchData(newId)
+        }
+      }
     }
   },
 
@@ -136,29 +150,91 @@ export default {
       }
     },
 
-    openLightbox(src) { this.lightboxSrc = src },
-    closeLightbox()   { this.lightboxSrc = null },
+    openLightbox(src) { 
+      this.lightboxSrc = src 
+      this.stopCarousel()
+    },
+    closeLightbox()   { 
+      this.lightboxSrc = null 
+      this.startCarousel()
+    },
 
-    selectShot(i) { this.activeShot = i }
+    selectShot(i) { 
+      this.activeShot = i 
+      this.startCarousel()
+    },
+    
+    startCarousel() {
+      this.stopCarousel()
+      this.carouselInterval = setInterval(() => {
+        if (this.screenshots && this.screenshots.length > 0 && !this.lightboxSrc) {
+          this.activeShot = (this.activeShot + 1) % this.screenshots.length
+        }
+      }, 4000)
+    },
+    
+    stopCarousel() {
+      if (this.carouselInterval) {
+        clearInterval(this.carouselInterval)
+        this.carouselInterval = null
+      }
+    },
+
+    async fetchData(id) {
+      this.loading = true
+      this.game = null
+      this.screenshots = []
+      this.similarGames = []
+      this.activeShot = 0
+      
+      try {
+        const [gameRes, ssRes, simRes] = await Promise.all([
+          rawgApi.get(`/games/${id}`),
+          rawgApi.get(`/games/${id}/screenshots`),
+          rawgApi.get(`/games/${id}/game-series`)
+        ])
+        this.game = gameRes.data
+        this.screenshots = ssRes.data.results || []
+        this.similarGames = (simRes.data.results || []).slice(0, 6)
+
+        const genreSlug = this.game.genres?.[0]?.slug
+        
+        const today = new Date()
+        const past = new Date(today)
+        past.setMonth(past.getMonth() - 6)
+        const dateStr = `${past.toISOString().split('T')[0]},${today.toISOString().split('T')[0]}`
+
+        const discoverPromise = genreSlug 
+          ? rawgApi.get('/games', { params: { genres: genreSlug, ordering: '-added', page_size: 7 } })
+          : Promise.resolve({ data: { results: [] } })
+          
+        const recentPromise = rawgApi.get('/games', { 
+          params: { dates: dateStr, ordering: '-released', page_size: 6 } 
+        })
+
+        const [discoverRes, recentRes] = await Promise.all([discoverPromise, recentPromise])
+        
+        this.discoverMoreGames = (discoverRes.data.results || []).filter(g => g.id !== Number(id)).slice(0, 6)
+        this.recentGames = recentRes.data.results || []
+        
+        document.title = `${this.game.name} | GameHub`
+
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        this.startCarousel()
+      } catch (err) {
+        console.error(err)
+      } finally {
+        this.loading = false
+      }
+    }
   },
 
-  async mounted() {
+  mounted() {
     onAuthStateChanged(auth, user => { this.currentUser = user })
-    try {
-      const id = this.$route.params.id
-      const [gameRes, ssRes, simRes] = await Promise.all([
-        rawgApi.get(`/games/${id}`),
-        rawgApi.get(`/games/${id}/screenshots`),
-        rawgApi.get(`/games/${id}/game-series`)
-      ])
-      this.game = gameRes.data
-      this.screenshots = ssRes.data.results || []
-      this.similarGames = (simRes.data.results || []).slice(0, 6)
-    } catch (err) {
-      console.error(err)
-    } finally {
-      this.loading = false
-    }
+  },
+  
+  beforeUnmount() {
+    this.stopCarousel()
   }
 }
 </script>
@@ -309,6 +385,48 @@ export default {
                     :alt="g.name"
                     class="gd-similar-img"
                   >
+                  <div class="gd-similar-body">
+                    <p class="gd-similar-title">{{ g.name }}</p>
+                    <span v-if="g.metacritic" class="gd-similar-mc" :class="g.metacritic >= 75 ? 'mc-green' : g.metacritic >= 50 ? 'mc-yellow' : 'mc-red'">
+                      {{ g.metacritic }}
+                    </span>
+                  </div>
+                </router-link>
+              </div>
+            </div>
+
+            <!-- Discover More -->
+            <div v-if="discoverMoreGames.length" class="gd-section mb-4">
+              <h2 class="gd-section-title">More Games to Discover</h2>
+              <div class="gd-similar-grid">
+                <router-link
+                  v-for="g in discoverMoreGames"
+                  :key="g.id"
+                  :to="`/games/${g.id}`"
+                  class="gd-similar-card"
+                >
+                  <img v-lazy-img="g.background_image" :alt="g.name" class="gd-similar-img">
+                  <div class="gd-similar-body">
+                    <p class="gd-similar-title">{{ g.name }}</p>
+                    <span v-if="g.metacritic" class="gd-similar-mc" :class="g.metacritic >= 75 ? 'mc-green' : g.metacritic >= 50 ? 'mc-yellow' : 'mc-red'">
+                      {{ g.metacritic }}
+                    </span>
+                  </div>
+                </router-link>
+              </div>
+            </div>
+
+            <!-- Recent Releases -->
+            <div v-if="recentGames.length" class="gd-section mb-4">
+              <h2 class="gd-section-title">Recent Releases</h2>
+              <div class="gd-similar-grid">
+                <router-link
+                  v-for="g in recentGames"
+                  :key="g.id"
+                  :to="`/games/${g.id}`"
+                  class="gd-similar-card"
+                >
+                  <img v-lazy-img="g.background_image" :alt="g.name" class="gd-similar-img">
                   <div class="gd-similar-body">
                     <p class="gd-similar-title">{{ g.name }}</p>
                     <span v-if="g.metacritic" class="gd-similar-mc" :class="g.metacritic >= 75 ? 'mc-green' : g.metacritic >= 50 ? 'mc-yellow' : 'mc-red'">

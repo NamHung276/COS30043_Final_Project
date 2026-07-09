@@ -351,7 +351,7 @@ export default {
   flex-shrink: 0;
   box-shadow: 0 4px 20px rgba(245,158,11,0.4);
 }
-.deals-title { font-size: 2.1rem; font-weight: 800; color: #f0f4ff !important; margin: 0 0 4px; line-height: 1; }
+.deals-title { font-size: 2.1rem; font-weight: 800; color: var(--text-primary) !important; margin: 0 0 4px; line-height: 1; }
 .deals-subtitle { font-size: 0.85rem; color: #8b9cc8 !important; margin: 0; }
 .deals-powered { opacity: 0.55; }
 
@@ -374,7 +374,7 @@ export default {
 .deals-search-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); pointer-events: none; opacity: 0.6; }
 .deals-input {
   width: 100%; background: rgba(15,23,42,0.7); border: 1px solid var(--border-glass);
-  border-radius: var(--radius-sm); color: #f0f4ff !important; padding: 10px 14px 10px 38px;
+  border-radius: var(--radius-sm); color: var(--text-primary) !important; padding: 10px 14px 10px 38px;
   font-size: 0.88rem; font-family: var(--font-family); outline: none; transition: border-color 0.2s;
 }
 .deals-input::placeholder { color: #4a5580; }
@@ -384,7 +384,7 @@ export default {
 .deals-select-group { display: flex; flex-direction: column; }
 .deals-select {
   background: rgba(15,23,42,0.7); border: 1px solid var(--border-glass);
-  border-radius: var(--radius-sm); color: #f0f4ff !important; padding: 9px 14px;
+  border-radius: var(--radius-sm); color: var(--text-primary) !important; padding: 9px 14px;
   font-size: 0.88rem; font-family: var(--font-family); outline: none; cursor: pointer; min-width: 140px;
 }
 .deals-select:focus { border-color: var(--primary-light); }
@@ -486,7 +486,7 @@ export default {
 /* Card body */
 .deal-card-body { padding: 14px 16px 16px; display: flex; flex-direction: column; flex: 1; gap: 8px; }
 .deal-card-title {
-  font-size: 0.95rem; font-weight: 700; color: #f0f4ff !important; margin: 0;
+  font-size: 0.95rem; font-weight: 700; color: var(--text-primary) !important; margin: 0;
   line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 
@@ -524,7 +524,7 @@ export default {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   text-align: center; min-height: 280px; gap: 12px; color: #6b7fa8 !important;
 }
-.deals-state h3 { color: #f0f4ff !important; font-size: 1.2rem; margin: 0; }
+.deals-state h3 { color: var(--text-primary) !important; font-size: 1.2rem; margin: 0; }
 .deals-state p { color: #6b7fa8 !important; font-size: 0.88rem; margin: 0; }
 .deals-primary-btn {
   margin-top: 8px; padding: 10px 24px; border-radius: 30px; border: none;

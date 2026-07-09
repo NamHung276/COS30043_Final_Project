@@ -28,6 +28,7 @@ export default {
       this.article = news.find(item => item.id === articleId)
 
       if (this.article) {
+        document.title = `${this.article.title} | GameHub`
         this.relatedArticles = news
           .filter(item =>
             item.category === this.article.category &&

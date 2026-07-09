@@ -51,6 +51,11 @@ const routes = [
     component: Games
   },
   {
+    path: '/paid-games',
+    name: 'PaidGames',
+    component: () => import('../views/PaidGames.vue')
+  },
+  {
     path: '/games/:id',
     name: 'GameDetails',
     component: () => import('../views/GameDetails.vue')
@@ -141,6 +146,17 @@ router.beforeEach(async (to, from, next) => {
     }
   }
   next()
+})
+
+// Update document title on navigation
+router.afterEach((to) => {
+  if (to.name && !to.name.includes('Details')) {
+    const formattedName = to.name.replace(/([A-Z])/g, ' $1').trim()
+    document.title = `GameHub — ${formattedName}`
+  } else if (!to.name) {
+    document.title = 'GameHub'
+  }
+  // If it's a Details page, we'll let the component update the title dynamically with the actual content title
 })
 
 export default router

@@ -1,6 +1,6 @@
 <script>
 import SkeletonCard from '../components/SkeletonCard.vue'
-import { newsApi } from '../api'
+import { newsApi } from '../services/api'
 
 export default {
   components: { SkeletonCard },

@@ -1,7 +1,7 @@
 // src/views/PaidGames.vue
 <script>
 import SkeletonCard from '../components/SkeletonCard.vue'
-import { rawgApi } from '../api'
+import { rawgApi } from '../services/api'
 
 // RAWG parent_platform IDs
 const PLATFORMS = [

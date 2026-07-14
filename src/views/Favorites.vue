@@ -7,6 +7,7 @@ import {
   collection,
   query,
   where,
+  orderBy,
   getDocs,
   deleteDoc,
   doc
@@ -71,9 +72,9 @@ export default {
       try {
         await deleteDoc(doc(db, 'favorites', favoriteId))
         this.favorites = this.favorites.filter(fav => fav.id !== favoriteId)
-        this.toast.show(`Removed "${title}" from favorites`, 'info')
+        this.toast.show(`Removed "${title}" from wishlist`, 'info')
       } catch (error) {
-        console.error('Failed to remove favorite:', error)
+        console.error('Failed to remove from wishlist:', error)
         this.toast.show('Failed to remove. Please try again.', 'error')
       }
     },
@@ -82,7 +83,8 @@ export default {
       this.loading = true
       const favoritesQuery = query(
         collection(db, 'favorites'),
-        where('userId', '==', user.uid)
+        where('userId', '==', user.uid),
+        orderBy('createdAt', 'desc')
       )
       const snapshot = await getDocs(favoritesQuery)
       this.favorites = snapshot.docs.map(docSnap => ({
@@ -93,7 +95,7 @@ export default {
     },
 
     getSourceLabel(source) {
-      return source === 'freetogame' ? 'Free-to-Play' : 'Steam'
+      return source === 'freetogame' ? 'Free-to-Play' : 'Premium'
     },
 
     getSourceBadgeClass(source) {
@@ -127,8 +129,8 @@ export default {
           <i class="bi bi-star-fill"></i>
         </div>
         <div>
-          <h1 class="fav-hero-title">My Favorites</h1>
-          <p class="fav-hero-sub">Your personal gaming collection, all in one place</p>
+          <h1 class="fav-hero-title">My Wishlist</h1>
+          <p class="fav-hero-sub">Your personal gaming wishlist, all in one place</p>
         </div>
         <div class="fav-hero-stats ms-auto d-none d-md-flex">
           <div class="fav-stat">
@@ -154,8 +156,8 @@ export default {
             v-model="searchQuery"
             type="text"
             class="fav-search"
-            placeholder="Search your favorites…"
-            aria-label="Search favorites"
+            placeholder="Search your wishlist…"
+            aria-label="Search wishlist"
           >
           <button
             v-if="searchQuery"
@@ -178,8 +180,8 @@ export default {
         </div>
 
         <div class="fav-toolbar-right">
-          <select v-model="sortBy" class="fav-select" aria-label="Sort favorites">
-            <option value="newest">Default</option>
+          <select v-model="sortBy" class="fav-select" aria-label="Sort wishlist">
+            <option value="newest">Newest First</option>
             <option value="az">A → Z</option>
             <option value="za">Z → A</option>
           </select>
@@ -221,7 +223,7 @@ export default {
         <div class="fav-empty-icon">
           <i class="bi bi-star"></i>
         </div>
-        <h2 class="fav-empty-title">No favorites yet</h2>
+        <h2 class="fav-empty-title">Your wishlist is empty</h2>
         <p class="fav-empty-desc">
           Start exploring and hit the ⭐ on any game to save it here.<br>
           Build your perfect gaming wishlist!
@@ -268,7 +270,7 @@ export default {
             </span>
             <button
               class="fav-remove-btn"
-              aria-label="Remove from favorites"
+              aria-label="Remove from wishlist"
               @click="removeFavorite(game.id, game.title)"
             >
               <i class="bi bi-trash3"></i>
@@ -327,7 +329,7 @@ export default {
             </router-link>
             <button
               class="fav-list-remove"
-              aria-label="Remove from favorites"
+              aria-label="Remove from wishlist"
               @click="removeFavorite(game.id, game.title)"
             >
               <i class="bi bi-trash3"></i>

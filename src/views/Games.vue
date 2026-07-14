@@ -1,7 +1,7 @@
 // src/views/Games.vue
 <script>
 import SkeletonCard from '../components/SkeletonCard.vue'
-import { rawgApi, freeToGameApi } from '../api'
+import { rawgApi, freeToGameApi } from '../services/api'
 
 // RAWG parent_platform IDs
 const PLATFORMS = [
@@ -336,6 +336,27 @@ export default {
             </div>
             <div class="game-card-img-overlay" aria-hidden="true"></div>
 
+            <div class="game-card-hover">
+              <div class="hover-content">
+                  <span class="hover-action">
+                      View Details
+                  </span>
+                  <small>
+                      Click to view screenshots,
+                      reviews and game information
+                  </small>
+              </div>
+            </div>
+
+            <!-- Genre Ribbon -->
+            <div
+                class="genre-ribbon"
+                v-if="game.genres?.length">
+
+                {{ game.genres[0].name }}
+
+            </div>
+
             <!-- Metacritic badge -->
             <span v-if="game.metacritic" class="mc-badge" :class="metacriticClass(game.metacritic)" :title="`Metacritic: ${game.metacritic}`">
               {{ game.metacritic }}
@@ -355,20 +376,55 @@ export default {
 
           <!-- Card Body -->
           <div class="game-card-body">
-            <h3 class="game-card-title">{{ game.name }}</h3>
+            <div class="game-card-header">
+              <h3 class="game-card-title">
+                {{ game.name }}
+              </h3>
+
+              <span
+                v-if="game.itemType==='f2p'"
+                class="game-type free"
+              >
+                FREE
+              </span>
+
+              <span
+                v-else
+                class="game-type premium"
+              >
+                PREMIUM
+              </span>
+            </div>
             <div class="game-card-genres" v-if="(game.genres || []).length">
               <span v-for="genre in (game.genres || []).slice(0, 2)" :key="genre.id" class="game-genre-tag">
                 {{ genre.name }}
               </span>
             </div>
-            <div class="game-card-rating" v-if="game.rating">
-              <div class="game-rating-bar-track">
-                <div class="game-rating-bar-fill" :style="{ width: `${(game.rating / 5) * 100}%` }"></div>
+            <div class="game-card-footer">
+              <div class="game-card-rating" v-if="game.rating">
+                <div class="game-rating-bar-track">
+                  <div
+                    class="game-rating-bar-fill"
+                    :style="{ width: `${(game.rating / 5) * 100}%` }">
+                  </div>
+                </div>
+
+                <div class="game-rating-text">
+                  <img
+                    src="/logo/star.svg"
+                    width="11"
+                    height="11"
+                    alt=""
+                    aria-hidden="true">
+
+                  <span>{{ game.rating.toFixed(1) }}</span>
+                </div>
               </div>
-              <div class="game-rating-text">
-                <img src="/logo/star.svg" width="11" height="11" alt="" aria-hidden="true">
-                <span>{{ game.rating.toFixed(1) }} / 5</span>
-                <span class="game-rating-count">&middot; {{ (game.ratings_count || 0).toLocaleString() }} ratings</span>
+
+              <div class="game-source">
+                {{ game.itemType === 'f2p'
+                    ? 'FreeToGame'
+                    : 'RAWG' }}
               </div>
             </div>
           </div>
@@ -614,6 +670,101 @@ export default {
   pointer-events: none;
 }
 
+.game-card-hover{
+    position:absolute;
+    inset:0;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:rgba(5,8,18,.72);
+
+    opacity:0;
+
+    transition:.28s ease;
+
+    z-index:3;
+}
+
+.game-card:hover .game-card-hover{
+    opacity:1;
+}
+
+.hover-content{
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+gap:12px;
+
+}
+
+.hover-content small{
+
+color:#d6dce8;
+
+font-size:.78rem;
+
+text-align:center;
+
+max-width:170px;
+
+line-height:1.5;
+
+}
+
+.hover-action{
+
+padding:12px 26px;
+
+background:var(--gradient-primary);
+
+border-radius:999px;
+
+font-weight:700;
+
+transition:.25s;
+
+}
+
+.game-card:hover .hover-action{
+
+    transform:translateY(0);
+
+}
+
+.genre-ribbon{
+
+position:absolute;
+
+left:12px;
+
+top:12px;
+
+z-index:3;
+
+padding:6px 12px;
+
+border-radius:999px;
+
+background:rgba(12,17,29,.82);
+
+backdrop-filter:blur(10px);
+
+font-size:.72rem;
+
+font-weight:700;
+
+color:white;
+
+border:1px solid rgba(255,255,255,.08);
+
+}
+
 /* Metacritic */
 .mc-badge {
   position: absolute;
@@ -681,6 +832,32 @@ export default {
   overflow: hidden;
 }
 
+.game-card-header{
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+gap:10px;
+}
+
+.game-type{
+font-size:.65rem;
+font-weight:800;
+padding:5px 8px;
+border-radius:999px;
+letter-spacing:.08em;
+flex-shrink:0;
+}
+
+.game-type.free{
+background:#16a34a;
+color:white;
+}
+
+.game-type.premium{
+background:#f59e0b;
+color:#111;
+}
+
 /* Genre tags */
 .game-card-genres { display: flex; flex-wrap: wrap; gap: 6px; }
 .game-genre-tag {
@@ -700,7 +877,37 @@ export default {
 }
 
 /* Rating */
-.game-card-rating { margin-top: auto; display: flex; flex-direction: column; gap: 6px; }
+.game-card-footer{
+
+margin-top:auto;
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:flex-end;
+
+gap:14px;
+
+}
+
+.game-source{
+
+font-size:.7rem;
+
+font-weight:700;
+
+letter-spacing:.08em;
+
+text-transform:uppercase;
+
+color:#8b9cc8;
+
+opacity:.8;
+
+}
+
+.game-card-rating { display: flex; flex-direction: column; gap: 6px; }
 .game-rating-bar-track {
   height: 4px;
   border-radius: 2px;

@@ -1,6 +1,6 @@
 // src/components/SkeletonCard.vue
 <template>
-  <div class="skeleton-card-wrap">
+  <div class="skeleton-card-wrap" aria-hidden="true">
     <!-- Image area -->
     <div class="skeleton-img"></div>
 

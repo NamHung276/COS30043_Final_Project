@@ -9,56 +9,103 @@
  *
  * Usage:
  *   <img v-lazy-img="game.thumbnail" alt="...">
- *
- * Instead of:
- *   <img :src="game.thumbnail" alt="...">
  */
 
 const PLACEHOLDER =
   'data:image/svg+xml;charset=UTF-8,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect width="100%25" height="100%25" fill="%231e293b"/%3E%3C/svg%3E'
 
+function applyImage(el, src) {
+  // Prevent duplicate loading
+  if (el.dataset.loaded === src) return
+
+  // Avoid loading empty URLs
+  if (!src) {
+    el.src = PLACEHOLDER
+    el.style.opacity = '1'
+    el.classList.remove('skeleton')
+    return
+  }
+
+  // Start with a placeholder + shimmer style
+  el.src = PLACEHOLDER
+  el.style.transition = 'opacity 0.5s ease, transform 0.5s ease'
+  el.style.opacity = '0'
+  el.style.transform = 'scale(1.02)'
+  el.classList.add('skeleton')
+
+  // Skeleton timeout: stop shimmer after 8 seconds if internet is slow
+  const shimmerTimeout = setTimeout(() => {
+    el.classList.remove('skeleton')
+  }, 8000)
+
+  const tempImg = new Image()
+  tempImg.src = src
+
+  const renderImage = () => {
+    clearTimeout(shimmerTimeout)
+    el.dataset.loaded = src
+    
+    // Fade in AFTER src changes for a smoother animation
+    requestAnimationFrame(() => {
+      el.src = src
+      requestAnimationFrame(() => {
+        el.style.opacity = '1'
+        el.style.transform = 'scale(1)'
+        el.classList.remove('skeleton')
+      })
+    })
+  }
+
+  const handleError = () => {
+    clearTimeout(shimmerTimeout)
+    // Keep placeholder visible if the real image fails
+    el.style.opacity = '1'
+    el.style.transform = 'scale(1)'
+    el.classList.remove('skeleton')
+  }
+
+  // Handle cached images immediately
+  if (tempImg.complete) {
+    renderImage()
+    return
+  }
+
+  // Use decode() before displaying for smoother loading without flickering
+  if ('decode' in tempImg) {
+    tempImg.decode()
+      .then(renderImage)
+      .catch(handleError)
+  } else {
+    tempImg.onload = renderImage
+    tempImg.onerror = handleError
+  }
+}
+
 export default {
   mounted(el, binding) {
-    // Start with a placeholder + shimmer style
-    el.src = PLACEHOLDER
-    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease'
-    el.style.opacity = '0'
-    el.style.transform = 'scale(1.02)'
+    // Native lazy loading attributes
+    el.loading = 'lazy'
+    el.decoding = 'async'
+    el.setAttribute('draggable', 'false')
 
-    // Add shimmer class for loading animation
-    el.classList.add('skeleton')
+    const src = binding.value
 
-    const realSrc = binding.value
-
-    const loadImage = () => {
-      const tempImg = new Image()
-      tempImg.src = realSrc
-
-      tempImg.onload = () => {
-        el.src = realSrc
-        el.style.opacity = '1'
-        el.style.transform = 'scale(1)'
-        el.classList.remove('skeleton')
-      }
-
-      tempImg.onerror = () => {
-        // Keep placeholder visible if the real image fails
-        el.style.opacity = '1'
-        el.style.transform = 'scale(1)'
-        el.classList.remove('skeleton')
-      }
+    // Don't create an observer if browser doesn't support it
+    if (!('IntersectionObserver' in window)) {
+      applyImage(el, src)
+      return
     }
 
     // Observe when the element enters the viewport
     const observer = new IntersectionObserver((entries, obs) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          loadImage()
+          applyImage(el, src)
           obs.unobserve(el)
         }
       })
     }, {
-      rootMargin: '100px' // start loading slightly before it's visible
+      rootMargin: '250px' // Increase preload distance
     })
 
     observer.observe(el)
@@ -70,23 +117,7 @@ export default {
   updated(el, binding) {
     // If the bound value changes (e.g. different game selected), reload
     if (binding.value !== binding.oldValue) {
-      el.style.opacity = '0'
-      el.style.transform = 'scale(1.02)'
-      el.classList.add('skeleton')
-
-      const tempImg = new Image()
-      tempImg.src = binding.value
-      tempImg.onload = () => {
-        el.src = binding.value
-        el.style.opacity = '1'
-        el.style.transform = 'scale(1)'
-        el.classList.remove('skeleton')
-      }
-      tempImg.onerror = () => {
-        el.style.opacity = '1'
-        el.style.transform = 'scale(1)'
-        el.classList.remove('skeleton')
-      }
+      applyImage(el, binding.value)
     }
   },
 

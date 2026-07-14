@@ -8,6 +8,9 @@ export default {
   },
 
   mounted() {
+    // Set initial visibility in case the page mounts already scrolled down
+    // (e.g. browser back/forward navigation, or a route that doesn't reset scroll)
+    this.handleScroll()
     window.addEventListener('scroll', this.handleScroll)
   },
 

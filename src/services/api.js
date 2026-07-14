@@ -1,4 +1,4 @@
-// src/api.js
+// src/services/api.js
 // Centralized Axios instances for all external API calls.
 
 import axios from 'axios'
@@ -14,7 +14,7 @@ export const newsApi = axios.create({
   baseURL: '/newsapi/v2',
   timeout: 10000,
   params: {
-    apiKey: 'a125829a83b64ea99e6889447f348dc8'
+    apiKey: import.meta.env.VITE_NEWS_API_KEY
   }
 })
 
@@ -32,20 +32,35 @@ export const rawgApi = axios.create({
   baseURL: 'https://api.rawg.io/api',
   timeout: 10000,
   params: {
-    key: 'ac1924ebac0a443b83a78f401f8ee01b'
+    key: import.meta.env.VITE_RAWG_API_KEY
   }
 })
 
-  // ── Shared response interceptor (auto-handle errors) ─────────────────────────
-  ;[freeToGameApi, newsApi, cheapSharkApi, rawgApi].forEach(instance => {
-    instance.interceptors.response.use(
-      response => response,
-      error => {
-        const message =
-          error.response?.data?.message ||
-          error.message ||
-          'An unknown error occurred.'
-        return Promise.reject(new Error(message))
-      }
-    )
+// ── Shared Interceptors ─────────────────────────
+;[freeToGameApi, newsApi, cheapSharkApi, rawgApi].forEach(instance => {
+  // Request Interceptor (Logging)
+  instance.interceptors.request.use(config => {
+    console.log(`[${config.baseURL}]`, config.url)
+    return config
   })
+
+  // Response Interceptor (Error Handling)
+  instance.interceptors.response.use(
+    response => response,
+    error => {
+      console.error(
+        `[API ERROR] ${error.config?.baseURL}`,
+        error.response?.status,
+        error.response?.data
+      )
+
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        error.message ||
+        'Unknown API error'
+        
+      return Promise.reject(new Error(message))
+    }
+  )
+})

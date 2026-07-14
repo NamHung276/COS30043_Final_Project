@@ -1,6 +1,6 @@
 // src/views/FreeToPlay.vue
 <script>
-import { freeToGameApi } from '../api'
+import { freeToGameApi } from '../services/api'
 import SkeletonCard from '../components/SkeletonCard.vue'
 
 const ALL_CATEGORIES = [

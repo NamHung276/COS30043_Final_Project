@@ -1,6 +1,6 @@
 // src/components/Navbar.vue
 <template>
-  <nav class="navbar navbar-expand-lg navbar-dark">
+  <nav class="navbar navbar-expand-lg" :class="theme === 'dark' ? 'navbar-dark' : 'navbar-light'">
     <div class="container">
 
       <router-link
@@ -124,7 +124,7 @@
             to="/favorites"
             @click="closeMenu"
           >
-            Favorites
+            Wishlist
           </router-link>
 
           <router-link
@@ -133,6 +133,19 @@
             @click="closeMenu"
           >
             About
+          </router-link>
+
+          <!-- Cart Link -->
+          <router-link
+            class="nav-link d-flex align-items-center position-relative me-2"
+            to="/checkout"
+            @click="closeMenu"
+          >
+            <i class="bi bi-cart3 fs-5"></i>
+            <span v-if="cartItemsCount > 0" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem; transform: translate(-30%, 10%) !important;">
+              {{ cartItemsCount }}
+            </span>
+            <span class="ms-2 d-lg-none">Cart</span>
           </router-link>
 
           <!-- Admin link (only visible to admins) -->
@@ -145,6 +158,20 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px; vertical-align:-1px;" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             Admin
           </router-link>
+
+          <!-- Theme Toggle -->
+          <button 
+            class="btn btn-link nav-link theme-toggle-btn"
+            @click="toggleTheme"
+            :title="theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+          >
+            <svg v-if="theme === 'dark'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+            <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </button>
 
           <template v-if="!currentUser && authReady">
             <router-link
@@ -196,6 +223,7 @@
 import { auth, db } from '../firebase'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
+import { cartState } from '../services/cart'
 
 export default {
   data() {
@@ -203,7 +231,8 @@ export default {
       currentUser: null,
       authReady: false,
       isAdmin: false,
-      unsubscribe: null
+      unsubscribe: null,
+      theme: 'dark'
     }
   },
 
@@ -212,10 +241,18 @@ export default {
       if (!this.currentUser) return ''
       const name = this.currentUser.displayName || this.currentUser.email
       return name.charAt(0).toUpperCase()
+    },
+    cartItemsCount() {
+      return cartState.totalItems
     }
   },
 
   mounted() {
+    // Theme initialization
+    const savedTheme = localStorage.getItem('gamehub-theme') || 'dark'
+    this.theme = savedTheme
+    document.documentElement.setAttribute('data-theme', savedTheme)
+
     // Firebase listener — fires automatically on login/logout/page load
     this.unsubscribe = onAuthStateChanged(auth, async (user) => {
       this.currentUser = user
@@ -240,6 +277,12 @@ export default {
   },
 
   methods: {
+    toggleTheme() {
+      this.theme = this.theme === 'dark' ? 'light' : 'dark'
+      document.documentElement.setAttribute('data-theme', this.theme)
+      localStorage.setItem('gamehub-theme', this.theme)
+    },
+
     async logout() {
       try {
         await signOut(auth)
@@ -266,3 +309,21 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.theme-toggle-btn {
+  color: var(--text-secondary);
+  border: none;
+  background: transparent;
+  padding: 0.5rem;
+  margin: 0 10px;
+  transition: color 0.2s, transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.theme-toggle-btn:hover {
+  color: var(--primary);
+  transform: scale(1.15);
+}
+</style>

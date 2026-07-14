@@ -1,12 +1,12 @@
-// src/views/Home.vue
 <script>
-import { rawgApi, freeToGameApi, cheapSharkApi } from '../api'
+import { inject } from 'vue'
+import { rawgApi, freeToGameApi, cheapSharkApi } from '../services/api'
 
 const GENRES = [
   { label: 'MMORPG',       icon: '/game_icon/mmorpg.png',        color: 'violet', cat: 'mmorpg',        link: '/games?genre=MMORPG' },
   { label: 'Shooter',      icon: '/game_icon/shooter.png',       color: 'coral',  cat: 'shooter',       link: '/games?genre=Shooter' },
   { label: 'Battle Royale',icon: '/game_icon/battle_royale.png', color: 'gold',   cat: 'battle-royale', link: '/games?genre=Battle Royale' },
-  { label: 'MOBA',         iconClass: 'bi bi-shield-sword',      color: 'cyan',   cat: 'moba',          link: '/games?genre=MOBA' },
+  { label: 'MOBA',         icon: '/game_icon/moba.png',          color: 'cyan',   cat: 'moba',          link: '/games?genre=MOBA' },
   { label: 'Strategy',     icon: '/game_icon/strategy.png',      color: 'green',  cat: 'strategy',      link: '/games?genre=Strategy' },
   { label: 'Racing',       icon: '/game_icon/racing.png',        color: 'pink',   cat: 'racing',        link: '/games?genre=Racing' },
   { label: 'Sports',       icon: '/game_icon/sports.png',        color: 'cyan',   cat: 'sports',        link: '/games?genre=Sports' },
@@ -18,6 +18,11 @@ const GENRES = [
 ]
 
 export default {
+  setup() {
+    const toast = inject('toast')
+    return { toast }
+  },
+
   data() {
     return {
       // Featured carousel (FreeToGame)
@@ -176,6 +181,7 @@ export default {
         }
       } catch (e) {
         console.error(e)
+        this.toast?.show('Could not load featured games right now.', 'error')
       } finally {
         this.carouselLoading = false
         this.trendingFreeLoading = false
@@ -195,6 +201,7 @@ export default {
         this.newReleases = data.results || []
       } catch (e) {
         console.error(e)
+        this.toast?.show('Could not load new releases right now.', 'error')
       } finally {
         this.releasesLoading = false
       }
@@ -213,6 +220,7 @@ export default {
         this.comingSoon = data.results || []
       } catch (e) {
         console.error(e)
+        this.toast?.show('Could not load upcoming games right now.', 'error')
       } finally {
         this.comingSoonLoading = false
       }
@@ -224,16 +232,18 @@ export default {
           params: { sortBy: 'DealRating', pageSize: 12, onSale: 1, upperPrice: 30 }
         })
         const uniqueDeals = []
-        const seenIds = new Set()
+        const seenTitles = new Set()
         for (const deal of (data || [])) {
-          if (!seenIds.has(deal.gameID)) {
+          const key = deal.title.trim().toLowerCase()
+          if (!seenTitles.has(key)) {
             uniqueDeals.push(deal)
-            seenIds.add(deal.gameID)
+            seenTitles.add(key)
           }
         }
         this.hotDeals = uniqueDeals.slice(0, 8)
       } catch (e) {
         console.error(e)
+        this.toast?.show('Could not load special offers right now.', 'error')
       } finally {
         this.dealsLoading = false
       }
@@ -310,14 +320,24 @@ export default {
     <!-- ══════════════════════════════════════
          HERO V2 — Full-Bleed Carousel
          ══════════════════════════════════════ -->
-    <div class="steam-hero-fullbleed" :style="{ backgroundImage: `url(${currentGame?.displayThumb || ''})` }">
+    <div
+      class="steam-hero-fullbleed"
+      :key="currentGame?.id"
+      :style="{ backgroundImage: `url(${currentGame?.displayThumb || ''})` }"
+    >
       <div class="steam-hero-blur-overlay"></div>
       <div class="container py-5" style="position: relative; z-index: 2;">
-        <div class="section-header mb-3" style="color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-          <span class="section-icon" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2);">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
-          </span>
-          <h2 class="mb-0">Featured &amp; Recommended</h2>
+        <div class="hero-heading mb-4">
+
+          <h1 class="hero-title">
+            Find Your Next Favorite Game
+          </h1>
+
+          <p class="hero-subtitle">
+            Explore curated games, read community reviews, discover the latest gaming news,
+            and find the best deals—all in one place.
+          </p>
+
         </div>
 
       <!-- Skeleton -->
@@ -358,11 +378,61 @@ export default {
             <div class="steam-info-top">
               <h3 class="steam-title">{{ currentGame.displayTitle }}</h3>
               <div class="steam-meta-row">
-                <span class="steam-badge-genre">{{ currentGame.displayGenre }}</span>
-                <span v-if="currentGame.itemType === 'f2p'" class="steam-badge-free">Free to Play</span>
-                <span v-else class="steam-badge-free" style="background:var(--primary-color)">Premium Game</span>
+
+                <span class="steam-badge-genre">
+                  {{ currentGame.displayGenre }}
+                </span>
+
+                <span
+                  v-if="currentGame.itemType === 'f2p'"
+                  class="steam-badge-free"
+                >
+                  Free to Play
+                </span>
+
+                <span
+                  v-else
+                  class="steam-badge-premium"
+                >
+                  Premium
+                </span>
+
+                <span
+                  v-if="currentDetail?.platform"
+                  class="steam-badge-platform"
+                >
+                  {{ currentDetail.platform }}
+                </span>
+
               </div>
-              <p class="steam-desc">{{ shortDesc }}</p>
+              <p class="steam-desc">
+                {{ shortDesc }}
+              </p>
+
+              <p
+                v-if="currentDetail?.publisher"
+                class="steam-publisher"
+              >
+                Published by
+                <strong>{{ currentDetail.publisher }}</strong>
+              </p>
+              <div class="hero-actions mt-4">
+
+                <router-link
+                  :to="currentGame.displayLink"
+                  class="btn steam-play-btn"
+                >
+                  Explore Game
+                </router-link>
+
+                <router-link
+                  to="/games"
+                  class="btn btn-outline-secondary ms-2"
+                >
+                  Browse Library
+                </router-link>
+
+              </div>
             </div>
 
             <div class="steam-screenshots-grid">
@@ -381,6 +451,15 @@ export default {
                 <span class="steam-dev-label">Developer</span>
                 <span class="steam-dev-value">{{ currentDetail?.developer || currentDetail?.developers[0]?.name }}</span>
               </div>
+              <div class="hero-extra-info">
+                <span>{{ currentGame.displayGenre }}</span>
+                <span>
+                  {{ currentGame.itemType === 'f2p'
+                    ? 'Free to Play'
+                    : 'Premium Game'
+                  }}
+                </span>
+              </div>
               <router-link :to="currentGame.displayLink" class="btn steam-play-btn">
                 View Game →
               </router-link>
@@ -389,6 +468,12 @@ export default {
         </transition>
 
         <button class="steam-arrow steam-arrow-right" @click="next" aria-label="Next game">›</button>
+
+        <div class="steam-counter">
+          {{ activeIndex + 1 }}
+          <span>/</span>
+          {{ featuredGames.length }}
+        </div>
 
         <div class="steam-dots">
           <button
@@ -403,6 +488,32 @@ export default {
       </div>
     </div> <!-- /steam-hero-fullbleed -->
 
+    <!-- Trending Quick Navigation -->
+    <section class="hero-shortcuts">
+      <div class="container">
+
+        <router-link to="/games" class="hero-shortcut-card">
+          <span class="shortcut-title">Browse Games</span>
+          <small>400+ titles</small>
+        </router-link>
+
+        <router-link to="/news" class="hero-shortcut-card">
+          <span class="shortcut-title">Gaming News</span>
+          <small>Latest updates</small>
+        </router-link>
+
+        <router-link to="/games?filter=free" class="hero-shortcut-card">
+          <span class="shortcut-title">Free Games</span>
+          <small>No cost to play</small>
+        </router-link>
+
+        <router-link to="/deals" class="hero-shortcut-card">
+          <span class="shortcut-title">Best Deals</span>
+          <small>Save on games</small>
+        </router-link>
+
+      </div>
+    </section>
     <div class="container steam-main-container pb-5">
 
       <!-- ══════════════════════════════════════
@@ -461,7 +572,7 @@ export default {
                 <h4 class="steam-preview-title">{{ hoveredGame.name }}</h4>
                 <div class="steam-preview-reviews" v-if="hoveredGame.metacritic">
                   <span class="preview-mc" :class="metacriticClass(hoveredGame.metacritic)">{{ hoveredGame.metacritic }}</span>
-                  <span style="color:#8f98a0; font-size:0.75rem;">Metacritic</span>
+                  <span style="color:var(--text-secondary); font-size:0.75rem;">Metacritic</span>
                 </div>
                 <div class="steam-preview-screenshots">
                   <img v-if="hoveredGame.background_image" :src="hoveredGame.background_image" alt="" class="preview-img-main">
@@ -643,7 +754,7 @@ export default {
               <span class="feature-card-icon"><i class="bi bi-bookmark-heart"></i></span>
               <h5>Personal Collection</h5>
               <p>
-                Save any game to your favorites. Your collection is synced to the cloud and accessible from any device.
+                Save any game to your wishlist. Your collection is synced to the cloud and accessible from any device.
               </p>
             </div>
           </div>
@@ -717,47 +828,47 @@ export default {
 }
 
 /* --- STEAM TABBED DISCOVERY --- */
-.steam-tabs-container { background: #ffffff; border-radius: 8px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-.steam-tabs-header { display: flex; background: #f8fafc; border-bottom: 1px solid #e5e7eb; }
-.steam-tab-btn { flex: 1; background: transparent; border: none; color: #4b5563; font-weight: 600; font-size: 0.95rem; padding: 16px; cursor: pointer; transition: all 0.2s ease; border-bottom: 2px solid transparent; text-align: center; }
-.steam-tab-btn:hover { color: #00439c; background: #f1f5f9; }
-.steam-tab-btn.active { color: #00439c; border-bottom-color: #00439c; background: #fff; }
-.steam-tab-content { background: #fff; min-height: 400px; }
+.steam-tabs-container { background: var(--bg-surface); border-radius: 8px; border: 1px solid var(--border-subtle); overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.steam-tabs-header { display: flex; background: var(--bg-deep); border-bottom: 1px solid var(--border-subtle); }
+.steam-tab-btn { flex: 1; background: transparent; border: none; color: var(--text-muted); font-weight: 600; font-size: 0.95rem; padding: 16px; cursor: pointer; transition: all 0.2s ease; border-bottom: 2px solid transparent; text-align: center; }
+.steam-tab-btn:hover { color: var(--text-primary); background: var(--bg-surface); }
+.steam-tab-btn.active { color: var(--text-primary); border-bottom-color: #00439c; background: var(--bg-surface); }
+.steam-tab-content { background: var(--bg-surface); min-height: 400px; }
 .steam-tab-list { max-height: 500px; overflow-y: auto; }
 .steam-tab-list::-webkit-scrollbar { width: 8px; }
-.steam-tab-list::-webkit-scrollbar-track { background: #f1f5f9; }
-.steam-tab-list::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-.steam-tab-list::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-.steam-tab-item { display: flex; align-items: center; padding: 12px 16px; text-decoration: none; border-bottom: 1px solid #e5e7eb; transition: background 0.15s ease; color: inherit; }
-.steam-tab-item:hover { background: #f8fafc; cursor: pointer; }
-.steam-tab-item-img { width: 140px; height: 65px; flex-shrink: 0; overflow: hidden; border-radius: 4px; background: #e2e8f0; }
+.steam-tab-list::-webkit-scrollbar-track { background: var(--bg-deep); }
+.steam-tab-list::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 4px; }
+.steam-tab-list::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+.steam-tab-item { display: flex; align-items: center; padding: 12px 16px; text-decoration: none; border-bottom: 1px solid var(--border-subtle); transition: background 0.15s ease; color: inherit; }
+.steam-tab-item:hover { background: var(--bg-deep); cursor: pointer; }
+.steam-tab-item-img { width: 140px; height: 65px; flex-shrink: 0; overflow: hidden; border-radius: 4px; background: var(--bg-deep); }
 .steam-tab-item-img img { width: 100%; height: 100%; object-fit: cover; }
 .steam-tab-item-info { flex: 1; min-width: 0; padding: 0 16px; }
-.steam-tab-item-title { color: #111827; font-weight: 600; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+.steam-tab-item-title { color: var(--text-primary); font-weight: 600; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
 .steam-tab-item-tags { display: flex; gap: 6px; flex-wrap: wrap; }
-.steam-tab-tag { font-size: 0.65rem; background: #f1f5f9; color: #475569; padding: 2px 6px; border-radius: 4px; }
+.steam-tab-tag { font-size: 0.65rem; background: var(--bg-deep); color: var(--text-secondary); padding: 2px 6px; border-radius: 4px; }
 .steam-tab-item-meta { display: flex; align-items: center; justify-content: flex-end; width: 100px; }
 .steam-tab-free { color: #00439c; font-weight: 700; font-size: 0.9rem; }
-.steam-tab-price { color: #111827; font-weight: 700; font-size: 0.9rem; background: #f1f5f9; padding: 4px 8px; border-radius: 4px; }
-.steam-tab-preview-col { background: #f8fafc; border-left: 1px solid #e5e7eb; }
+.steam-tab-price { color: var(--text-primary); font-weight: 700; font-size: 0.9rem; background: var(--bg-deep); padding: 4px 8px; border-radius: 4px; }
+.steam-tab-preview-col { background: var(--bg-deep); border-left: 1px solid var(--border-subtle); }
 .steam-tab-preview { padding: 24px; position: sticky; top: 0; }
-.steam-preview-title { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 12px; }
+.steam-preview-title { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; }
 .steam-preview-reviews { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
 .preview-mc { padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 0.85rem; }
 .preview-img-main { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 12px; }
 
 /* --- STEAM SPECIAL OFFERS --- */
-.steam-special-offer-card { width: 280px; flex: 0 0 280px; background: #ffffff; display: flex; flex-direction: column; text-decoration: none; color: inherit; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-radius: 6px; overflow: hidden; border: 1px solid #e5e7eb; }
+.steam-special-offer-card { width: 280px; flex: 0 0 280px; background: var(--bg-surface); display: flex; flex-direction: column; text-decoration: none; color: inherit; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-radius: 6px; overflow: hidden; border: 1px solid var(--border-subtle); }
 .steam-special-offer-card:hover { transform: scale(1.03); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
 .sso-img-wrap { width: 100%; height: 130px; }
 .sso-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
 .sso-body { padding: 12px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-.sso-title { color: #111827; font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sso-price-row { display: flex; align-items: stretch; height: 34px; background: #f1f5f9; border-radius: 4px; overflow: hidden; width: fit-content; }
+.sso-title { color: var(--text-primary); font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sso-price-row { display: flex; align-items: stretch; height: 34px; background: var(--bg-deep); border-radius: 4px; overflow: hidden; width: fit-content; }
 .sso-discount { background: #facc15; color: #111827; font-weight: 700; font-size: 0.95rem; padding: 0 8px; display: flex; align-items: center; }
 .sso-prices { background: transparent; display: flex; flex-direction: column; justify-content: center; padding: 0 8px; }
-.sso-orig { color: #64748b; text-decoration: line-through; font-size: 0.65rem; line-height: 1; margin-bottom: 2px; }
-.sso-sale { color: #111827; font-size: 0.85rem; font-weight: 700; line-height: 1; }
+.sso-orig { color: var(--text-muted); text-decoration: line-through; font-size: 0.65rem; line-height: 1; margin-bottom: 2px; }
+.sso-sale { color: var(--text-primary); font-size: 0.85rem; font-weight: 700; line-height: 1; }
 
 /* --- STEAM GENRE CARDS --- */
 .steam-genre-explorer { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }

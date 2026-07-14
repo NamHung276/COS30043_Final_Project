@@ -1,6 +1,6 @@
 // src/views/Deals.vue
 <script>
-import { cheapSharkApi } from '../api'
+import { cheapSharkApi } from '../services/api'
 import SkeletonCard from '../components/SkeletonCard.vue'
 
 const STORE_NAMES = {
@@ -37,7 +37,8 @@ export default {
       return this.deals.filter(deal => {
         const matchesSearch = !term || deal.title.toLowerCase().includes(term)
         const matchesStore = !this.selectedStore || deal.storeID === this.selectedStore
-        return matchesSearch && matchesStore
+        const matchesSavings = this.savingsInt(deal.savings) >= this.minSavings
+        return matchesSearch && matchesStore && matchesSavings
       })
     },
     paginatedDeals() {
@@ -67,7 +68,8 @@ export default {
 
   watch: {
     searchTerm() { this.currentPage = 1 },
-    selectedStore() { this.currentPage = 1 }
+    selectedStore() { this.currentPage = 1 },
+    minSavings() { this.currentPage = 1 }
   },
 
   methods: {
@@ -93,7 +95,7 @@ export default {
         const { data } = await cheapSharkApi.get('/deals', {
           params: { sortBy: this.sortBy, upperPrice: this.maxPrice, lowerPrice: 0, pageSize: 60, onSale: 1 }
         })
-        this.deals = data.filter(d => this.savingsInt(d.savings) >= this.minSavings)
+        this.deals = data
         this.currentPage = 1
       } catch (err) {
         console.error(err)
@@ -173,7 +175,7 @@ export default {
           <div class="deals-filter-row deals-sliders-row">
             <div class="deals-slider-group">
               <label class="deals-filter-label">
-                Max Price: <strong class="deals-slider-val deals-slider-val-price">${{ maxPrice === 60 ? '60+' : maxPrice }}</strong>
+                Max Price: <strong class="deals-slider-val deals-slider-val-price">${{ maxPrice }}</strong>
               </label>
               <div class="deals-slider-track">
                 <input v-model.number="maxPrice" type="range" class="deals-range" min="0" max="60" step="5" @change="fetchDeals" aria-label="Maximum price filter">

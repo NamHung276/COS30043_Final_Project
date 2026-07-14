@@ -1,6 +1,6 @@
 // src/components/Footer.vue
 <template>
-  <footer class="footer mt-5 py-4">
+  <footer class="footer mt-5 py-4 gd-footer-transition">
     <div class="container text-center">
 
       <h5><i class="bi bi-controller me-2"></i>GameHub</h5>
@@ -52,3 +52,9 @@
     </div>
   </footer>
 </template>
+
+<style scoped>
+.gd-footer-transition {
+    background: linear-gradient(var(--bg-deep), var(--border-subtle));
+}
+</style>

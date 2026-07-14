@@ -2,12 +2,13 @@
 <script>
 import { inject } from 'vue'
 import { auth, db } from '../firebase'
-import { rawgApi } from '../api'
+import { rawgApi } from '../services/api'
 import { onAuthStateChanged } from 'firebase/auth'
 import {
   collection, query, where, getDocs, addDoc
 } from 'firebase/firestore'
 import ReviewSection from '../components/ReviewSection.vue'
+import { cartState } from '../services/cart'
 
 export default {
   components: { ReviewSection },
@@ -21,6 +22,7 @@ export default {
     return {
       game: null,
       screenshots: [],
+      trailers: [],
       similarGames: [],
       loading: true,
       currentUser: null,
@@ -79,6 +81,13 @@ export default {
         return this.screenshots[this.activeShot].image
       }
       return this.game?.background_image
+    },
+    
+    fakePrice() {
+      // Deterministic fake price based on game ID
+      if (!this.game) return 0
+      const base = (this.game.id % 40) + 10 // $10 to $49
+      return base + 0.99
     }
   },
 
@@ -135,7 +144,7 @@ export default {
           where('userId', '==', this.currentUser.uid),
           where('gameId', '==', this.game.id)
         ))
-        if (!snap.empty) { this.showFavStatus('⚠️ Already in your favorites!', 'warning'); return }
+        if (!snap.empty) { this.showFavStatus('⚠️ Already in your wishlist!', 'warning'); return }
         await addDoc(collection(db, 'favorites'), {
           userId: this.currentUser.uid,
           gameId: this.game.id,
@@ -143,7 +152,7 @@ export default {
           thumbnail: this.game.background_image,
           genre: this.game.genres?.[0]?.name || ''
         })
-        this.showFavStatus('⭐ Added to favorites!', 'success')
+        this.showFavStatus('⭐ Added to wishlist!', 'success')
       } catch (err) {
         console.error(err)
         this.showFavStatus('Something went wrong. Please try again.', 'error')
@@ -179,22 +188,40 @@ export default {
         this.carouselInterval = null
       }
     },
+    
+    addToCart() {
+      cartState.add({
+        id: this.game.id,
+        name: this.game.name,
+        price: this.fakePrice,
+        thumbnail: this.game.background_image
+      })
+      this.toast?.show(`${this.game.name} added to cart`, 'success')
+    },
+    
+    buyNow() {
+      this.addToCart()
+      this.$router.push('/checkout')
+    },
 
     async fetchData(id) {
       this.loading = true
       this.game = null
       this.screenshots = []
+      this.trailers = []
       this.similarGames = []
       this.activeShot = 0
       
       try {
-        const [gameRes, ssRes, simRes] = await Promise.all([
+        const [gameRes, ssRes, moviesRes, simRes] = await Promise.all([
           rawgApi.get(`/games/${id}`),
           rawgApi.get(`/games/${id}/screenshots`),
+          rawgApi.get(`/games/${id}/movies`),
           rawgApi.get(`/games/${id}/game-series`)
         ])
         this.game = gameRes.data
         this.screenshots = ssRes.data.results || []
+        this.trailers = moviesRes.data.results || []
         this.similarGames = (simRes.data.results || []).slice(0, 6)
 
         const genreSlug = this.game.genres?.[0]?.slug
@@ -300,7 +327,7 @@ export default {
                 </div>
                 <span class="gd-rating-text">
                   {{ game.rating.toFixed(1) }}/5
-                  <span class="gd-rating-count">({{ (game.ratings_count || 0).toLocaleString() }} ratings)</span>
+                  <span class="gd-rating-count">Based on {{ (game.ratings_count || 0).toLocaleString() }} ratings</span>
                 </span>
                 <span v-if="game.metacritic" class="gd-metacritic" :class="metacriticClass">
                   {{ game.metacritic }}
@@ -327,6 +354,17 @@ export default {
           <!-- ── LEFT: Screenshots + About + Tags ── -->
           <div class="col-lg-8">
 
+            <!-- Gameplay Trailer -->
+            <div v-if="trailers.length > 0" class="gd-section mb-4">
+              <h2 class="gd-section-title mb-3">Gameplay Trailer</h2>
+              <div class="ratio ratio-16x9 rounded-4 overflow-hidden" style="box-shadow: 0 8px 30px rgba(0,0,0,0.5);">
+                <video controls :poster="trailers[0].preview" style="width: 100%; height: 100%; object-fit: cover; background: #000;">
+                  <source :src="trailers[0].data.max" type="video/mp4">
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            </div>
+
             <!-- Screenshot Viewer -->
             <div v-if="screenshots.length" class="gd-screenshots-block mb-4">
               <!-- Main featured shot -->
@@ -339,29 +377,32 @@ export default {
                 <div class="gd-shot-zoom-hint">Click to enlarge</div>
               </div>
               <!-- Thumbnail strip -->
-              <div class="gd-shot-strip">
-                <div
+              <div class="gd-shot-strip" role="tablist">
+                <button
                   v-for="(shot, i) in screenshots"
                   :key="shot.id"
                   class="gd-shot-thumb"
                   :class="{ active: i === activeShot }"
                   @click="selectShot(i)"
+                  :aria-label="`View screenshot ${i + 1}`"
+                  role="tab"
+                  :aria-selected="i === activeShot"
                 >
                   <img v-lazy-img="shot.image" :alt="`Screenshot ${i + 1}`">
-                </div>
+                </button>
               </div>
             </div>
 
             <!-- About -->
-            <div class="gd-section mb-4">
-              <h2 class="gd-section-title">About this game</h2>
+            <div class="gd-section mb-5">
+              <h2 class="gd-section-title" style="font-size:2rem;">About this game</h2>
               <div class="gd-description">
                 {{ game.description_raw || 'No description available.' }}
               </div>
             </div>
 
             <!-- Tags -->
-            <div v-if="game.tags?.length" class="gd-section mb-4">
+            <div v-if="game.tags?.length" class="gd-section mb-5">
               <h2 class="gd-section-title">Tags</h2>
               <div class="gd-tags">
                 <span v-for="tag in game.tags.slice(0, 20)" :key="tag.id" class="gd-tag">
@@ -371,7 +412,7 @@ export default {
             </div>
 
             <!-- Similar Games / Series -->
-            <div v-if="similarGames.length" class="gd-section mb-4">
+            <div v-if="similarGames.length" class="gd-section mb-5">
               <h2 class="gd-section-title">More in This Series</h2>
               <div class="gd-similar-grid">
                 <router-link
@@ -386,7 +427,14 @@ export default {
                     class="gd-similar-img"
                   >
                   <div class="gd-similar-body">
-                    <p class="gd-similar-title">{{ g.name }}</p>
+                    <div class="gd-similar-info">
+                      <p class="gd-similar-title">{{ g.name }}</p>
+                      <small class="gd-similar-meta">
+                        <span v-if="g.genres?.[0]">{{ g.genres[0].name }}</span>
+                        <span v-if="g.genres?.[0] && g.released"> • </span>
+                        <span v-if="g.released">{{ g.released.split('-')[0] }}</span>
+                      </small>
+                    </div>
                     <span v-if="g.metacritic" class="gd-similar-mc" :class="g.metacritic >= 75 ? 'mc-green' : g.metacritic >= 50 ? 'mc-yellow' : 'mc-red'">
                       {{ g.metacritic }}
                     </span>
@@ -395,8 +443,19 @@ export default {
               </div>
             </div>
 
+            <!-- REVIEWS (Moved Above Discover) -->
+            <div class="gd-section mb-5">
+              <div class="gd-review-header">
+                <div>
+                  <h2 class="gd-section-title" style="font-size:2rem;">Community Reviews</h2>
+                  <p class="gd-review-subtitle text-muted" style="margin-top:-10px; margin-bottom: 20px;">Share your thoughts and help other players decide.</p>
+                </div>
+              </div>
+              <ReviewSection :game-id="game.id" :game-title="game.name" />
+            </div>
+
             <!-- Discover More -->
-            <div v-if="discoverMoreGames.length" class="gd-section mb-4">
+            <div v-if="discoverMoreGames.length" class="gd-section mb-5">
               <h2 class="gd-section-title">More Games to Discover</h2>
               <div class="gd-similar-grid">
                 <router-link
@@ -407,7 +466,14 @@ export default {
                 >
                   <img v-lazy-img="g.background_image" :alt="g.name" class="gd-similar-img">
                   <div class="gd-similar-body">
-                    <p class="gd-similar-title">{{ g.name }}</p>
+                    <div class="gd-similar-info">
+                      <p class="gd-similar-title">{{ g.name }}</p>
+                      <small class="gd-similar-meta">
+                        <span v-if="g.genres?.[0]">{{ g.genres[0].name }}</span>
+                        <span v-if="g.genres?.[0] && g.released"> • </span>
+                        <span v-if="g.released">{{ g.released.split('-')[0] }}</span>
+                      </small>
+                    </div>
                     <span v-if="g.metacritic" class="gd-similar-mc" :class="g.metacritic >= 75 ? 'mc-green' : g.metacritic >= 50 ? 'mc-yellow' : 'mc-red'">
                       {{ g.metacritic }}
                     </span>
@@ -417,7 +483,7 @@ export default {
             </div>
 
             <!-- Recent Releases -->
-            <div v-if="recentGames.length" class="gd-section mb-4">
+            <div v-if="recentGames.length" class="gd-section mb-5">
               <h2 class="gd-section-title">Recent Releases</h2>
               <div class="gd-similar-grid">
                 <router-link
@@ -428,7 +494,14 @@ export default {
                 >
                   <img v-lazy-img="g.background_image" :alt="g.name" class="gd-similar-img">
                   <div class="gd-similar-body">
-                    <p class="gd-similar-title">{{ g.name }}</p>
+                    <div class="gd-similar-info">
+                      <p class="gd-similar-title">{{ g.name }}</p>
+                      <small class="gd-similar-meta">
+                        <span v-if="g.genres?.[0]">{{ g.genres[0].name }}</span>
+                        <span v-if="g.genres?.[0] && g.released"> • </span>
+                        <span v-if="g.released">{{ g.released.split('-')[0] }}</span>
+                      </small>
+                    </div>
                     <span v-if="g.metacritic" class="gd-similar-mc" :class="g.metacritic >= 75 ? 'mc-green' : g.metacritic >= 50 ? 'mc-yellow' : 'mc-red'">
                       {{ g.metacritic }}
                     </span>
@@ -453,31 +526,52 @@ export default {
               </div>
 
               <!-- Actions -->
-              <div class="gd-actions mb-4">
-                <a
-                  v-if="game.website"
-                  :href="game.website"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="btn btn-primary w-100 mb-2 gd-action-btn"
-                >
-                  <img src="/logo/pc.svg" alt="" class="gd-action-icon">
-                  <span>Official Website</span>
-                </a>
+              <div class="gd-actions mb-4 p-3 profile-glass-card rounded-4 border border-secondary border-opacity-25" style="background: rgba(15, 23, 42, 0.6);">
+                <div class="text-center mb-3">
+                  <span class="fs-2 fw-bold text-white">${{ fakePrice }}</span>
+                </div>
+                
                 <button
-                  class="btn btn-success w-100 mb-2 gd-action-btn"
-                  @click="addToFavorites"
-                  aria-label="Add to favorites"
+                  class="btn gd-btn-primary w-100 mb-2 py-2 fw-bold"
+                  @click="buyNow"
+                  aria-label="Buy Now"
                 >
-                  <img src="/logo/star.svg" alt="" class="gd-action-icon">
-                  <span>Add to Favorites</span>
+                  <i class="bi bi-credit-card-fill me-2"></i> Buy Now
                 </button>
+                
+                <button
+                  class="btn btn-outline-light w-100 mb-3 py-2 fw-bold"
+                  @click="addToCart"
+                  aria-label="Add to Cart"
+                >
+                  <i class="bi bi-cart-plus-fill me-2"></i> Add to Cart
+                </button>
+
+                <div class="d-flex gap-2">
+                  <a
+                    v-if="game.website"
+                    :href="game.website"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn btn-sm btn-dark flex-grow-1 gd-action-btn border-secondary"
+                    aria-label="Official Website"
+                  >
+                    <i class="bi bi-globe me-1"></i> Website
+                  </a>
+                  <button
+                    class="btn btn-sm btn-dark flex-grow-1 gd-action-btn border-secondary"
+                    @click="addToFavorites"
+                    aria-label="Add to wishlist"
+                  >
+                    <i class="bi bi-star-fill text-warning me-1"></i> Wishlist
+                  </button>
+                </div>
 
                 <!-- Status toast -->
                 <transition name="fav-fade">
                   <div
                     v-if="favStatus.visible"
-                    class="fav-status-msg"
+                    class="fav-status-msg mt-3"
                     :class="`fav-status-${favStatus.type}`"
                     role="status"
                     aria-live="polite"
@@ -497,6 +591,7 @@ export default {
                       target="_blank"
                       rel="noopener noreferrer"
                       class="gd-store-btn"
+                      :aria-label="`Buy on ${s.store.name}`"
                     >
                       {{ s.store.name }}
                     </a>
@@ -537,11 +632,6 @@ export default {
             </div>
           </div>
 
-        </div>
-
-        <!-- ══════════ REVIEWS ══════════ -->
-        <div class="gd-reviews-section">
-          <ReviewSection :game-id="game.id" />
         </div>
 
       </div>
@@ -596,6 +686,7 @@ export default {
   position: absolute;
   inset: 0;
   overflow: hidden;
+  animation: gdFadeIn 1s ease-out forwards;
 }
 .gd-hero-bg img {
   width: 100%; height: 100%;
@@ -654,8 +745,17 @@ export default {
   box-shadow: 0 12px 40px rgba(0,0,0,0.7);
   flex-shrink: 0;
   border: 2px solid rgba(255,255,255,0.1);
+  animation: gdSlideUp 0.6s ease-out forwards;
+  animation-delay: 0.1s;
+  opacity: 0;
+  transform: translateY(20px);
 }
-.gd-hero-info { flex: 1; min-width: 240px; }
+.gd-hero-info { 
+  flex: 1; min-width: 240px; 
+  animation: gdFadeIn 0.8s ease-out forwards; 
+  animation-delay: 0.3s; 
+  opacity: 0; 
+}
 .gd-title {
   font-size: clamp(1.6rem, 4vw, 2.8rem);
   font-weight: 900;
@@ -664,6 +764,13 @@ export default {
   letter-spacing: -0.02em;
   text-shadow: 0 2px 20px rgba(0,0,0,0.8);
   line-height: 1.1;
+}
+
+@keyframes gdFadeIn {
+  to { opacity: 1; }
+}
+@keyframes gdSlideUp {
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Genre/ESRB badges */
@@ -827,20 +934,17 @@ export default {
   background: rgba(255,255,255,0.03);
   border: 1px solid var(--border-glass);
   border-radius: 16px;
-  padding: 20px 22px;
+  padding: 32px;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
 }
 .gd-section-title {
-  font-size: 1rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: 16px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--border-glass);
   letter-spacing: 0.02em;
-  text-transform: uppercase;
-  font-size: 0.82rem;
-  color: var(--text-muted);
 }
 
 /* ── Description ──────────────────────────── */
@@ -894,10 +998,16 @@ export default {
 .gd-similar-img { width: 100%; height: 80px; object-fit: cover; display: block; }
 .gd-similar-body { padding: 8px; display: flex; justify-content: space-between; align-items: center; gap: 6px; }
 .gd-similar-title {
-  font-size: 0.72rem; font-weight: 600;
-  color: var(--text-primary); margin: 0;
+  font-size: 0.85rem; font-weight: 600;
+  color: var(--text-primary); margin: 0 0 2px 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.gd-similar-meta {
+  font-size: 0.7rem; color: var(--text-muted);
+}
+.gd-similar-info {
   flex: 1;
+  overflow: hidden;
 }
 .gd-similar-mc {
   font-size: 0.65rem; font-weight: 800;
@@ -934,6 +1044,11 @@ export default {
   align-items: center;
   justify-content: center;
   gap: 10px;
+  transition: all 0.25s ease;
+}
+.gd-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
 }
 .gd-action-icon {
   width: 18px;
@@ -989,8 +1104,7 @@ export default {
 .gd-detail-label { color: var(--text-muted); flex-shrink: 0; }
 .gd-detail-value { color: var(--text-primary); font-weight: 600; text-align: right; }
 
-/* ── Reviews ──────────────────────────────── */
-.gd-reviews-section { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border-glass); }
+
 
 /* ── Lightbox ─────────────────────────────── */
 .gd-lightbox {

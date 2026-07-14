@@ -76,6 +76,12 @@ const routes = [
     component: () => import('../views/FreeToPlayDetails.vue')
   },
   {
+    path: '/checkout',
+    name: 'Checkout',
+    component: () => import('../views/Checkout.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('../views/Login.vue')
@@ -95,6 +101,12 @@ const routes = [
     path: '/profile',
     name: 'Profile',
     component: () => import('../views/Profile.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/library',
+    name: 'Library',
+    component: () => import('../views/Library.vue'),
     meta: { requiresAuth: true }
   },
   {

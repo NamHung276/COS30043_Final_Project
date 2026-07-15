@@ -1,7 +1,6 @@
-// src/components/LikeButton.vue
 <script>
-import { auth, db } from '../firebase'
-import { onAuthStateChanged } from 'firebase/auth'
+import { auth, db } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
 import {
   collection,
   query,
@@ -9,17 +8,17 @@ import {
   getDocs,
   addDoc,
   deleteDoc,
-  doc
-} from 'firebase/firestore'
+  doc,
+} from "firebase/firestore";
 
 export default {
-  name: 'LikeButton',
+  name: "LikeButton",
 
   props: {
     articleId: {
       type: [String, Number],
-      required: true
-    }
+      required: true,
+    },
   },
 
   data() {
@@ -28,87 +27,89 @@ export default {
       likeCount: 0,
       userLikeDocId: null, // Firestore doc id of the current user's like, if any
       loading: true,
-      bouncing: false
-    }
+      bouncing: false,
+    };
   },
 
   computed: {
     isLiked() {
-      return this.userLikeDocId !== null
-    }
+      return this.userLikeDocId !== null;
+    },
   },
 
   watch: {
     // Re-run if the component is reused for a different article (e.g. v-for list)
     articleId() {
-      this.loadLikes()
-    }
+      this.loadLikes();
+    },
   },
 
   methods: {
     async loadLikes() {
-      this.loading = true
+      this.loading = true;
 
       const likesQuery = query(
-        collection(db, 'likes'),
-        where('articleId', '==', this.articleId)
-      )
+        collection(db, "likes"),
+        where("articleId", "==", this.articleId),
+      );
 
-      const snapshot = await getDocs(likesQuery)
+      const snapshot = await getDocs(likesQuery);
 
-      this.likeCount = snapshot.size
-      this.userLikeDocId = null
+      this.likeCount = snapshot.size;
+      this.userLikeDocId = null;
 
       if (this.currentUser) {
         const myLike = snapshot.docs.find(
-          docSnap => docSnap.data().userId === this.currentUser.uid
-        )
+          (docSnap) => docSnap.data().userId === this.currentUser.uid,
+        );
         if (myLike) {
-          this.userLikeDocId = myLike.id
+          this.userLikeDocId = myLike.id;
         }
       }
 
-      this.loading = false
+      this.loading = false;
     },
 
     async toggleLike() {
       if (!this.currentUser) {
-        this.$router.push('/login')
-        return
+        this.$router.push("/login");
+        return;
       }
 
       // Bounce animation
-      this.bouncing = true
-      setTimeout(() => { this.bouncing = false }, 400)
+      this.bouncing = true;
+      setTimeout(() => {
+        this.bouncing = false;
+      }, 400);
 
       try {
         if (this.isLiked) {
           // Unlike
-          await deleteDoc(doc(db, 'likes', this.userLikeDocId))
-          this.userLikeDocId = null
-          this.likeCount--
+          await deleteDoc(doc(db, "likes", this.userLikeDocId));
+          this.userLikeDocId = null;
+          this.likeCount--;
         } else {
           // Like
-          const newLike = await addDoc(collection(db, 'likes'), {
+          const newLike = await addDoc(collection(db, "likes"), {
             articleId: this.articleId,
-            userId: this.currentUser.uid
-          })
-          this.userLikeDocId = newLike.id
-          this.likeCount++
+            userId: this.currentUser.uid,
+          });
+          this.userLikeDocId = newLike.id;
+          this.likeCount++;
         }
       } catch (error) {
-        console.error('Failed to toggle like:', error)
+        console.error("Failed to toggle like:", error);
       }
-    }
+    },
   },
 
   mounted() {
     onAuthStateChanged(auth, (user) => {
-      this.currentUser = user
-      this.loadLikes()
-    })
-  }
-}
+      this.currentUser = user;
+      this.loadLikes();
+    });
+  },
+};
 </script>
 
 <template>
@@ -116,7 +117,7 @@ export default {
     class="btn btn-sm like-button"
     :class="[
       isLiked ? 'btn-danger' : 'btn-outline-danger',
-      { 'like-bounce': bouncing }
+      { 'like-bounce': bouncing },
     ]"
     :disabled="loading"
     @click.stop="toggleLike"

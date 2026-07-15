@@ -1,4 +1,3 @@
-// src/components/SkeletonCard.vue
 <template>
   <div class="skeleton-card-wrap" aria-hidden="true">
     <!-- Image area -->
@@ -7,18 +6,21 @@
     <!-- Body -->
     <div class="skeleton-body">
       <!-- Title lines -->
-      <div class="skeleton-line" style="width: 88%;"></div>
-      <div class="skeleton-line" style="width: 62%; margin-top: -2px;"></div>
+      <div class="skeleton-line" style="width: 88%"></div>
+      <div class="skeleton-line" style="width: 62%; margin-top: -2px"></div>
 
       <!-- Genre tags -->
       <div class="skeleton-tags">
         <div class="skeleton-tag"></div>
-        <div class="skeleton-tag" style="width: 52px;"></div>
+        <div class="skeleton-tag" style="width: 52px"></div>
       </div>
 
       <!-- Rating bar -->
       <div class="skeleton-rating-bar"></div>
-      <div class="skeleton-line" style="width: 50%; height: 10px; margin-top: 4px;"></div>
+      <div
+        class="skeleton-line"
+        style="width: 50%; height: 10px; margin-top: 4px"
+      ></div>
     </div>
   </div>
 </template>
@@ -37,8 +39,12 @@
 
 /* Shimmer keyframes */
 @keyframes shimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .skeleton-img {

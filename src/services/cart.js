@@ -1,50 +1,56 @@
-// src/services/cart.js
-import { reactive, watch } from 'vue'
+import { reactive, watch } from "vue";
 
 const getInitialCart = () => {
   try {
-    const saved = localStorage.getItem('gamehub_cart')
+    const saved = localStorage.getItem("gamehub_cart");
     if (saved) {
-      return JSON.parse(saved)
+      return JSON.parse(saved);
     }
   } catch (e) {
-    console.error('Failed to parse cart from local storage', e)
+    console.error("Failed to parse cart from local storage", e);
   }
-  return []
-}
+  return [];
+};
 
 export const cartState = reactive({
   items: getInitialCart(),
-  
+
   get totalItems() {
-    return this.items.length
+    return this.items.length;
   },
-  
+
   get totalPrice() {
-    return this.items.reduce((total, item) => total + (item.price || 0), 0)
+    return this.items.reduce(
+      (total, item) => total + (parseFloat(item.price) || 0),
+      0,
+    );
   },
-  
+
   add(game) {
     // Prevent duplicates
-    if (!this.items.some(item => item.id === game.id)) {
-      this.items.push(game)
+    if (!this.items.some((item) => item.id === game.id)) {
+      this.items.push(game);
     }
   },
-  
+
   remove(gameId) {
-    this.items = this.items.filter(item => item.id !== gameId)
+    this.items = this.items.filter((item) => item.id !== gameId);
   },
-  
+
   clear() {
-    this.items = []
+    this.items = [];
   },
-  
+
   has(gameId) {
-    return this.items.some(item => item.id === gameId)
-  }
-})
+    return this.items.some((item) => item.id === gameId);
+  },
+});
 
 // Persist cart to local storage whenever it changes
-watch(() => cartState.items, (newItems) => {
-  localStorage.setItem('gamehub_cart', JSON.stringify(newItems))
-}, { deep: true })
+watch(
+  () => cartState.items,
+  (newItems) => {
+    localStorage.setItem("gamehub_cart", JSON.stringify(newItems));
+  },
+  { deep: true },
+);

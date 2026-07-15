@@ -1,22 +1,20 @@
-// src/views/Favorites.vue
 <script>
-import { inject } from 'vue'
-import { auth, db } from '../firebase'
-import { onAuthStateChanged } from 'firebase/auth'
+import { inject } from "vue";
+import { auth, db } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
 import {
   collection,
   query,
   where,
-  orderBy,
   getDocs,
   deleteDoc,
-  doc
-} from 'firebase/firestore'
+  doc,
+} from "firebase/firestore";
 
 export default {
   setup() {
-    const toast = inject('toast')
-    return { toast }
+    const toast = inject("toast");
+    return { toast };
   },
 
   data() {
@@ -24,103 +22,119 @@ export default {
       favorites: [],
       loading: true,
       currentUser: null,
-      searchQuery: '',
-      selectedGenre: 'All',
-      sortBy: 'newest',
-      viewMode: 'grid'
-    }
+      searchQuery: "",
+      selectedGenre: "All",
+      sortBy: "newest",
+      viewMode: "grid",
+    };
   },
 
   computed: {
     allGenres() {
-      const genres = ['All', ...new Set(this.favorites.map(f => f.genre).filter(Boolean))]
-      return genres
+      const genres = [
+        "All",
+        ...new Set(this.favorites.map((f) => f.genre).filter(Boolean)),
+      ];
+      return genres;
     },
 
     filteredFavorites() {
-      let list = [...this.favorites]
+      let list = [...this.favorites];
 
       if (this.searchQuery.trim()) {
-        const q = this.searchQuery.toLowerCase()
-        list = list.filter(f => f.title?.toLowerCase().includes(q))
+        const q = this.searchQuery.toLowerCase();
+        list = list.filter((f) => f.title?.toLowerCase().includes(q));
       }
 
-      if (this.selectedGenre !== 'All') {
-        list = list.filter(f => f.genre === this.selectedGenre)
+      if (this.selectedGenre !== "All") {
+        list = list.filter((f) => f.genre === this.selectedGenre);
       }
 
-      if (this.sortBy === 'az') {
-        list.sort((a, b) => (a.title || '').localeCompare(b.title || ''))
-      } else if (this.sortBy === 'za') {
-        list.sort((a, b) => (b.title || '').localeCompare(a.title || ''))
+      if (this.sortBy === "az") {
+        list.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+      } else if (this.sortBy === "za") {
+        list.sort((a, b) => (b.title || "").localeCompare(a.title || ""));
       }
 
-      return list
+      return list;
     },
 
     totalCount() {
-      return this.favorites.length
+      return this.favorites.length;
     },
 
     filteredCount() {
-      return this.filteredFavorites.length
-    }
+      return this.filteredFavorites.length;
+    },
   },
 
   methods: {
     async removeFavorite(favoriteId, title) {
       try {
-        await deleteDoc(doc(db, 'favorites', favoriteId))
-        this.favorites = this.favorites.filter(fav => fav.id !== favoriteId)
-        this.toast.show(`Removed "${title}" from wishlist`, 'info')
+        await deleteDoc(doc(db, "favorites", favoriteId));
+        this.favorites = this.favorites.filter((fav) => fav.id !== favoriteId);
+        this.toast.show(`Removed "${title}" from wishlist`, "info");
       } catch (error) {
-        console.error('Failed to remove from wishlist:', error)
-        this.toast.show('Failed to remove. Please try again.', 'error')
+        console.error("Failed to remove from wishlist:", error);
+        this.toast.show("Failed to remove. Please try again.", "error");
       }
     },
 
     async loadFavorites(user) {
-      this.loading = true
+      this.loading = true;
       const favoritesQuery = query(
-        collection(db, 'favorites'),
-        where('userId', '==', user.uid),
-        orderBy('createdAt', 'desc')
-      )
-      const snapshot = await getDocs(favoritesQuery)
-      this.favorites = snapshot.docs.map(docSnap => ({
+        collection(db, "favorites"),
+        where("userId", "==", user.uid),
+      );
+      const snapshot = await getDocs(favoritesQuery);
+      const favs = snapshot.docs.map((docSnap) => ({
         id: docSnap.id,
-        ...docSnap.data()
-      }))
-      this.loading = false
+        ...docSnap.data(),
+      }));
+
+      // Sort in descending order of createdAt locally to avoid requiring a composite index
+      favs.sort((a, b) => {
+        const timeA =
+          a.createdAt && typeof a.createdAt.toMillis === "function"
+            ? a.createdAt.toMillis()
+            : 0;
+        const timeB =
+          b.createdAt && typeof b.createdAt.toMillis === "function"
+            ? b.createdAt.toMillis()
+            : 0;
+        return timeB - timeA;
+      });
+
+      this.favorites = favs;
+      this.loading = false;
     },
 
     getSourceLabel(source) {
-      return source === 'freetogame' ? 'Free-to-Play' : 'Premium'
+      return source === "freetogame" ? "Free-to-Play" : "Premium";
     },
 
     getSourceBadgeClass(source) {
-      return source === 'freetogame' ? 'badge-free' : 'badge-steam'
-    }
+      return source === "freetogame" ? "badge-free" : "badge-steam";
+    },
   },
 
   mounted() {
     onAuthStateChanged(auth, (user) => {
       if (!user) {
-        this.favorites = []
-        this.currentUser = null
-        this.$router.push('/login')
-        return
+        this.favorites = [];
+        this.currentUser = null;
+        this.$router.push("/login");
+        return;
       }
-      this.currentUser = user
-      this.loadFavorites(user)
-    })
-  }
-}
+      this.currentUser = user;
+      this.loadFavorites(user);
+    });
+  },
+};
 </script>
 
 <template>
   <div class="fav-page">
-
     <!-- Hero Header -->
     <div class="fav-hero">
       <div class="fav-hero-bg"></div>
@@ -130,7 +144,9 @@ export default {
         </div>
         <div>
           <h1 class="fav-hero-title">My Wishlist</h1>
-          <p class="fav-hero-sub">Your personal gaming wishlist, all in one place</p>
+          <p class="fav-hero-sub">
+            Your personal gaming wishlist, all in one place
+          </p>
         </div>
         <div class="fav-hero-stats ms-auto d-none d-md-flex">
           <div class="fav-stat">
@@ -147,7 +163,6 @@ export default {
     </div>
 
     <div class="container fav-body">
-
       <!-- Toolbar -->
       <div class="fav-toolbar" v-if="!loading && favorites.length > 0">
         <div class="fav-search-wrap">
@@ -158,7 +173,7 @@ export default {
             class="fav-search"
             placeholder="Search your wishlist…"
             aria-label="Search wishlist"
-          >
+          />
           <button
             v-if="searchQuery"
             class="fav-search-clear"
@@ -176,11 +191,17 @@ export default {
             class="fav-genre-btn"
             :class="{ active: selectedGenre === genre }"
             @click="selectedGenre = genre"
-          >{{ genre }}</button>
+          >
+            {{ genre }}
+          </button>
         </div>
 
         <div class="fav-toolbar-right">
-          <select v-model="sortBy" class="fav-select" aria-label="Sort wishlist">
+          <select
+            v-model="sortBy"
+            class="fav-select"
+            aria-label="Sort wishlist"
+          >
             <option value="newest">Newest First</option>
             <option value="az">A → Z</option>
             <option value="za">Z → A</option>
@@ -191,21 +212,28 @@ export default {
               :class="{ active: viewMode === 'grid' }"
               @click="viewMode = 'grid'"
               aria-label="Grid view"
-            ><i class="bi bi-grid-3x3-gap-fill"></i></button>
+            >
+              <i class="bi bi-grid-3x3-gap-fill"></i>
+            </button>
             <button
               class="fav-view-btn"
               :class="{ active: viewMode === 'list' }"
               @click="viewMode = 'list'"
               aria-label="List view"
-            ><i class="bi bi-list-ul"></i></button>
+            >
+              <i class="bi bi-list-ul"></i>
+            </button>
           </div>
         </div>
       </div>
 
       <!-- Result count -->
       <div v-if="!loading && favorites.length > 0" class="fav-result-count">
-        Showing <strong>{{ filteredCount }}</strong> of <strong>{{ totalCount }}</strong> games
-        <span v-if="selectedGenre !== 'All'"> in <em>{{ selectedGenre }}</em></span>
+        Showing <strong>{{ filteredCount }}</strong> of
+        <strong>{{ totalCount }}</strong> games
+        <span v-if="selectedGenre !== 'All'">
+          in <em>{{ selectedGenre }}</em></span
+        >
       </div>
 
       <!-- Loading -->
@@ -225,7 +253,7 @@ export default {
         </div>
         <h2 class="fav-empty-title">Your wishlist is empty</h2>
         <p class="fav-empty-desc">
-          Start exploring and hit the ⭐ on any game to save it here.<br>
+          Start exploring and hit the ⭐ on any game to save it here.<br />
           Build your perfect gaming wishlist!
         </p>
         <div class="fav-empty-actions">
@@ -240,12 +268,21 @@ export default {
 
       <!-- No filter results -->
       <div v-else-if="filteredFavorites.length === 0" class="fav-empty">
-        <div class="fav-empty-icon" style="background: rgba(6,182,212,0.12); color: var(--accent);">
+        <div
+          class="fav-empty-icon"
+          style="background: rgba(6, 182, 212, 0.12); color: var(--accent)"
+        >
           <i class="bi bi-funnel"></i>
         </div>
         <h2 class="fav-empty-title">No results found</h2>
         <p class="fav-empty-desc">Try a different search or genre filter.</p>
-        <button class="btn-fav-outline" @click="searchQuery = ''; selectedGenre = 'All'">
+        <button
+          class="btn-fav-outline"
+          @click="
+            searchQuery = '';
+            selectedGenre = 'All';
+          "
+        >
           <i class="bi bi-arrow-counterclockwise me-2"></i>Clear Filters
         </button>
       </div>
@@ -263,9 +300,12 @@ export default {
               v-lazy-img="game.thumbnail"
               class="fav-card-img"
               :alt="`${game.title} thumbnail`"
-            >
+            />
             <div class="fav-card-overlay"></div>
-            <span class="fav-source-badge" :class="getSourceBadgeClass(game.source)">
+            <span
+              class="fav-source-badge"
+              :class="getSourceBadgeClass(game.source)"
+            >
               {{ getSourceLabel(game.source) }}
             </span>
             <button
@@ -279,12 +319,14 @@ export default {
           <div class="fav-card-body">
             <h3 class="fav-card-title">{{ game.title }}</h3>
             <span class="fav-genre-tag">
-              <i class="bi bi-tag me-1"></i>{{ game.genre || 'Unknown' }}
+              <i class="bi bi-tag me-1"></i>{{ game.genre || "Unknown" }}
             </span>
             <router-link
-              :to="game.source === 'freetogame'
-                ? `/free-to-play/${game.gameId}`
-                : `/games/${game.gameId}`"
+              :to="
+                game.source === 'freetogame'
+                  ? `/free-to-play/${game.gameId}`
+                  : `/games/${game.gameId}`
+              "
               class="fav-card-btn"
             >
               View Details <i class="bi bi-arrow-right ms-1"></i>
@@ -305,25 +347,31 @@ export default {
             v-lazy-img="game.thumbnail"
             class="fav-list-thumb"
             :alt="`${game.title} thumbnail`"
-          >
+          />
           <div class="fav-list-info">
             <h3 class="fav-list-title">{{ game.title }}</h3>
             <div class="fav-list-meta">
               <span class="fav-genre-tag">
-                <i class="bi bi-tag me-1"></i>{{ game.genre || 'Unknown' }}
+                <i class="bi bi-tag me-1"></i>{{ game.genre || "Unknown" }}
               </span>
-              <span class="fav-source-badge" :class="getSourceBadgeClass(game.source)" style="position:static;font-size:0.7rem;padding:3px 8px;">
+              <span
+                class="fav-source-badge"
+                :class="getSourceBadgeClass(game.source)"
+                style="position: static; font-size: 0.7rem; padding: 3px 8px"
+              >
                 {{ getSourceLabel(game.source) }}
               </span>
             </div>
           </div>
           <div class="fav-list-actions">
             <router-link
-              :to="game.source === 'freetogame'
-                ? `/free-to-play/${game.gameId}`
-                : `/games/${game.gameId}`"
+              :to="
+                game.source === 'freetogame'
+                  ? `/free-to-play/${game.gameId}`
+                  : `/games/${game.gameId}`
+              "
               class="fav-card-btn"
-              style="padding: 7px 16px; font-size: 0.82rem;"
+              style="padding: 7px 16px; font-size: 0.82rem"
             >
               Details
             </router-link>
@@ -344,7 +392,6 @@ export default {
           <i class="bi bi-plus-circle me-2"></i>Discover More Games
         </router-link>
       </div>
-
     </div>
   </div>
 </template>
@@ -367,8 +414,17 @@ export default {
 .fav-hero-bg {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 80% 60% at 20% 50%, rgba(124,58,237,0.13) 0%, transparent 70%),
-              radial-gradient(ellipse 50% 80% at 80% 30%, rgba(6,182,212,0.08) 0%, transparent 70%);
+  background:
+    radial-gradient(
+      ellipse 80% 60% at 20% 50%,
+      rgba(124, 58, 237, 0.13) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 50% 80% at 80% 30%,
+      rgba(6, 182, 212, 0.08) 0%,
+      transparent 70%
+    );
   pointer-events: none;
 }
 
@@ -384,15 +440,19 @@ export default {
   width: 60px;
   height: 60px;
   border-radius: 16px;
-  background: linear-gradient(135deg, rgba(124,58,237,0.25), rgba(6,182,212,0.2));
-  border: 1px solid rgba(124,58,237,0.35);
+  background: linear-gradient(
+    135deg,
+    rgba(124, 58, 237, 0.25),
+    rgba(6, 182, 212, 0.2)
+  );
+  border: 1px solid rgba(124, 58, 237, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.6rem;
   color: #f59e0b;
   flex-shrink: 0;
-  box-shadow: 0 0 24px rgba(124,58,237,0.2);
+  box-shadow: 0 0 24px rgba(124, 58, 237, 0.2);
 }
 
 .fav-hero-title {
@@ -493,14 +553,18 @@ export default {
   padding: 9px 36px 9px 34px;
   font-size: 0.88rem;
   backdrop-filter: var(--glass-blur);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
-.fav-search::placeholder { color: var(--text-muted); }
+.fav-search::placeholder {
+  color: var(--text-muted);
+}
 .fav-search:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(124,58,237,0.18);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.18);
 }
 
 .fav-search-clear {
@@ -517,7 +581,9 @@ export default {
   line-height: 1;
   transition: color 0.2s;
 }
-.fav-search-clear:hover { color: var(--accent2); }
+.fav-search-clear:hover {
+  color: var(--accent2);
+}
 
 .fav-genre-scroll {
   display: flex;
@@ -544,7 +610,7 @@ export default {
 }
 
 .fav-genre-btn.active {
-  background: rgba(124,58,237,0.2);
+  background: rgba(124, 58, 237, 0.2);
   border-color: var(--primary);
   color: var(--primary-light);
   font-weight: 600;
@@ -568,7 +634,10 @@ export default {
   backdrop-filter: var(--glass-blur);
   transition: border-color 0.2s;
 }
-.fav-select:focus { outline: none; border-color: var(--primary); }
+.fav-select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
 
 .fav-view-toggle {
   display: flex;
@@ -586,9 +655,12 @@ export default {
   transition: all 0.2s;
   font-size: 0.85rem;
 }
-.fav-view-btn:hover { color: var(--text-primary); background: var(--bg-glass-hover); }
+.fav-view-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-glass-hover);
+}
 .fav-view-btn.active {
-  background: rgba(124,58,237,0.22);
+  background: rgba(124, 58, 237, 0.22);
   color: var(--primary-light);
 }
 
@@ -598,8 +670,13 @@ export default {
   color: var(--text-secondary);
   margin-bottom: 1.5rem;
 }
-.fav-result-count strong { color: var(--text-primary); }
-.fav-result-count em { color: var(--primary-light); font-style: normal; }
+.fav-result-count strong {
+  color: var(--text-primary);
+}
+.fav-result-count em {
+  color: var(--primary-light);
+  font-style: normal;
+}
 
 /* ===== Loading ===== */
 .fav-loading {
@@ -631,7 +708,9 @@ export default {
 }
 
 @keyframes fav-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .fav-spinner-icon {
@@ -661,7 +740,11 @@ export default {
   width: 300px;
   height: 300px;
   border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(124,58,237,0.1) 0%, transparent 70%);
+  background: radial-gradient(
+    ellipse,
+    rgba(124, 58, 237, 0.1) 0%,
+    transparent 70%
+  );
   pointer-events: none;
 }
 
@@ -669,8 +752,8 @@ export default {
   width: 88px;
   height: 88px;
   border-radius: 24px;
-  background: rgba(124,58,237,0.12);
-  border: 1px solid rgba(124,58,237,0.2);
+  background: rgba(124, 58, 237, 0.12);
+  border: 1px solid rgba(124, 58, 237, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -712,12 +795,14 @@ export default {
   font-weight: 600;
   font-size: 0.9rem;
   text-decoration: none;
-  box-shadow: 0 4px 20px rgba(124,58,237,0.35);
-  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.35);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 .btn-fav-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(124,58,237,0.45);
+  box-shadow: 0 8px 30px rgba(124, 58, 237, 0.45);
   color: #fff;
 }
 
@@ -758,13 +843,18 @@ export default {
   display: flex;
   flex-direction: column;
   backdrop-filter: var(--glass-blur);
-  transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+  transition:
+    transform 0.25s,
+    box-shadow 0.25s,
+    border-color 0.25s;
 }
 
 .fav-card:hover {
   transform: translateY(-5px);
-  border-color: rgba(124,58,237,0.4);
-  box-shadow: 0 12px 40px rgba(124,58,237,0.18), 0 0 0 1px rgba(124,58,237,0.15);
+  border-color: rgba(124, 58, 237, 0.4);
+  box-shadow:
+    0 12px 40px rgba(124, 58, 237, 0.18),
+    0 0 0 1px rgba(124, 58, 237, 0.15);
 }
 
 .fav-card-img-wrap {
@@ -787,7 +877,11 @@ export default {
 .fav-card-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 40%, rgba(5,7,15,0.85) 100%);
+  background: linear-gradient(
+    180deg,
+    transparent 40%,
+    rgba(5, 7, 15, 0.85) 100%
+  );
   pointer-events: none;
 }
 
@@ -804,14 +898,14 @@ export default {
 }
 
 .badge-free {
-  background: rgba(34,197,94,0.2);
-  border: 1px solid rgba(34,197,94,0.4);
+  background: rgba(34, 197, 94, 0.2);
+  border: 1px solid rgba(34, 197, 94, 0.4);
   color: #4ade80;
 }
 
 .badge-steam {
-  background: rgba(6,182,212,0.2);
-  border: 1px solid rgba(6,182,212,0.4);
+  background: rgba(6, 182, 212, 0.2);
+  border: 1px solid rgba(6, 182, 212, 0.4);
   color: var(--accent-light);
 }
 
@@ -822,8 +916,8 @@ export default {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(244,63,94,0.15);
-  border: 1px solid rgba(244,63,94,0.3);
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.3);
   color: #fb7185;
   display: flex;
   align-items: center;
@@ -831,7 +925,10 @@ export default {
   font-size: 0.8rem;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.2s, transform 0.2s, background 0.2s;
+  transition:
+    opacity 0.2s,
+    transform 0.2s,
+    background 0.2s;
 }
 
 .fav-card:hover .fav-remove-btn {
@@ -839,7 +936,7 @@ export default {
 }
 
 .fav-remove-btn:hover {
-  background: rgba(244,63,94,0.3);
+  background: rgba(244, 63, 94, 0.3);
   transform: scale(1.12);
 }
 
@@ -868,8 +965,8 @@ export default {
   align-items: center;
   font-size: 0.75rem;
   color: var(--primary-light);
-  background: rgba(124,58,237,0.12);
-  border: 1px solid rgba(124,58,237,0.2);
+  background: rgba(124, 58, 237, 0.12);
+  border: 1px solid rgba(124, 58, 237, 0.2);
   border-radius: 20px;
   padding: 3px 10px;
   width: fit-content;
@@ -880,8 +977,8 @@ export default {
   align-items: center;
   margin-top: auto;
   padding: 8px 16px;
-  background: rgba(124,58,237,0.15);
-  border: 1px solid rgba(124,58,237,0.3);
+  background: rgba(124, 58, 237, 0.15);
+  border: 1px solid rgba(124, 58, 237, 0.3);
   border-radius: 10px;
   color: var(--primary-light);
   font-size: 0.82rem;
@@ -892,7 +989,7 @@ export default {
 }
 
 .fav-card-btn:hover {
-  background: rgba(124,58,237,0.28);
+  background: rgba(124, 58, 237, 0.28);
   border-color: var(--primary);
   color: #fff;
 }
@@ -913,11 +1010,13 @@ export default {
   border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
   backdrop-filter: var(--glass-blur);
-  transition: border-color 0.2s, transform 0.2s;
+  transition:
+    border-color 0.2s,
+    transform 0.2s;
 }
 
 .fav-list-item:hover {
-  border-color: rgba(124,58,237,0.35);
+  border-color: rgba(124, 58, 237, 0.35);
   transform: translateX(3px);
 }
 
@@ -962,8 +1061,8 @@ export default {
   width: 34px;
   height: 34px;
   border-radius: 8px;
-  background: rgba(244,63,94,0.1);
-  border: 1px solid rgba(244,63,94,0.25);
+  background: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.25);
   color: #fb7185;
   display: flex;
   align-items: center;
@@ -973,7 +1072,7 @@ export default {
   transition: all 0.2s;
 }
 .fav-list-remove:hover {
-  background: rgba(244,63,94,0.25);
+  background: rgba(244, 63, 94, 0.25);
   transform: scale(1.08);
 }
 
@@ -991,33 +1090,64 @@ export default {
 }
 
 @keyframes fav-fade-in {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ===== Responsive ===== */
 /* Tablet (iPad, 768px–1023px) */
 @media (max-width: 1023px) {
-  .fav-hero { padding: 2.5rem 0 1.75rem; }
-  .fav-hero-title { font-size: 2rem; }
-  .fav-genre-scroll { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-  .fav-genre-scroll::-webkit-scrollbar { display: none; }
-  .fav-genre-btn { flex-shrink: 0; }
-  .fav-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .fav-hero {
+    padding: 2.5rem 0 1.75rem;
+  }
+  .fav-hero-title {
+    font-size: 2rem;
+  }
+  .fav-genre-scroll {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .fav-genre-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .fav-genre-btn {
+    flex-shrink: 0;
+  }
+  .fav-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
 }
 
 /* Mobile (≤767px) */
 @media (max-width: 767px) {
-  .fav-hero { padding: 1.75rem 0 1.25rem; }
-  .fav-hero-title { font-size: 1.5rem; }
-  .fav-hero-sub { font-size: 0.85rem; }
-  .fav-hero-content { gap: 0.875rem; }
+  .fav-hero {
+    padding: 1.75rem 0 1.25rem;
+  }
+  .fav-hero-title {
+    font-size: 1.5rem;
+  }
+  .fav-hero-sub {
+    font-size: 0.85rem;
+  }
+  .fav-hero-content {
+    gap: 0.875rem;
+  }
   .fav-toolbar {
     flex-direction: column;
     align-items: stretch;
     gap: 0.75rem;
   }
-  .fav-search-wrap { max-width: 100%; }
+  .fav-search-wrap {
+    max-width: 100%;
+  }
   .fav-genre-scroll {
     overflow-x: auto;
     flex-wrap: nowrap;
@@ -1025,29 +1155,75 @@ export default {
     scrollbar-width: none;
     padding-bottom: 2px;
   }
-  .fav-genre-scroll::-webkit-scrollbar { display: none; }
-  .fav-genre-btn { flex-shrink: 0; }
-  .fav-toolbar-right { justify-content: flex-end; }
-  .fav-grid { grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 0.875rem; }
-  .fav-card-img-wrap { height: 125px; }
-  .fav-card-body { padding: 0.75rem 0.875rem 1rem; }
-  .fav-card-title { font-size: 0.85rem; }
-  .fav-list-thumb { width: 60px; height: 44px; }
-  .fav-list-title { font-size: 0.82rem; }
-  .fav-list-item { padding: 0.625rem 0.75rem; gap: 0.75rem; }
-  .fav-empty { padding: 3.5rem 1rem; }
-  .fav-cta { margin-top: 2rem; }
+  .fav-genre-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .fav-genre-btn {
+    flex-shrink: 0;
+  }
+  .fav-toolbar-right {
+    justify-content: flex-end;
+  }
+  .fav-grid {
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 0.875rem;
+  }
+  .fav-card-img-wrap {
+    height: 125px;
+  }
+  .fav-card-body {
+    padding: 0.75rem 0.875rem 1rem;
+  }
+  .fav-card-title {
+    font-size: 0.85rem;
+  }
+  .fav-list-thumb {
+    width: 60px;
+    height: 44px;
+  }
+  .fav-list-title {
+    font-size: 0.82rem;
+  }
+  .fav-list-item {
+    padding: 0.625rem 0.75rem;
+    gap: 0.75rem;
+  }
+  .fav-empty {
+    padding: 3.5rem 1rem;
+  }
+  .fav-cta {
+    margin-top: 2rem;
+  }
 }
 
 /* Small mobile (≤479px) */
 @media (max-width: 479px) {
-  .fav-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
-  .fav-card-img-wrap { height: 110px; }
-  .fav-card-title { font-size: 0.8rem; }
-  .fav-genre-tag { font-size: 0.7rem; padding: 2px 8px; }
-  .fav-card-btn { font-size: 0.75rem; padding: 6px 12px; }
-  .fav-list-actions { flex-direction: column; gap: 4px; }
-  .fav-list-remove { width: 28px; height: 28px; font-size: 0.72rem; }
+  .fav-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  .fav-card-img-wrap {
+    height: 110px;
+  }
+  .fav-card-title {
+    font-size: 0.8rem;
+  }
+  .fav-genre-tag {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+  }
+  .fav-card-btn {
+    font-size: 0.75rem;
+    padding: 6px 12px;
+  }
+  .fav-list-actions {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .fav-list-remove {
+    width: 28px;
+    height: 28px;
+    font-size: 0.72rem;
+  }
 }
-
 </style>

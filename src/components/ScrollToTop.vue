@@ -1,33 +1,32 @@
-// src/components/ScrollToTop.vue
 <script>
 export default {
   data() {
     return {
-      visible: false
-    }
+      visible: false,
+    };
   },
 
   mounted() {
     // Set initial visibility in case the page mounts already scrolled down
     // (e.g. browser back/forward navigation, or a route that doesn't reset scroll)
-    this.handleScroll()
-    window.addEventListener('scroll', this.handleScroll)
+    this.handleScroll();
+    window.addEventListener("scroll", this.handleScroll);
   },
 
   beforeUnmount() {
-    window.removeEventListener('scroll', this.handleScroll)
+    window.removeEventListener("scroll", this.handleScroll);
   },
 
   methods: {
     handleScroll() {
-      this.visible = window.scrollY > 300
+      this.visible = window.scrollY > 300;
     },
 
     scrollToTop() {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-  }
-}
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    },
+  },
+};
 </script>
 
 <template>

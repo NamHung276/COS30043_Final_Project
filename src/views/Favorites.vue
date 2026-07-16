@@ -118,8 +118,14 @@ export default {
     },
   },
 
+  beforeUnmount() {
+    if (this.unsubscribe) {
+      this.unsubscribe();
+    }
+  },
+
   mounted() {
-    onAuthStateChanged(auth, (user) => {
+    this.unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) {
         this.favorites = [];
         this.currentUser = null;

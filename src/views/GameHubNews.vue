@@ -3,15 +3,14 @@ import newsData from "../data/news.json";
 import LikeButton from "../components/LikeButton.vue";
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, addDoc, query, where, Timestamp } from "firebase/firestore";
 
 export default {
   components: { LikeButton },
 
   data() {
     return {
-      staticNews: [],
-      userNews: [],
+      allNews: [],
       currentUser: null,
       searchTerm: "",
       selectedCategory: "All",
@@ -22,52 +21,73 @@ export default {
     };
   },
 
+  beforeUnmount() {
+    if (this.unsubscribe) {
+      this.unsubscribe();
+    }
+  },
+
   mounted() {
-    onAuthStateChanged(auth, (user) => {
+    this.unsubscribe = onAuthStateChanged(auth, (user) => {
       this.currentUser = user;
     });
-    this.loadStaticNews();
-    this.loadUserNews();
+    this.seedAndLoadNews();
   },
 
   computed: {
-    allNews() {
-      return [...this.userNews, ...this.staticNews];
+    scoredNews() {
+      // strictly sort by date descending
+      const sorted = [...this.allNews].sort((a, b) => {
+        const dateA = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : new Date(a.date).getTime();
+        const dateB = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : new Date(b.date).getTime();
+        return dateB - dateA;
+      });
+
+      // Calculate trending score for each
+      const now = Date.now();
+      return sorted.map(item => {
+        const itemDate = item.createdAt?.seconds ? item.createdAt.seconds * 1000 : new Date(item.date).getTime();
+        const daysOld = Math.max(1, (now - itemDate) / (1000 * 60 * 60 * 24));
+        const recencyBonus = Math.max(0, 100 - (daysOld * 2));
+        const likes = item.likes || 0;
+        const views = item.views || 0;
+        
+        return {
+          ...item,
+          trendingScore: (likes * 5) + (views * 1) + recencyBonus
+        };
+      });
     },
 
-    // Featured story (first in list)
+    // Featured story (highest score)
     featuredStory() {
-      return this.allNews[0] || null;
+      if(this.scoredNews.length === 0) return null;
+      return [...this.scoredNews].sort((a, b) => b.trendingScore - a.trendingScore)[0];
     },
 
-    // Top trending stories
+    // Top trending stories (top 7 scores, excluding featured)
     trendingStories() {
-      return this.allNews.slice(1, 8);
+      if(this.scoredNews.length === 0) return [];
+      const featuredId = this.featuredStory?.id;
+      return [...this.scoredNews]
+        .filter(item => item.id !== featuredId)
+        .sort((a, b) => b.trendingScore - a.trendingScore)
+        .slice(0, 7);
     },
 
     // All categories
     categories() {
-      const cats = new Set(this.allNews.map((item) => item.category));
+      const cats = new Set(this.scoredNews.map((item) => item.category));
       return Array.from(cats).sort();
-    },
-
-    // News by category
-    newsByCategory() {
-      const result = {};
-      this.categories.forEach((cat) => {
-        result[cat] = this.allNews.filter((item) => item.category === cat);
-      });
-      return result;
     },
 
     filteredNews() {
       const term = this.searchTerm.toLowerCase();
-      return this.allNews.filter((item) => {
+      return this.scoredNews.filter((item) => {
         const matchesSearch =
-          item.title.toLowerCase().includes(term) ||
-          item.content.toLowerCase().includes(term) ||
-          item.category.toLowerCase().includes(term) ||
-          item.date.includes(term);
+          (item.title && item.title.toLowerCase().includes(term)) ||
+          (item.content && item.content.toLowerCase().includes(term)) ||
+          (item.category && item.category.toLowerCase().includes(term));
         const matchesCategory =
           this.selectedCategory === "All" ||
           item.category === this.selectedCategory;
@@ -95,26 +115,38 @@ export default {
   },
 
   methods: {
-    loadStaticNews() {
-      const savedNews = localStorage.getItem("gamehubNews");
-      if (savedNews) {
-        this.staticNews = JSON.parse(savedNews);
-      } else {
-        this.staticNews = newsData;
-        localStorage.setItem("gamehubNews", JSON.stringify(newsData));
-      }
-    },
-    async loadUserNews() {
+    async seedAndLoadNews() {
       this.loadingUserNews = true;
       try {
-        const snapshot = await getDocs(collection(db, "news"));
-        this.userNews = snapshot.docs.map((docSnap) => ({
-          id: docSnap.id,
-          isUserPost: true,
-          ...docSnap.data(),
-        }));
+        const q = query(collection(db, "news"), where("isOfficial", "==", true));
+        const snap = await getDocs(q);
+        
+        // Seed official data exactly once if missing
+        if (snap.empty) {
+          console.log("Seeding official news to Firestore...");
+          for (const item of newsData) {
+            await addDoc(collection(db, "news"), {
+              title: item.title,
+              content: item.content,
+              category: item.category,
+              image: item.image,
+              isOfficial: true,
+              authorName: "GameHub Staff",
+              date: item.date,
+              createdAt: Timestamp.fromDate(new Date(item.date)),
+              likes: Math.floor(Math.random() * 500),
+              views: Math.floor(Math.random() * 5000),
+              comments: Math.floor(Math.random() * 50)
+            });
+          }
+        }
+        
+        // Load all unified news
+        const allSnap = await getDocs(collection(db, "news"));
+        this.allNews = allSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
       } catch (error) {
-        console.error("Failed to load user news:", error);
+        console.error("Error seeding/loading news:", error);
       } finally {
         this.loadingUserNews = false;
       }
@@ -238,6 +270,24 @@ export default {
 
         <!-- Search Bar -->
         <div class="ghn-filter-panel">
+          <div class="ghn-categories-bar">
+            <button 
+              class="ghn-cat-tab" 
+              :class="{ active: selectedCategory === 'All' }"
+              @click="selectedCategory = 'All'"
+            >
+              All News
+            </button>
+            <button 
+              v-for="cat in categories" 
+              :key="cat"
+              class="ghn-cat-tab" 
+              :class="{ active: selectedCategory === cat }"
+              @click="selectedCategory = cat"
+            >
+              {{ cat }}
+            </button>
+          </div>
           <div class="ghn-search-wrap">
             <img
               src="/logo/search.svg"
@@ -291,7 +341,7 @@ export default {
                 </svg>
                 Top Story
               </span>
-              <span v-if="featuredStory.isUserPost" class="ghn-community-badge">
+              <span v-if="!featuredStory.isOfficial" class="ghn-community-badge">
                 <svg
                   width="11"
                   height="11"
@@ -304,6 +354,12 @@ export default {
                   <circle cx="12" cy="7" r="4" />
                 </svg>
                 Community
+              </span>
+              <span v-else class="ghn-official-badge">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                </svg>
+                Official
               </span>
               <span
                 class="ghn-cat-pill"
@@ -424,7 +480,7 @@ export default {
                   ></span
                   >{{ item.category }}
                 </span>
-                <span v-if="item.isUserPost" class="ghn-community-badge">
+                <span v-if="!item.isOfficial" class="ghn-community-badge">
                   <svg
                     width="11"
                     height="11"
@@ -437,6 +493,12 @@ export default {
                     <circle cx="12" cy="7" r="4" />
                   </svg>
                   Community
+                </span>
+                <span v-else class="ghn-official-badge list-badge">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                  </svg>
+                  Official
                 </span>
                 <span class="ghn-list-date">{{ item.date }}</span>
               </div>
@@ -563,8 +625,11 @@ export default {
               <h4 class="ghn-trending-title">{{ article.title }}</h4>
               <div class="ghn-trending-meta">
                 <span class="ghn-trending-date">{{ article.date }}</span>
-                <span v-if="article.isUserPost" class="ghn-trending-community"
+                <span v-if="!article.isOfficial" class="ghn-trending-community"
                   >Community</span
+                >
+                <span v-else class="ghn-trending-official"
+                  >Official</span
                 >
               </div>
             </div>
@@ -1519,5 +1584,74 @@ export default {
   .ghn-post-btn span {
     display: none;
   }
+}
+
+/* === NEW UI ELEMENTS: Categories & Official Badges === */
+.ghn-categories-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.ghn-categories-bar::-webkit-scrollbar {
+  height: 4px;
+}
+.ghn-categories-bar::-webkit-scrollbar-thumb {
+  background: var(--border-glass);
+  border-radius: 4px;
+}
+.ghn-cat-tab {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  color: var(--text-secondary);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.ghn-cat-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+.ghn-cat-tab.active {
+  background: var(--primary);
+  border-color: var(--primary-light);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(124, 58, 237, 0.3);
+}
+
+.ghn-official-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(16, 185, 129, 0.15); /* Emerald */
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ghn-trending-official {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+}
+
+.list-badge {
+  padding: 3px 8px;
+  font-size: 0.68rem;
 }
 </style>

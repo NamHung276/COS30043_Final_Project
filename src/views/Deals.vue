@@ -215,8 +215,14 @@ export default {
     },
   },
 
+  beforeUnmount() {
+    if (this.unsubscribe) {
+      this.unsubscribe();
+    }
+  },
+
   async mounted() {
-    onAuthStateChanged(auth, async (user) => {
+    this.unsubscribe = onAuthStateChanged(auth, async (user) => {
       this.currentUser = user;
       if (user) await this.loadWishlist();
     });

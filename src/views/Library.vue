@@ -83,7 +83,7 @@ export default {
   },
 
   mounted() {
-    onAuthStateChanged(auth, (user) => {
+    this.unsubscribe = onAuthStateChanged(auth, (user) => {
       this.currentUser = user;
       if (user) {
         this.fetchLibrary();
@@ -98,6 +98,7 @@ export default {
   },
 
   beforeUnmount() {
+    if (this.unsubscribe) this.unsubscribe();
     if (this.activeSessionTimer) clearInterval(this.activeSessionTimer);
   },
 

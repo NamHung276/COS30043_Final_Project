@@ -2,7 +2,7 @@
 import newsData from "../data/news.json";
 import LikeButton from "../components/LikeButton.vue";
 import { db } from "../firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 
 export default {
   components: { LikeButton },
@@ -41,23 +41,53 @@ export default {
   },
 
   methods: {
-    loadArticle() {
-      const articleId = Number(this.$route.params.id);
+    async loadArticle() {
+      const articleId = this.$route.params.id;
 
-      const savedNews = localStorage.getItem("gamehubNews");
-      const news = savedNews ? JSON.parse(savedNews) : newsData;
-
-      this.article = news.find((item) => item.id === articleId);
+      try {
+        const docRef = doc(db, "news", articleId);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          this.article = { id: docSnap.id, ...docSnap.data() };
+        } else {
+          throw new Error("Not found in Firestore");
+        }
+      } catch (err) {
+        // Fallback to local JSON if Firestore fails or doc doesn't exist
+        this.article = newsData.find((item) => String(item.id) === String(articleId));
+      }
 
       if (this.article) {
         document.title = `${this.article.title} | GameHub`;
-        this.relatedArticles = news
-          .filter(
-            (item) =>
-              item.category === this.article.category &&
-              item.id !== this.article.id,
-          )
-          .slice(0, 3);
+        
+        try {
+          const q = query(
+            collection(db, "news"),
+            where("category", "==", this.article.category)
+          );
+          const snap = await getDocs(q);
+          const related = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          
+          this.relatedArticles = related
+            .filter(item => String(item.id) !== String(articleId))
+            .sort((a, b) => {
+               const dateA = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : new Date(a.date).getTime();
+               const dateB = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : new Date(b.date).getTime();
+               return dateB - dateA;
+            })
+            .slice(0, 3);
+            
+        } catch (err) {
+          // Fallback to local JSON for related articles
+          this.relatedArticles = newsData
+            .filter(
+              (item) =>
+                item.category === this.article.category &&
+                String(item.id) !== String(articleId),
+            )
+            .slice(0, 3);
+        }
       }
     },
 

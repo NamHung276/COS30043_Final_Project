@@ -239,12 +239,13 @@ export default {
   },
 
   mounted() {
-    onAuthStateChanged(auth, (user) => {
+    this.unsubscribe = onAuthStateChanged(auth, (user) => {
       this.currentUser = user;
     });
   },
 
   beforeUnmount() {
+    if (this.unsubscribe) this.unsubscribe();
     this.stopCarousel();
   },
 };

@@ -422,13 +422,14 @@ export default {
   },
 
   mounted() {
-    onAuthStateChanged(auth, (user) => {
+    this.unsubscribe = onAuthStateChanged(auth, (user) => {
       this.currentUser = user;
     });
     document.addEventListener("keydown", this.onLightboxKey);
   },
 
   beforeUnmount() {
+    if (this.unsubscribe) this.unsubscribe();
     this.stopCarousel();
     document.removeEventListener("keydown", this.onLightboxKey);
   },

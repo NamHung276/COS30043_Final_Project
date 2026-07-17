@@ -1100,15 +1100,25 @@ export default {
   border: 1px solid var(--border-glass);
   color: var(--text-primary);
   border-radius: var(--radius-sm);
-  padding: 11px 14px;
+  padding: 11px 36px 11px 14px;
   font-size: 0.92rem;
   font-family: var(--font-family);
   outline: none;
   cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a99b3' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  transition: border-color 0.25s, box-shadow 0.25s;
 }
 .games-genre-select:focus {
   border-color: var(--primary-light);
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+}
+.games-genre-select option {
+  background: #0f172a;
+  color: var(--text-primary);
 }
 
 /* Platform Tabs */
@@ -1181,24 +1191,18 @@ export default {
   flex-direction: column;
   background: var(--bg-glass);
   border: 1px solid var(--border-glass);
-  border-radius: var(--radius-md);
+  border-radius: var(--card-radius);
   overflow: hidden;
   text-decoration: none;
   color: var(--text-primary);
-  transition:
-    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.3s ease;
+  transition: var(--card-transition);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 .game-card:hover {
-  transform: translateY(-6px) scale(1.01);
-  box-shadow:
-    0 16px 48px rgba(124, 58, 237, 0.15),
-    0 4px 20px rgba(0, 0, 0, 0.4);
-  border-color: rgba(124, 58, 237, 0.3);
-  color: var(--text-primary);
+  transform: var(--card-hover-lift);
+  box-shadow: var(--card-hover-shadow);
+  border-color: var(--card-hover-border);
 }
 
 /* Image */

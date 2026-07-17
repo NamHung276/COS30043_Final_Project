@@ -4,21 +4,43 @@
 
 Built as the final project for COS30043, this application leverages Vue 3 and Firebase to deliver a responsive and interactive user experience.
 
-## 🚀 Tech Stack
+## 🚀 Technologies Used
 
-*   **Frontend:** Vue 3 (Composition API), Vite, Vue Router
+*   **Frontend Core:** Vue 3 (Composition API), Vite, Vue Router
 *   **Backend & Database:** Firebase Authentication, Firestore
-*   **Styling:** Modern CSS (Glassmorphism, CSS Variables, Custom Gradients), Bootstrap (for grid layout and utility classes)
+*   **Styling:** Vanilla CSS (Glassmorphism, CSS Variables, Custom Gradients), Bootstrap 5 (for grid layout and utility classes), Bootstrap Icons
+*   **Tooling:** npm, Git
 
-## ✨ Key Features & Progress
+## ✨ Platform Features
 
-*   **Gamer Profiles:** A dynamic, Steam-inspired user profile displaying account statistics, recent community activity (reviews), and a preview of favorite games. Includes secure options to edit display names and passwords.
-*   **Authentication & Security:** Full Firebase Authentication flow (Login, Registration, Protected Routes).
-*   **Favorites System:** Users can save games to their personal collection. The Favorites page supports list/grid views, real-time search, sorting, and genre filtering.
-*   **Community Reviews:** A robust review system allowing users to rate games out of 5 stars, write detailed feedback, and vote on other community members' reviews (helpful/unhelpful).
-*   **Game Catalogs & Deals:** Browse through comprehensive lists of premium games and Free-to-Play titles. Discover the latest deals across multiple storefronts.
+*   **Browse Games:** Explore 500k+ free-to-play and premium titles with genre filters.
+*   **Smart Search:** Instant title search across the full game library.
+*   **Favorites & Wishlists:** Cloud-saved personal collection via Firestore, supporting list/grid views, real-time search, sorting, and genre filtering.
+*   **Community Reviews:** A robust review system allowing users to rate games out of 5 stars, write detailed feedback, and vote on other community members' reviews.
+*   **Live News:** Real-time gaming news powered by NewsAPI.
+*   **Auth System:** User registration & login with Firebase Auth (Protected Routes, Secure Sessions).
+*   **Gamer Profiles:** A dynamic, Steam-inspired user profile displaying account statistics and recent community activity.
 *   **Admin Dashboard:** A moderation panel for managing user accounts and community posts.
 *   **Modern Aesthetics:** Deep dark-mode design by default, utilizing glowing accents, glassmorphism cards, and micro-animations to ensure a premium look and feel.
+*   **Responsive Design:** Optimised for desktop, tablet, and mobile viewing.
+
+## 🔌 External APIs Integrated
+
+GameHub aggregates data from multiple powerful gaming and news APIs to deliver a comprehensive experience:
+
+*   **[RAWG Video Games Database API](https://rawg.io/apidocs):** Powers the main Games section with a massive library of 500,000+ games, rich metadata, ratings, genres, screenshots, and release information spanning all major gaming platforms.
+*   **[FreeToGame API](https://www.freetogame.com/api-doc):** Provides access to 500+ free-to-play games with detailed information, genres, screenshots, system requirements, and platform availability. Drives the Free-to-Play section.
+*   **[CheapShark Deals API](https://apidocs.cheapshark.com/):** Aggregates PC game deals and price comparisons from major stores like Steam, Epic, GOG, and more. Powers the Deals section to help gamers find the best prices on their favourite titles.
+*   **[NewsAPI](https://newsapi.org/):** Delivers real-time gaming news and industry updates from multiple major gaming news outlets. Powers the Live News section with continuously updated articles from top gaming publications.
+
+## 🚀 Future Roadmap
+
+GameHub is continuously evolving. Planned enhancements include:
+
+*   **Game Recommendation Engine:** AI-powered suggestions based on your favorites and play history.
+*   **Advanced Search & Filtering:** Multi-tag filters, platform selection, and release date range.
+*   **Social Features:** Follow friends, share collections, and compare libraries.
+*   **Enhanced Admin Dashboard:** Advanced news management, analytics, and moderation tools.
 
 ## 🛠️ Setup Instructions
 
@@ -54,4 +76,4 @@ Built as the final project for COS30043, this application leverages Vue 3 and Fi
 
 ## 📝 License
 
-This project is created for educational purposes (COS30043).
+This project is created for educational purposes (COS30043 Full Stack Development).

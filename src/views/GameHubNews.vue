@@ -117,6 +117,8 @@ export default {
   methods: {
     async seedAndLoadNews() {
       this.loadingUserNews = true;
+      
+      // 1. Attempt to seed data (may fail if user lacks admin permissions)
       try {
         const q = query(collection(db, "news"), where("isOfficial", "==", true));
         const snap = await getDocs(q);
@@ -140,13 +142,16 @@ export default {
             });
           }
         }
-        
-        // Load all unified news
+      } catch (seedError) {
+        console.warn("Notice: Skipped seeding official news (insufficient permissions). This is expected for non-admin users.");
+      }
+
+      // 2. Load all unified news (this should succeed for all users to read)
+      try {
         const allSnap = await getDocs(collection(db, "news"));
         this.allNews = allSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        
       } catch (error) {
-        console.error("Error seeding/loading news:", error);
+        console.error("Error loading news:", error);
       } finally {
         this.loadingUserNews = false;
       }
@@ -209,9 +214,7 @@ export default {
       );
     },
     detailLink(item) {
-      return item.isUserPost
-        ? `/gamehub-news/user/${item.id}`
-        : `/gamehub-news/${item.id}`;
+      return `/gamehub-news/${item.id}`;
     },
   },
 };

@@ -95,10 +95,19 @@ export default {
     },
 
     platforms() {
-      return (this.game?.platforms || []).map((p) => ({
+      const allPlatforms = (this.game?.platforms || []).map((p) => ({
         name: p.platform.name,
         icon: this.platformIcon(p.platform.name),
       }));
+      const unique = [];
+      const seen = new Set();
+      for (const p of allPlatforms) {
+        if (!seen.has(p.icon)) {
+          seen.add(p.icon);
+          unique.push(p);
+        }
+      }
+      return unique;
     },
 
     developerNames() {
@@ -470,72 +479,97 @@ export default {
         <div class="gd-hero-overlay" aria-hidden="true"></div>
 
         <!-- Content -->
-        <div class="container gd-hero-content">
-          <router-link to="/games" class="gd-back-btn"> ← Games </router-link>
+        <div class="container gd-hero-content pb-5">
+          <router-link to="/games" class="gd-back-btn mb-4 d-inline-block"> ← Back to Games </router-link>
 
-          <div class="gd-hero-bottom">
+          <div class="gd-hero-bottom align-items-end">
             <!-- Cover thumbnail -->
             <img
               v-if="game.background_image"
               v-lazy-img="game.background_image"
-              class="gd-cover"
+              class="gd-cover shadow-lg"
               :alt="`${game.name} cover`"
             />
 
             <!-- Title + meta -->
-            <div class="gd-hero-info">
-              <div class="d-flex flex-wrap gap-2 mb-2">
-                <span v-for="g in genreNames" :key="g" class="gd-badge-genre">{{
-                  g
-                }}</span>
-                <span v-if="game.esrb_rating" class="gd-badge-esrb">{{
-                  game.esrb_rating.name
-                }}</span>
+            <div class="gd-hero-info w-100">
+              <div class="d-flex flex-wrap gap-2 mb-3">
+                <span v-for="g in genreNames" :key="g" class="gd-badge-genre">{{ g }}</span>
+                <span v-if="game.esrb_rating" class="gd-badge-esrb">{{ game.esrb_rating.name }}</span>
+                <span v-if="game.released" class="gd-badge-esrb" style="background: rgba(255,255,255,0.15);"><i class="bi bi-calendar3"></i> {{ game.released.split("-")[0] }}</span>
               </div>
-              <h1 class="gd-title">{{ game.name }}</h1>
+              
+              <h1 class="gd-title display-3 fw-bold mb-3 text-white">{{ game.name }}</h1>
 
-              <!-- Rating bar -->
-              <div v-if="game.rating" class="gd-rating-row">
-                <div class="gd-stars">
-                  <div
-                    class="gd-stars-fill"
-                    :style="{ width: ratingPercent + '%' }"
-                  ></div>
+              <!-- Rating bar & Platforms -->
+              <div class="gd-rating-row d-flex align-items-center flex-wrap gap-4 mb-4">
+                <div v-if="game.rating" class="d-flex align-items-center gap-2">
+                  <div class="gd-stars">
+                    <div
+                      class="gd-stars-fill"
+                      :style="{ width: ratingPercent + '%' }"
+                    ></div>
+                  </div>
+                  <span class="gd-rating-text fs-5 text-white fw-bold m-0" style="opacity: 1;">
+                    {{ game.rating.toFixed(1) }}/5
+                  </span>
                 </div>
-                <span class="gd-rating-text">
-                  {{ game.rating.toFixed(1) }}/5
-                  <span class="gd-rating-count"
-                    >Based on
-                    {{
-                      (game.ratings_count || 0).toLocaleString()
-                    }}
-                    ratings</span
+                
+                <div v-if="game.metacritic" class="d-flex align-items-center gap-2">
+                  <div
+                    class="gd-metacritic fs-5 d-flex align-items-center justify-content-center"
+                    :class="metacriticClass"
+                    style="width: 44px; height: 44px; border-radius: 50%; box-shadow: 0 0 15px rgba(0,0,0,0.5);"
                   >
-                </span>
-                <span
-                  v-if="game.metacritic"
-                  class="gd-metacritic"
-                  :class="metacriticClass"
+                    {{ game.metacritic }}
+                  </div>
+                  <span class="text-white fw-bold">Metacritic</span>
+                </div>
+
+                <!-- Platform chips -->
+                <div class="d-flex flex-wrap gap-2">
+                  <span
+                    v-for="p in platforms.slice(0, 5)"
+                    :key="p.name"
+                    class="gd-platform-chip border-0 bg-dark bg-opacity-50 text-white shadow-sm"
+                    :title="`Available on ${p.name}`"
+                  >
+                    <img
+                      :src="p.icon"
+                      :alt="`${p.name} logo`"
+                      class="gd-platform-logo"
+                    />
+                  </span>
+                </div>
+              </div>
+              
+              <!-- Quick Actions in Hero -->
+              <div class="d-flex flex-wrap gap-3 mt-4">
+                <button
+                  class="gd-hero-btn-primary btn btn-primary btn-lg fw-bold px-5 shadow-sm text-white"
+                  @click="buyNow"
+                  aria-label="Buy Now"
                 >
-                  {{ game.metacritic }}
-                </span>
+                  <i class="bi bi-lightning-charge-fill me-2"></i> Buy Now — ${{ discountedPrice || fakePrice }}
+                </button>
+
+                <button
+                  class="gd-hero-btn-secondary btn btn-lg fw-bold px-4 shadow-sm"
+                  @click="addToCart"
+                  aria-label="Add to Cart"
+                >
+                  <i class="bi bi-cart-plus-fill me-2"></i> Add to Cart
+                </button>
+
+                <button
+                  class="gd-hero-btn-tertiary btn btn-lg px-4"
+                  @click="addToFavorites"
+                  aria-label="Add to wishlist"
+                >
+                  <i class="bi bi-heart me-2"></i> Wishlist
+                </button>
               </div>
 
-              <!-- Platform chips -->
-              <div class="d-flex flex-wrap gap-2 mt-2">
-                <span
-                  v-for="p in platforms.slice(0, 6)"
-                  :key="p.name"
-                  class="gd-platform-chip"
-                >
-                  <img
-                    :src="p.icon"
-                    :alt="`${p.name} logo`"
-                    class="gd-platform-logo"
-                  />
-                  <span>{{ p.name }}</span>
-                </span>
-              </div>
             </div>
           </div>
         </div>
@@ -590,7 +624,6 @@ export default {
                   class="gd-shot-main-img"
                 />
                 <div class="gd-shot-zoom-hint">
-                  <span>🔍 Click to enlarge</span>
                   <span class="gd-shot-counter"
                     >{{ activeShot + 1 }} / {{ screenshots.length }}</span
                   >
@@ -615,25 +648,22 @@ export default {
 
             <!-- About -->
             <div class="gd-section mb-5">
-              <h2 class="gd-section-title" style="font-size: 2rem">
-                About this game
-              </h2>
-              <div class="gd-description">
-                {{ game.description_raw || "No description available." }}
-              </div>
+              <h2 class="gd-section-title">About this game</h2>
+              <div class="gd-description" v-html="game.description || 'No description available.'"></div>
             </div>
 
             <!-- Tags -->
             <div v-if="game.tags?.length" class="gd-section mb-5">
               <h2 class="gd-section-title">Tags</h2>
-              <div class="gd-tags">
-                <span
+              <div class="gd-tags d-flex flex-wrap gap-2">
+                <router-link
                   v-for="tag in game.tags.slice(0, 20)"
                   :key="tag.id"
-                  class="gd-tag"
+                  :to="`/games?search=${encodeURIComponent(tag.name)}`"
+                  class="gd-tag text-decoration-none"
                 >
                   {{ tag.name }}
-                </span>
+                </router-link>
               </div>
             </div>
 
@@ -702,12 +732,10 @@ export default {
             </div>
 
             <!-- REVIEWS (Moved Above Discover) -->
-            <div class="gd-section mb-5">
+            <div class="gd-section gd-review-section-tint mb-5">
               <div class="gd-review-header">
                 <div>
-                  <h2 class="gd-section-title" style="font-size: 2rem">
-                    Community Reviews
-                  </h2>
+                  <h2 class="gd-section-title">Community Reviews</h2>
                   <p
                     class="gd-review-subtitle text-muted"
                     style="margin-top: -10px; margin-bottom: 20px"
@@ -812,7 +840,7 @@ export default {
           <div class="col-lg-4">
             <div class="gd-sidebar">
               <!-- Metacritic Score -->
-              <div v-if="game.metacritic" class="gd-mc-card mb-3">
+              <div v-if="game.metacritic" class="gd-mc-card mb-4 profile-glass-card p-4 rounded-4 d-flex align-items-center gap-3" style="background: var(--bg-surface);">
                 <div class="gd-mc-score" :class="metacriticClass">
                   {{ game.metacritic }}
                 </div>
@@ -826,83 +854,70 @@ export default {
 
               <!-- Actions -->
               <div
-                class="gd-actions mb-4 p-3 profile-glass-card rounded-4 border border-secondary border-opacity-25"
+                class="gd-actions mb-4 p-0 profile-glass-card rounded-4 border border-secondary border-opacity-25 overflow-hidden"
                 style="background: var(--bg-surface)"
               >
-                <!-- Price display -->
-                <div class="text-center mb-3">
+                <!-- Price display Block -->
+                <div class="text-center p-4 border-bottom border-secondary border-opacity-25 bg-black bg-opacity-10">
                   <template v-if="fakeDiscount > 0">
-                    <div
-                      class="d-flex align-items-center justify-content-center gap-2 mb-1"
-                    >
-                      <span class="gd-discount-badge"
-                        >-{{ fakeDiscount }}%</span
-                      >
-                      <span class="gd-original-price">${{ fakePrice }}</span>
+                    <div class="d-inline-block px-3 py-1 bg-danger text-white fw-bold rounded-pill mb-2 shadow-sm">
+                      SALE -{{ fakeDiscount }}%
                     </div>
-                    <span class="fs-2 fw-bold" style="color: var(--text-primary);"
-                      >${{ discountedPrice }}</span
-                    >
+                    <div class="d-flex align-items-center justify-content-center gap-3">
+                      <span class="fs-1 fw-bold text-primary-var">${{ discountedPrice }}</span>
+                      <span class="fs-4 text-muted text-decoration-line-through">${{ fakePrice }}</span>
+                    </div>
                   </template>
                   <template v-else>
-                    <span class="fs-2 fw-bold" style="color: var(--text-primary);"
-                      >${{ fakePrice }}</span
-                    >
+                    <span class="fs-1 fw-bold text-primary-var">${{ fakePrice }}</span>
                   </template>
                 </div>
 
-                <button
-                  class="btn btn-primary text-white w-100 mb-2 py-2 fw-bold"
-                  @click="buyNow"
-                  aria-label="Buy Now"
-                >
-                  <i class="bi bi-credit-card-fill me-2"></i> Buy Now
-                </button>
+                  <!-- Sidebar Buy Actions Block -->
+                  <div class="p-4 border-bottom border-secondary border-opacity-25">
+                    <button
+                      class="gd-buy-now-btn w-100 mb-3"
+                      @click="buyNow"
+                      aria-label="Buy Now"
+                    >
+                      <i class="bi bi-lightning-charge-fill me-2"></i>
+                      Buy Now — ${{ discountedPrice || fakePrice }}
+                    </button>
 
-                <button
-                  class="btn w-100 mb-3 py-2 fw-bold"
-                  style="border: 1px solid var(--border-glass); color: var(--text-primary);"
-                  @click="addToCart"
-                  aria-label="Add to Cart"
-                >
-                  <i class="bi bi-cart-plus-fill me-2"></i> Add to Cart
-                </button>
+                    <button
+                      class="gd-add-cart-btn w-100 mb-3"
+                      @click="addToCart"
+                      aria-label="Add to Cart"
+                    >
+                      <i class="bi bi-cart-plus me-2"></i> Add to Cart
+                    </button>
 
-                <!-- Trailer button -->
-                <button
-                  v-if="hasTrailer"
-                  class="btn btn-outline-secondary w-100 mb-3 py-2"
-                  @click="showTrailerModal = true"
-                  aria-label="Watch Trailer"
-                >
-                  ▶ Watch Trailer
-                </button>
+                    <button
+                      v-if="hasTrailer"
+                      class="btn btn-outline-secondary w-100 py-2"
+                      @click="showTrailerModal = true"
+                      aria-label="Watch Trailer"
+                    >
+                      <i class="bi bi-play-circle me-2"></i> Watch Trailer
+                    </button>
+                  </div>
 
-                <div class="d-flex gap-2">
-                  <a
-                    v-if="game.website"
-                    :href="game.website"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="btn btn-sm btn-dark flex-grow-1 gd-action-btn border-secondary"
-                    aria-label="Official Website"
-                  >
-                    <i class="bi bi-globe me-1"></i> Website
-                  </a>
+                <!-- Wishlist Block -->
+                <div class="p-3 text-center border-bottom border-secondary border-opacity-25">
                   <button
-                    class="btn btn-sm btn-dark flex-grow-1 gd-action-btn border-secondary"
+                    class="gd-wishlist-btn w-100"
                     @click="addToFavorites"
                     aria-label="Add to wishlist"
                   >
-                    <i class="bi bi-star-fill text-warning me-1"></i> Wishlist
+                    <i class="bi bi-heart me-2"></i> Add to Wishlist
                   </button>
                 </div>
-
+                
                 <!-- Status toast -->
                 <transition name="fav-fade">
                   <div
                     v-if="favStatus.visible"
-                    class="fav-status-msg mt-3"
+                    class="fav-status-msg m-3"
                     :class="`fav-status-${favStatus.type}`"
                     role="status"
                     aria-live="polite"
@@ -912,111 +927,114 @@ export default {
                 </transition>
 
                 <!-- Store links -->
-                <div v-if="game.stores?.length" class="gd-stores mt-2">
-                  <small
-                    class="text-muted d-block mb-2"
-                    style="
-                      font-size: 0.75rem;
-                      text-transform: uppercase;
-                      letter-spacing: 0.5px;
-                    "
-                    >Available On</small
-                  >
-                  <div class="d-flex flex-wrap gap-2">
+                <div v-if="game.stores?.length" class="p-4 bg-black bg-opacity-10">
+                  <small class="text-muted d-block mb-3 fw-bold text-uppercase" style="letter-spacing: 0.08em;">Available On</small>
+                  <div class="d-flex flex-column gap-2">
                     <a
                       v-for="s in game.stores"
                       :key="s.id"
                       :href="s.url || '#'"
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="gd-store-btn"
-                      :aria-label="`Buy on ${s.store.name}`"
+                      class="gd-store-link d-flex align-items-center justify-content-between p-3 rounded-3 text-decoration-none"
+                      style="background: var(--bg-glass); border: 1px solid var(--border-glass);"
                     >
-                      {{ s.store.name }}
+                      <span class="fw-semibold" style="color: var(--text-primary); font-size: 0.88rem;">{{ s.store.name }}</span>
+                      <i class="bi bi-box-arrow-up-right" style="color: var(--text-muted); font-size: 0.8rem;"></i>
                     </a>
                   </div>
                 </div>
               </div>
 
               <!-- Details table -->
-              <div class="gd-details-card mb-3">
-                <h5 class="gd-details-heading">Game Info</h5>
+              <div class="gd-details-card mb-4 profile-glass-card p-4 rounded-4" style="background: var(--bg-surface);">
+                <h5 class="gd-details-heading mb-4"><i class="bi bi-info-circle-fill text-primary me-2"></i> Game Info</h5>
 
                 <div class="gd-detail-row" v-if="developerNames !== '—'">
-                  <span class="gd-detail-label">Developer</span>
-                  <span class="gd-detail-value">{{ developerNames }}</span>
+                  <span class="gd-detail-label text-muted"><i class="bi bi-code-slash me-1"></i> Developer</span>
+                  <span class="gd-detail-value fw-bold" style="color: var(--text-primary);">{{ developerNames }}</span>
                 </div>
                 <div class="gd-detail-row" v-if="publisherNames !== '—'">
-                  <span class="gd-detail-label">Publisher</span>
-                  <span class="gd-detail-value">{{ publisherNames }}</span>
+                  <span class="gd-detail-label text-muted"><i class="bi bi-building me-1"></i> Publisher</span>
+                  <span class="gd-detail-value fw-bold" style="color: var(--text-primary);">{{ publisherNames }}</span>
                 </div>
                 <div class="gd-detail-row" v-if="game.released">
-                  <span class="gd-detail-label">Release</span>
-                  <span class="gd-detail-value">{{
+                  <span class="gd-detail-label text-muted"><i class="bi bi-calendar-event me-1"></i> Release</span>
+                  <span class="gd-detail-value fw-bold" style="color: var(--text-primary);">{{
                     formatDate(game.released)
                   }}</span>
                 </div>
                 <div class="gd-detail-row" v-if="game.playtime">
-                  <span class="gd-detail-label">Avg Playtime</span>
-                  <span class="gd-detail-value">{{ game.playtime }}h</span>
+                  <span class="gd-detail-label text-muted"><i class="bi bi-clock-history me-1"></i> Playtime</span>
+                  <span class="gd-detail-value fw-bold" style="color: var(--text-primary);">~{{ game.playtime }} hours</span>
                 </div>
                 <div class="gd-detail-row" v-if="game.esrb_rating">
-                  <span class="gd-detail-label">ESRB</span>
-                  <span class="gd-detail-value">{{
+                  <span class="gd-detail-label text-muted"><i class="bi bi-shield-check me-1"></i> ESRB</span>
+                  <span class="gd-detail-value fw-bold" style="color: var(--text-primary);">{{
                     game.esrb_rating.name
                   }}</span>
                 </div>
                 <div class="gd-detail-row" v-if="game.ratings_count">
-                  <span class="gd-detail-label">Total Votes</span>
-                  <span class="gd-detail-value">{{
+                  <span class="gd-detail-label text-muted"><i class="bi bi-bar-chart-fill me-1"></i> Reviews</span>
+                  <span class="gd-detail-value fw-bold" style="color: var(--text-primary);">{{
                     game.ratings_count.toLocaleString()
                   }}</span>
                 </div>
               </div>
 
               <!-- CheapShark Deals -->
-              <div class="gd-deals-card" v-if="deals.length || dealsLoading">
-                <h5 class="gd-details-heading">Compare Prices</h5>
-                <div v-if="dealsLoading" class="gd-deals-loading">
-                  Searching stores…
+              <div class="gd-deals-card profile-glass-card p-4 rounded-4 mt-4" v-if="deals.length || dealsLoading">
+                <h5 class="gd-details-heading mb-4"><i class="bi bi-tags-fill text-primary me-2"></i> Compare Prices</h5>
+                <div v-if="dealsLoading" class="gd-deals-loading text-center py-4 text-muted">
+                  <div class="spinner-border spinner-border-sm me-2"></div> Searching stores…
                 </div>
                 <div v-else>
-                  <a
-                    v-for="deal in deals"
-                    :key="deal.dealID"
-                    :href="`https://www.cheapshark.com/redirect?dealID=${deal.dealID}`"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="gd-deal-row"
-                    :class="{ cheapest: cheapestDeal?.dealID === deal.dealID }"
-                  >
-                    <div class="gd-deal-store">
-                      <span
-                        class="gd-deal-cheapest-badge"
-                        v-if="cheapestDeal?.dealID === deal.dealID"
-                        >BEST</span
-                      >
-                      {{ storeName(deal.storeID) }}
-                    </div>
-                    <div class="gd-deal-prices">
-                      <span
-                        v-if="
-                          parseFloat(deal.normalPrice) >
-                          parseFloat(deal.salePrice)
-                        "
-                        class="gd-deal-original"
-                        >${{ parseFloat(deal.normalPrice).toFixed(2) }}</span
-                      >
-                      <span class="gd-deal-sale"
-                        >${{ parseFloat(deal.salePrice).toFixed(2) }}</span
-                      >
-                      <span
-                        v-if="parseFloat(deal.savings) > 0"
-                        class="gd-deal-savings"
-                        >-{{ Math.round(deal.savings) }}%</span
-                      >
-                    </div>
-                  </a>
+                  <table class="table table-borderless table-hover align-middle mb-0" style="color: var(--text-primary);">
+                    <thead>
+                      <tr class="border-bottom border-secondary border-opacity-25">
+                        <th class="text-muted fw-normal pb-3 px-0">Store</th>
+                        <th class="text-muted fw-normal pb-3 text-end">Price</th>
+                        <th class="pb-3 px-0"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="deal in deals" :key="deal.dealID" :class="{ 'bg-success bg-opacity-10': cheapestDeal?.dealID === deal.dealID }">
+                        <td class="fw-bold py-3 px-2 rounded-start" :class="{ 'text-success': cheapestDeal?.dealID === deal.dealID }">
+                          <span v-if="cheapestDeal?.dealID === deal.dealID" class="badge bg-success me-2">Best Deal</span>
+                          {{ storeName(deal.storeID) }}
+                        </td>
+                        <td class="text-end py-3 fw-bold" :class="{ 'text-success': cheapestDeal?.dealID === deal.dealID }">${{ deal.salePrice }}</td>
+                        <td class="text-end py-3 px-2 rounded-end">
+                          <a :href="`https://www.cheapshark.com/redirect?dealID=${deal.dealID}`" target="_blank" class="btn btn-sm rounded-pill px-3" :class="cheapestDeal?.dealID === deal.dealID ? 'btn-success text-white' : 'btn-outline-secondary'">
+                            {{ cheapestDeal?.dealID === deal.dealID ? 'Buy' : 'View' }}
+                          </a>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Community Stats -->
+              <div class="gd-stats-card profile-glass-card p-4 rounded-4 mt-4" style="background: var(--bg-surface);">
+                <h5 class="gd-details-heading mb-4">
+                  <i class="bi bi-people-fill text-primary me-2"></i> Community Stats
+                </h5>
+                <div class="gd-detail-row">
+                  <span class="gd-detail-label text-muted"><i class="bi bi-star-fill text-warning me-1"></i> Average</span>
+                  <span class="gd-detail-value fw-bold" style="color: var(--text-primary);">{{ game.rating ? game.rating.toFixed(1) : '4.6' }} / 5</span>
+                </div>
+                <div class="gd-detail-row">
+                  <span class="gd-detail-label text-muted"><i class="bi bi-chat-text-fill text-info me-1"></i> Reviews</span>
+                  <span class="gd-detail-value fw-bold" style="color: var(--text-primary);">{{ (game.ratings_count || 1254).toLocaleString() }}</span>
+                </div>
+                <div class="gd-detail-row">
+                  <span class="gd-detail-label text-muted"><i class="bi bi-heart-fill text-danger me-1"></i> Wishlists</span>
+                  <span class="gd-detail-value fw-bold" style="color: var(--text-primary);">{{ (game.added || 3912).toLocaleString() }}</span>
+                </div>
+                <div class="gd-detail-row">
+                  <span class="gd-detail-label text-muted"><i class="bi bi-collection-fill text-success me-1"></i> Libraries</span>
+                  <span class="gd-detail-value fw-bold" style="color: var(--text-primary);">{{ (game.added_by_status?.owned || 1884).toLocaleString() }}</span>
                 </div>
               </div>
             </div>
@@ -1067,6 +1085,9 @@ export default {
         </div>
       </div>
     </transition>
+
+    <!-- Footer Transition -->
+    <div class="gd-footer-transition"></div>
   </div>
 </template>
 
@@ -1098,11 +1119,12 @@ export default {
 /* ── Hero ──────────────────────────────────── */
 .gd-hero {
   position: relative;
-  min-height: 380px;
+  min-height: 550px;
   display: flex;
   align-items: flex-end;
   overflow: hidden;
   isolation: isolate;
+  padding-top: 80px;
 }
 .gd-hero-bg {
   position: absolute;
@@ -1114,8 +1136,8 @@ export default {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: blur(2px) brightness(0.35) saturate(0.7);
-  transform: scale(1.05);
+  filter: blur(8px) brightness(0.25) saturate(1.2);
+  transform: scale(1.1);
   display: block;
 }
 .gd-hero-overlay {
@@ -1125,15 +1147,13 @@ export default {
     linear-gradient(
       to top,
       var(--bg-deep) 0%,
-      rgba(5, 7, 15, 0.6) 50%,
-      rgba(5, 7, 15, 0.2) 100%
-    ),
-    linear-gradient(to right, rgba(5, 7, 15, 0.7) 0%, transparent 60%);
+      rgba(5, 7, 15, 0.4) 50%,
+      rgba(5, 7, 15, 0.1) 100%
+    );
 }
 .gd-hero-content {
   position: relative;
   z-index: 2;
-  padding-bottom: 32px;
   width: 100%;
 }
 .gd-back-btn {
@@ -1166,8 +1186,8 @@ export default {
   flex-wrap: wrap;
 }
 .gd-cover {
-  width: 180px;
-  height: 120px;
+  width: 220px;
+  height: 290px;
   object-fit: cover;
   border-radius: 10px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
@@ -1326,13 +1346,14 @@ export default {
 }
 .gd-shot-main-img {
   width: 100%;
-  height: 380px;
+  height: 460px;
   object-fit: cover;
   display: block;
-  transition: filter 0.2s ease;
+  transition: all 0.3s ease;
 }
 .gd-shot-main:hover .gd-shot-main-img {
   filter: brightness(0.85);
+  transform: scale(1.03);
 }
 .gd-shot-zoom-hint {
   position: absolute;
@@ -1408,13 +1429,55 @@ export default {
   letter-spacing: 0.02em;
 }
 
+.gd-sidebar {
+  position: sticky;
+  top: 100px;
+}
+
+.gd-deals-card .table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--text-primary);
+  --bs-table-hover-bg: var(--bg-glass-hover);
+  --bs-table-hover-color: var(--text-primary);
+}
+.gd-deals-card .table th,
+.gd-deals-card .table td {
+  background: transparent !important;
+}
+.gd-review-section-tint {
+  background: rgba(124, 58, 237, 0.03);
+  border: 1px solid rgba(124, 58, 237, 0.15);
+}
+
 /* ── Description ──────────────────────────── */
 .gd-description {
-  font-size: 0.98rem;
-  line-height: 1.9;
+  font-size: 1.05rem;
+  line-height: 1.8;
   color: var(--text-secondary);
-  white-space: pre-wrap;
   max-width: 72ch;
+}
+.gd-description :deep(h1),
+.gd-description :deep(h2),
+.gd-description :deep(h3),
+.gd-description :deep(h4) {
+  color: var(--text-primary);
+  margin-top: 1.8rem;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+.gd-description :deep(p) {
+  margin-bottom: 1.25rem;
+}
+.gd-description :deep(ul),
+.gd-description :deep(ol) {
+  margin-bottom: 1.25rem;
+  padding-left: 1.5rem;
+}
+.gd-description :deep(br) {
+  content: "";
+  display: block;
+  margin-bottom: 0.5rem;
 }
 
 /* ── Tags ─────────────────────────────────── */
@@ -1443,8 +1506,8 @@ export default {
 /* ── Similar games grid ───────────────────── */
 .gd-similar-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
 }
 .gd-similar-card {
   border-radius: 8px;
@@ -1464,7 +1527,7 @@ export default {
 }
 .gd-similar-img {
   width: 100%;
-  height: 80px;
+  height: 140px;
   object-fit: cover;
   display: block;
 }
@@ -1526,6 +1589,133 @@ export default {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+/* ── Hero CTA Buttons ──────────────────────── */
+.gd-hero-btn-primary {
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  border: none;
+  border-radius: 10px;
+  padding: 14px 28px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  box-shadow: 0 4px 20px rgba(14, 165, 233, 0.4);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  color: white;
+}
+.gd-hero-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(14, 165, 233, 0.55);
+  filter: brightness(1.1);
+  color: white;
+}
+
+.gd-hero-btn-secondary {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 10px;
+  padding: 13px 24px;
+  color: white;
+  backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
+}
+.gd-hero-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.gd-hero-btn-tertiary {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  padding: 13px 20px;
+  color: rgba(255, 255, 255, 0.8);
+  transition: all 0.25s ease;
+}
+.gd-hero-btn-tertiary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* ── Sidebar Purchase Buttons ──────────────── */
+.gd-buy-now-btn {
+  display: block;
+  width: 100%;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.35);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+.gd-buy-now-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.5);
+  filter: brightness(1.08);
+}
+
+.gd-add-cart-btn {
+  display: block;
+  width: 100%;
+  padding: 11px 20px;
+  background: var(--bg-glass-hover);
+  border: 1px solid var(--border-glass);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.92rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.gd-add-cart-btn:hover {
+  border-color: var(--primary);
+  background: rgba(14, 165, 233, 0.08);
+  color: var(--primary-light);
+  transform: translateY(-1px);
+}
+
+.gd-wishlist-btn {
+  display: block;
+  width: 100%;
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.gd-wishlist-btn:hover {
+  color: var(--danger);
+}
+
+/* ── Screenshot zoom hint ──────────────────── */
+.gd-shot-zoom-hint {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  background: rgba(0, 0, 0, 0.65);
+  color: var(--text-primary);
+  font-size: 0.72rem;
+  padding: 5px 12px;
+  border-radius: 20px;
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.2s;
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 /* Actions */
@@ -1882,10 +2072,18 @@ export default {
     height: 220px;
   }
   .gd-similar-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
   .gd-sidebar {
     position: static;
   }
+}
+
+.gd-footer-transition {
+  height: 100px;
+  background: linear-gradient(to bottom, var(--bg-deep) 0%, transparent 100%);
+  margin-top: -60px;
+  margin-bottom: 80px;
+  pointer-events: none;
 }
 </style>

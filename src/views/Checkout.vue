@@ -112,7 +112,7 @@ export default {
       <div class="row g-5">
         <!-- Cart Items -->
         <div class="col-lg-7">
-          <h2 class="text-white fw-bold mb-4">
+          <h2 class="text-primary-var fw-bold mb-4">
             Your Cart
             <span class="text-muted ms-2 fs-4">({{ cart.totalItems }})</span>
           </h2>
@@ -121,8 +121,8 @@ export default {
             v-if="cart.items.length === 0"
             class="gd-glass-card p-5 text-center"
           >
-            <i class="bi bi-cart-x display-1 text-white-50 mb-3"></i>
-            <h4 class="text-white">Your cart is empty</h4>
+            <i class="bi bi-cart-x display-1 text-primary-var-50 mb-3"></i>
+            <h4 class="text-primary-var">Your cart is empty</h4>
             <p class="text-muted mb-4">
               Looks like you haven't added any games yet.
             </p>
@@ -145,11 +145,11 @@ export default {
                 alt="Game thumbnail"
               />
               <div class="flex-grow-1">
-                <h5 class="text-white mb-1">{{ item.name || item.title }}</h5>
+                <h5 class="text-primary-var mb-1">{{ item.name || item.title }}</h5>
                 <span class="text-muted small">Digital Download</span>
               </div>
               <div class="text-end d-flex flex-column align-items-end gap-2">
-                <div class="text-white fw-bold fs-5">
+                <div class="text-primary-var fw-bold fs-5">
                   ${{ (parseFloat(item.price) || 0).toFixed(2) }}
                 </div>
                 <button
@@ -167,20 +167,20 @@ export default {
         <!-- Checkout Summary & Fake Payment -->
         <div class="col-lg-5">
           <div class="gd-glass-card p-4 checkout-summary">
-            <h4 class="text-white fw-bold mb-4">Order Summary</h4>
+            <h4 class="text-primary-var fw-bold mb-4">Order Summary</h4>
 
             <div class="d-flex justify-content-between mb-2">
               <span class="text-muted">Subtotal</span>
-              <span class="text-white">${{ cart.totalPrice.toFixed(2) }}</span>
+              <span class="text-primary-var">${{ cart.totalPrice.toFixed(2) }}</span>
             </div>
             <div
               class="d-flex justify-content-between mb-3 pb-3 border-bottom border-secondary border-opacity-50"
             >
               <span class="text-muted">Taxes</span>
-              <span class="text-white">$0.00</span>
+              <span class="text-primary-var">$0.00</span>
             </div>
             <div class="d-flex justify-content-between mb-4">
-              <strong class="text-white fs-5">Total</strong>
+              <strong class="text-primary-var fs-5">Total</strong>
               <strong class="text-warning fs-4"
                 >${{ cart.totalPrice.toFixed(2) }}</strong
               >
@@ -188,7 +188,7 @@ export default {
 
             <!-- Payment Form -->
             <div v-if="cart.items.length > 0">
-              <h5 class="text-white mb-3 mt-2">Payment Details</h5>
+              <h5 class="text-primary-var mb-3 mt-2">Payment Details</h5>
 
               <div class="mb-3">
                 <label
@@ -219,7 +219,7 @@ export default {
                     :disabled="processing"
                   />
                   <i
-                    class="bi bi-credit-card position-absolute top-50 end-0 translate-middle-y me-3 text-white-50"
+                    class="bi bi-credit-card position-absolute top-50 end-0 translate-middle-y me-3 text-primary-var-50"
                   ></i>
                 </div>
               </div>

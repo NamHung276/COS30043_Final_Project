@@ -379,7 +379,11 @@ export default {
                   :alt="`${game.title} screenshot`"
                   class="gd-shot-main-img"
                 />
-                <div class="gd-shot-zoom-hint">Click to enlarge</div>
+                <div class="gd-shot-zoom-hint">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                  <span>Enlarge</span>
+                  <span class="gd-shot-counter">{{ activeShot + 1 }} / {{ screenshots.length }}</span>
+                </div>
               </div>
               <!-- Thumbnail strip -->
               <div class="gd-shot-strip" role="tablist">
@@ -400,9 +404,7 @@ export default {
 
             <!-- About -->
             <div class="gd-section mb-5">
-              <h2 class="gd-section-title" style="font-size: 2rem">
-                About this game
-              </h2>
+              <h2 class="gd-section-title">About this game</h2>
               <div class="gd-description">
                 {{ game.description || "No description available." }}
               </div>
@@ -452,9 +454,7 @@ export default {
             <div class="gd-section mb-5">
               <div class="gd-review-header">
                 <div>
-                  <h2 class="gd-section-title" style="font-size: 2rem">
-                    Community Reviews
-                  </h2>
+                  <h2 class="gd-section-title">Community Reviews</h2>
                   <p
                     class="gd-review-subtitle text-muted"
                     style="margin-top: -10px; margin-bottom: 20px"
@@ -535,27 +535,19 @@ export default {
           <!-- ── RIGHT: Sidebar ── -->
           <div class="col-lg-4">
             <div class="gd-sidebar">
-              <!-- Actions -->
-              <div class="gd-actions mb-4">
+              <!-- Sidebar Buy Actions Block -->
+              <div class="p-4 border-bottom border-secondary border-opacity-25">
                 <a
                   v-if="game.game_url"
                   :href="game.game_url"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="btn btn-primary w-100 mb-2 gd-action-btn"
+                  class="gd-buy-now-btn w-100 mb-3 text-center text-decoration-none"
                   aria-label="Official Website"
                 >
-                  <img src="/logo/pc.svg" alt="" class="gd-action-icon" />
-                  <span>Play Now (FreeToGame)</span>
+                  <i class="bi bi-controller me-2"></i>
+                  Play Now (FreeToGame)
                 </a>
-                <button
-                  class="btn btn-success w-100 mb-2 gd-action-btn"
-                  @click="addToFavorites"
-                  aria-label="Add to wishlist"
-                >
-                  <img src="/logo/star.svg" alt="" class="gd-action-icon" />
-                  <span>Add to Wishlist</span>
-                </button>
 
                 <!-- Status toast -->
                 <transition name="fav-fade">
@@ -569,6 +561,17 @@ export default {
                     {{ favStatus.message }}
                   </div>
                 </transition>
+              </div>
+
+              <!-- Wishlist Block -->
+              <div class="p-3 text-center border-bottom border-secondary border-opacity-25">
+                <button
+                  class="gd-wishlist-btn w-100"
+                  @click="addToFavorites"
+                  aria-label="Add to wishlist"
+                >
+                  <i class="bi bi-heart me-2"></i> Add to Wishlist
+                </button>
               </div>
 
               <!-- Details table -->
@@ -998,6 +1001,64 @@ export default {
   gap: 10px;
   transition: all 0.25s ease;
 }
+
+/* ── Sidebar Purchase Buttons ──────────────── */
+.gd-buy-now-btn {
+  display: block;
+  width: 100%;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.35);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+.gd-buy-now-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.5);
+  filter: brightness(1.08);
+  color: white;
+}
+
+.gd-wishlist-btn {
+  display: block;
+  width: 100%;
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.gd-wishlist-btn:hover {
+  color: var(--danger);
+}
+
+/* ── Screenshot zoom hint ──────────────────── */
+.gd-shot-zoom-hint {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  background: rgba(0, 0, 0, 0.65);
+  color: var(--text-primary);
+  font-size: 0.72rem;
+  padding: 5px 12px;
+  border-radius: 20px;
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.2s;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .gd-action-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);

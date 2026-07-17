@@ -348,9 +348,9 @@ export default {
             <div>
               <h2 class="pane-title">Welcome back, Administrator.</h2>
               <p class="pane-subtitle">
-                Current queue: <strong class="text-white">{{ badgeCounts.reports }} reports</strong>, 
-                <strong class="text-white">{{ badgeCounts.users }} new players</strong>, 
-                <strong class="text-white">{{ badgeCounts.news }} articles pending</strong>.
+                Current queue: <strong class="text-primary-var">{{ badgeCounts.reports }} reports</strong>, 
+                <strong class="text-primary-var">{{ badgeCounts.users }} new players</strong>, 
+                <strong class="text-primary-var">{{ badgeCounts.news }} articles pending</strong>.
               </p>
             </div>
           </div>

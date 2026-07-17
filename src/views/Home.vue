@@ -576,21 +576,6 @@ export default {
                   Published by
                   <strong>{{ currentDetail.publisher }}</strong>
                 </p>
-                <div class="hero-actions mt-4">
-                  <router-link
-                    :to="currentGame.displayLink"
-                    class="btn steam-play-btn"
-                  >
-                    Explore Game
-                  </router-link>
-
-                  <router-link
-                    to="/games"
-                    class="btn btn-outline-secondary ms-2"
-                  >
-                    Browse Library
-                  </router-link>
-                </div>
               </div>
 
               <div class="steam-screenshots-grid">
@@ -628,16 +613,6 @@ export default {
                     currentDetail?.developer ||
                     currentDetail?.developers[0]?.name
                   }}</span>
-                </div>
-                <div class="hero-extra-info">
-                  <span>{{ currentGame.displayGenre }}</span>
-                  <span>
-                    {{
-                      currentGame.itemType === "f2p"
-                        ? "Free to Play"
-                        : "Premium Game"
-                    }}
-                  </span>
                 </div>
                 <router-link
                   :to="currentGame.displayLink"

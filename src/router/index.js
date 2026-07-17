@@ -30,11 +30,7 @@ const routes = [
     component: () => import("../views/CreateNews.vue"),
     meta: { requiresAuth: true },
   },
-  {
-    path: "/gamehub-news/user/:id",
-    name: "UserNewsDetails",
-    component: () => import("../views/UserNewsDetails.vue"),
-  },
+
   {
     path: "/gamehub-news/:id",
     name: "GameHubNewsDetails",

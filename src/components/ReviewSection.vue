@@ -39,6 +39,8 @@ export default {
       // Form state for creating a new review
       newRating: 5,
       newComment: "",
+      newRecommended: true,
+      newPlaytime: "",
       submitting: false,
       formError: "",
 
@@ -46,6 +48,8 @@ export default {
       editingReviewId: null,
       editRating: 5,
       editComment: "",
+      editRecommended: true,
+      editPlaytime: "",
     };
   },
 
@@ -173,6 +177,8 @@ export default {
           userName: this.currentUser.displayName || this.currentUser.email,
           rating: this.newRating,
           comment: this.newComment.trim(),
+          recommended: this.newRecommended,
+          playtime: this.newPlaytime ? parseFloat(this.newPlaytime) : null,
           likes: [],
           dislikes: [],
           createdAt: serverTimestamp(),
@@ -180,6 +186,8 @@ export default {
 
         this.newComment = "";
         this.newRating = 5;
+        this.newRecommended = true;
+        this.newPlaytime = "";
         await this.loadReviews();
       } catch (error) {
         console.error("Failed to submit review:", error);
@@ -193,6 +201,8 @@ export default {
       this.editingReviewId = review.id;
       this.editRating = review.rating;
       this.editComment = review.comment;
+      this.editRecommended = review.recommended !== false;
+      this.editPlaytime = review.playtime || "";
     },
 
     cancelEdit() {
@@ -206,6 +216,8 @@ export default {
         await updateDoc(doc(db, "reviews", reviewId), {
           rating: this.editRating,
           comment: this.editComment.trim(),
+          recommended: this.editRecommended,
+          playtime: this.editPlaytime ? parseFloat(this.editPlaytime) : null,
         });
 
         this.editingReviewId = null;
@@ -231,6 +243,16 @@ export default {
       }
     },
 
+    focusForm() {
+      const el = document.getElementById("newComment");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => el.focus(), 300);
+      } else {
+        const loginEl = document.querySelector(".login-prompt-box");
+        if (loginEl) loginEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    },
     async toggleVote(reviewId, type) {
       if (!this.currentUser) {
         this.$router.push("/login");
@@ -439,27 +461,47 @@ export default {
           {{ formError }}
         </div>
 
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label text-muted small text-uppercase fw-bold letter-spacing-1">
+              Rating
+            </label>
+            <div class="star-rating d-block">
+              <span
+                v-for="star in 5"
+                :key="star"
+                class="star"
+                @click="setNewRating(star)"
+              >
+                <i
+                  :class="
+                    star <= newRating
+                      ? 'bi bi-star-fill text-warning'
+                      : 'bi bi-star text-muted'
+                  "
+                ></i>
+              </span>
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label text-muted small text-uppercase fw-bold letter-spacing-1">
+              Playtime (Hours)
+            </label>
+            <input type="number" v-model="newPlaytime" class="gd-review-input" placeholder="e.g. 25" min="0">
+          </div>
+        </div>
+        
         <div class="mb-3">
-          <label
-            class="form-label text-muted small text-uppercase fw-bold letter-spacing-1"
-          >
-            Rating
+          <label class="form-label text-muted small text-uppercase fw-bold letter-spacing-1">
+            Recommended?
           </label>
-          <div class="star-rating d-block">
-            <span
-              v-for="star in 5"
-              :key="star"
-              class="star"
-              @click="setNewRating(star)"
-            >
-              <i
-                :class="
-                  star <= newRating
-                    ? 'bi bi-star-fill text-warning'
-                    : 'bi bi-star' + ' text-muted'
-                "
-              ></i>
-            </span>
+          <div class="d-flex gap-3">
+            <button class="btn" :class="newRecommended ? 'btn-primary' : 'btn-outline-secondary'" @click="newRecommended = true">
+              <i class="bi bi-hand-thumbs-up-fill me-1"></i> Yes
+            </button>
+            <button class="btn" :class="!newRecommended ? 'btn-danger' : 'btn-outline-secondary'" @click="newRecommended = false">
+              <i class="bi bi-hand-thumbs-down-fill me-1"></i> No
+            </button>
           </div>
         </div>
 
@@ -469,7 +511,7 @@ export default {
               for="newComment"
               class="form-label text-muted small text-uppercase fw-bold letter-spacing-1 mb-0"
             >
-              Comment
+              Review
             </label>
             <small
               :class="{
@@ -516,9 +558,18 @@ export default {
       v-else-if="reviews.length === 0"
       class="gd-glass-card text-center p-5 mb-4 empty-state-box"
     >
-      <div class="mb-3" style="font-size: 3rem">🎮</div>
-      <h4 class="text-white mb-2">Be the first to review!</h4>
-      <p class="text-muted">Share your experience and help other players.</p>
+      <div class="mb-2">
+        <i class="bi bi-star text-muted fs-4"></i>
+        <i class="bi bi-star text-muted fs-4 mx-1"></i>
+        <i class="bi bi-star text-muted fs-4"></i>
+        <i class="bi bi-star text-muted fs-4 mx-1"></i>
+        <i class="bi bi-star text-muted fs-4"></i>
+      </div>
+      <h4 class="text-white mb-2 mt-3">No reviews yet</h4>
+      <p class="text-muted mb-4">Be the first explorer to share your experience!</p>
+      <button class="btn btn-primary px-4 rounded-pill fw-bold" @click="focusForm">
+        Write the first review
+      </button>
     </div>
 
     <!-- Review List -->
@@ -531,35 +582,41 @@ export default {
       >
         <!-- Edit Mode -->
         <div v-if="editingReviewId === review.id">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label text-muted small text-uppercase fw-bold letter-spacing-1">Rating</label>
+              <div class="star-rating d-block">
+                <span
+                  v-for="star in 5"
+                  :key="star"
+                  class="star"
+                  @click="setEditRating(star)"
+                >
+                  <i :class="star <= editRating ? 'bi bi-star-fill text-warning' : 'bi bi-star text-muted'"></i>
+                </span>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label text-muted small text-uppercase fw-bold letter-spacing-1">Playtime (Hours)</label>
+              <input type="number" v-model="editPlaytime" class="gd-review-input" placeholder="e.g. 25" min="0">
+            </div>
+          </div>
+          
           <div class="mb-3">
-            <label
-              class="form-label text-muted small text-uppercase fw-bold letter-spacing-1"
-              >Rating</label
-            >
-            <div class="star-rating d-block">
-              <span
-                v-for="star in 5"
-                :key="star"
-                class="star"
-                @click="setEditRating(star)"
-              >
-                <i
-                  :class="
-                    star <= editRating
-                      ? 'bi bi-star-fill text-warning'
-                      : 'bi bi-star' + ' text-muted'
-                  "
-                ></i>
-              </span>
+            <label class="form-label text-muted small text-uppercase fw-bold letter-spacing-1">Recommended?</label>
+            <div class="d-flex gap-3">
+              <button class="btn" :class="editRecommended ? 'btn-primary' : 'btn-outline-secondary'" @click="editRecommended = true">
+                <i class="bi bi-hand-thumbs-up-fill me-1"></i> Yes
+              </button>
+              <button class="btn" :class="!editRecommended ? 'btn-danger' : 'btn-outline-secondary'" @click="editRecommended = false">
+                <i class="bi bi-hand-thumbs-down-fill me-1"></i> No
+              </button>
             </div>
           </div>
 
           <div class="mb-3">
             <div class="d-flex justify-content-between align-items-end mb-1">
-              <label
-                class="form-label text-muted small text-uppercase fw-bold letter-spacing-1 mb-0"
-                >Comment</label
-              >
+              <label class="form-label text-muted small text-uppercase fw-bold letter-spacing-1 mb-0">Review</label>
               <small
                 :class="{
                   'text-danger fw-bold': editComment.length >= 980,
@@ -618,25 +675,19 @@ export default {
                     >
                   </div>
                   <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
-                    <span class="text-warning" style="font-size: 0.9rem">
-                      <template v-for="s in review.rating" :key="'sr' + s"
-                        ><i class="bi bi-star-fill"></i
-                      ></template>
-                      <template v-for="s in 5 - review.rating" :key="'se' + s"
-                        ><i class="bi bi-star"></i
-                      ></template>
+                    <span v-if="review.recommended !== false" class="text-primary fw-bold" style="font-size: 0.95rem">
+                      <i class="bi bi-hand-thumbs-up-fill me-1"></i> Recommended
                     </span>
-                    <span class="text-white fw-bold" style="font-size: 0.85rem">
-                      {{
-                        review.rating >= 4
-                          ? "Recommended"
-                          : review.rating === 3
-                            ? "Mixed"
-                            : "Not Recommended"
-                      }}
+                    <span v-else class="text-danger fw-bold" style="font-size: 0.95rem">
+                      <i class="bi bi-hand-thumbs-down-fill me-1"></i> Not Recommended
                     </span>
+                    <span class="text-muted small px-1">•</span>
+                    <span v-if="review.playtime" class="text-muted small">
+                      {{ review.playtime }} hrs on record
+                    </span>
+                    <span v-if="review.playtime" class="text-muted small px-1">•</span>
                     <span class="text-muted small"
-                      >• Reviewed {{ timeAgo(review.createdAt?.seconds) }}</span
+                      >Reviewed {{ timeAgo(review.createdAt?.seconds) }}</span
                     >
                   </div>
                 </div>
@@ -679,34 +730,17 @@ export default {
 
               <div class="d-flex gap-2 mt-4">
                 <button
-                  class="btn-vote"
+                  class="btn btn-sm btn-outline-secondary rounded-pill px-3"
                   :class="{ active: review.likes?.includes(currentUser?.uid) }"
                   @click="toggleVote(review.id, 'like')"
                 >
-                  <i
-                    :class="
-                      review.likes?.includes(currentUser?.uid)
-                        ? 'bi bi-hand-thumbs-up-fill'
-                        : 'bi bi-hand-thumbs-up'
-                    "
-                  ></i>
-                  <span>{{ review.likes?.length || 0 }}</span>
+                  <i class="bi bi-hand-thumbs-up-fill me-1"></i> Helpful ({{ review.likes?.length || 0 }})
                 </button>
-                <button
-                  class="btn-vote"
-                  :class="{
-                    active: review.dislikes?.includes(currentUser?.uid),
-                  }"
-                  @click="toggleVote(review.id, 'dislike')"
-                >
-                  <i
-                    :class="
-                      review.dislikes?.includes(currentUser?.uid)
-                        ? 'bi bi-hand-thumbs-down-fill'
-                        : 'bi bi-hand-thumbs-down'
-                    "
-                  ></i>
-                  <span>{{ review.dislikes?.length || 0 }}</span>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" style="cursor: not-allowed; opacity: 0.7;">
+                  <i class="bi bi-chat-fill me-1"></i> Reply
+                </button>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" style="cursor: not-allowed; opacity: 0.7;">
+                  <i class="bi bi-award-fill me-1"></i> Award
                 </button>
               </div>
             </div>

@@ -242,7 +242,12 @@ export default {
 .news-hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, rgba(15,17,22,0) 40%, rgba(15,17,22,0.95) 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(15, 17, 22, 0) 20%,
+    rgba(15, 17, 22, 0.5) 65%,
+    rgba(15, 17, 22, 0.98) 100%
+  );
 }
 
 /* Container */
@@ -275,7 +280,7 @@ export default {
 
 /* Article layout */
 .news-article {
-  max-width: 780px;
+  max-width: 740px;
   margin: 0 auto;
 }
 
@@ -369,21 +374,40 @@ export default {
 }
 
 .news-article-content {
-  font-size: 1.05rem;
-  line-height: 1.85;
+  font-size: 1.0625rem;
+  line-height: 1.9;
   color: var(--text-secondary);
   white-space: pre-line;
+  max-width: 680px;
+  letter-spacing: 0.01em;
+}
+
+/* Drop-cap on first letter of article for editorial feel */
+.news-article-content::first-letter {
+  font-size: 3.5rem;
+  font-weight: 900;
+  float: left;
+  margin-right: 8px;
+  line-height: 0.8;
+  color: var(--text-primary);
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-family: var(--font-display, sans-serif);
 }
 
 .news-article-footer {
   margin-top: 32px;
-  padding: 20px 24px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 12px;
+  padding: 18px 22px;
+  background: rgba(14, 165, 233, 0.04);
+  border: 1px solid rgba(14, 165, 233, 0.12);
+  border-left: 3px solid var(--primary);
+  border-radius: 8px;
   color: var(--text-muted);
-  font-size: 0.875rem;
-  line-height: 1.6;
+  font-size: 0.85rem;
+  line-height: 1.65;
+  font-style: italic;
 }
 
 .news-article-footer p { margin: 0; }
@@ -419,17 +443,17 @@ export default {
   flex-direction: column;
   background: var(--bg-glass);
   border: 1px solid var(--border-glass);
-  border-radius: 12px;
+  border-radius: var(--card-radius);
   overflow: hidden;
   text-decoration: none;
   color: var(--text-primary);
-  transition: all 0.25s ease;
+  transition: var(--card-transition);
 }
 
 .news-related-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(14,165,233,0.25);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  transform: var(--card-hover-lift);
+  border-color: var(--card-hover-border);
+  box-shadow: var(--card-hover-shadow);
 }
 
 .news-related-img {

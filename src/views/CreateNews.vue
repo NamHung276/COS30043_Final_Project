@@ -76,7 +76,7 @@ export default {
           createdAt: serverTimestamp(),
         });
 
-        this.$router.push(`/gamehub-news/user/${docRef.id}`);
+        this.$router.push(`/gamehub-news/${docRef.id}`);
       } catch (error) {
         console.error("Failed to submit article:", error);
         this.error = "Something went wrong. Please try again.";

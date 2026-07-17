@@ -33,8 +33,9 @@
         <span class="navbar-toggler-icon"></span>
       </button>
 
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <div class="navbar-nav ms-auto align-items-center">
+            <div class="collapse navbar-collapse" id="navbarNav">
+        <!-- Left Side: Public Navigation -->
+        <div class="navbar-nav me-auto align-items-center">
           <router-link class="nav-link" to="/" @click="closeMenu">
             Home
           </router-link>
@@ -58,13 +59,7 @@
                   @click="closeMenu"
                 >
                   <span class="nav-dd-icon nav-dd-icon-purple">
-                    <img
-                      src="/logo/gamepad.svg"
-                      width="15"
-                      height="15"
-                      alt=""
-                      aria-hidden="true"
-                    />
+                    <img src="/logo/gamepad.svg" width="15" height="15" alt="" aria-hidden="true" />
                   </span>
                   All Games
                 </router-link>
@@ -76,21 +71,7 @@
                   @click="closeMenu"
                 >
                   <span class="nav-dd-icon nav-dd-icon-cyan">
-                    <svg
-                      width="15"
-                      height="15"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      aria-hidden="true"
-                    >
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M16 8h-6a2 2 0 100 4h4a2 2 0 110 4H8" />
-                      <path d="M12 18V6" />
-                    </svg>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M16 8h-6a2 2 0 100 4h4a2 2 0 110 4H8" /><path d="M12 18V6" /></svg>
                   </span>
                   Paid Games
                 </router-link>
@@ -102,21 +83,7 @@
                   @click="closeMenu"
                 >
                   <span class="nav-dd-icon nav-dd-icon-green">
-                    <svg
-                      width="15"
-                      height="15"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                      <path d="M2 17l10 5 10-5" />
-                      <path d="M2 12l10 5 10-5" />
-                    </svg>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" /></svg>
                   </span>
                   Free to Play
                 </router-link>
@@ -128,23 +95,7 @@
                   @click="closeMenu"
                 >
                   <span class="nav-dd-icon nav-dd-icon-amber">
-                    <svg
-                      width="15"
-                      height="15"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M20 12V22H4V12" />
-                      <path d="M22 7H2v5h20V7z" />
-                      <path d="M12 22V7" />
-                      <path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z" />
-                      <path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z" />
-                    </svg>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12V22H4V12" /><path d="M22 7H2v5h20V7z" /><path d="M12 22V7" /><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z" /><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z" /></svg>
                   </span>
                   Game Deals
                 </router-link>
@@ -152,93 +103,21 @@
             </ul>
           </li>
 
-          <!-- News Dropdown -->
-          <li class="nav-item dropdown list-unstyled">
-            <a
-              class="nav-link dropdown-toggle"
-              href="#"
-              role="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              News
-            </a>
-            <ul class="dropdown-menu shadow-sm border-0">
-              <li>
-                <router-link
-                  class="dropdown-item nav-dd-item"
-                  to="/live-news"
-                  @click="closeMenu"
-                >
-                  <span class="nav-dd-icon nav-dd-icon-cyan">
-                    <svg
-                      width="15"
-                      height="15"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M5 12.55a11 11 0 0114.08 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.95 0M12 20h.01"
-                      />
-                    </svg>
-                  </span>
-                  Live News
-                </router-link>
-              </li>
-              <li>
-                <router-link
-                  class="dropdown-item nav-dd-item"
-                  to="/gamehub-news"
-                  @click="closeMenu"
-                >
-                  <span class="nav-dd-icon nav-dd-icon-violet">
-                    <svg
-                      width="15"
-                      height="15"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
-                      />
-                      <polyline points="14,2 14,8 20,8" />
-                      <line x1="16" y1="13" x2="8" y2="13" />
-                      <line x1="16" y1="17" x2="8" y2="17" />
-                      <polyline points="10,9 9,9 8,9" />
-                    </svg>
-                  </span>
-                  GameHub News
-                </router-link>
-              </li>
-            </ul>
-          </li>
-
-          <router-link class="nav-link" to="/favorites" @click="closeMenu">
-            Wishlist
+          <router-link class="nav-link" to="/live-news" @click="closeMenu">
+            News
           </router-link>
 
-          <router-link
-            v-if="currentUser"
-            class="nav-link"
-            to="/library"
-            @click="closeMenu"
-          >
-            My Library
+          <router-link class="nav-link" to="/gamehub-news" @click="closeMenu">
+            Community
           </router-link>
 
           <router-link class="nav-link" to="/about" @click="closeMenu">
             About
           </router-link>
+        </div>
+
+        <!-- Right Side: Search & User Menu -->
+        <div class="navbar-nav ms-auto align-items-center">
 
           <!-- ── Search Bar ─────────────────────────────── -->
           <div class="nav-search-wrapper" ref="searchWrapper">
@@ -339,9 +218,14 @@
           </div>
           <!-- ── /Search Bar ─────────────────────────── -->
 
+          <!-- Notification Bell (Placeholder) -->
+          <a class="nav-link position-relative me-2 d-none d-lg-flex" href="#" @click.prevent title="Notifications">
+            <i class="bi bi-bell fs-5"></i>
+          </a>
+
           <!-- Cart Link -->
           <router-link
-            class="nav-link d-flex align-items-center position-relative me-2"
+            class="nav-link d-flex align-items-center position-relative me-3"
             to="/checkout"
             @click="closeMenu"
           >
@@ -359,106 +243,134 @@
             <span class="ms-2 d-lg-none">Cart</span>
           </router-link>
 
-          <!-- Admin link (only visible to admins) -->
-          <router-link
-            v-if="isAdmin"
-            class="nav-link nav-admin-link"
-            to="/admin"
-            @click="closeMenu"
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              style="margin-right: 5px; vertical-align: -1px"
-              aria-hidden="true"
-            >
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-            Admin
-          </router-link>
-
-          <!-- Theme Toggle -->
+          <!-- Theme Toggle (Only show in navbar if logged out) -->
           <button
-            class="btn btn-link nav-link theme-toggle-btn"
+            v-if="!currentUser"
+            class="btn btn-link nav-link theme-toggle-btn me-2"
             @click="toggleTheme"
-            :title="
-              theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'
-            "
+            :title="theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
           >
-            <svg
-              v-if="theme === 'dark'"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <circle cx="12" cy="12" r="5" />
-              <line x1="12" y1="1" x2="12" y2="3" />
-              <line x1="12" y1="21" x2="12" y2="23" />
-              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-              <line x1="1" y1="12" x2="3" y2="12" />
-              <line x1="21" y1="12" x2="23" y2="12" />
-              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-            </svg>
-            <svg
-              v-else
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-            </svg>
+            <svg v-if="theme === 'dark'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></svg>
+            <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
           </button>
 
           <template v-if="!currentUser && authReady">
-            <router-link class="nav-btn-login" to="/login" @click="closeMenu">
-              Login
-            </router-link>
-
-            <router-link
-              class="nav-btn-signup"
-              to="/register"
-              @click="closeMenu"
-            >
-              Sign Up
-            </router-link>
+            <router-link class="nav-btn-login" to="/login" @click="closeMenu">Login</router-link>
+            <router-link class="nav-btn-signup" to="/register" @click="closeMenu">Sign Up</router-link>
           </template>
 
           <template v-if="currentUser">
-            <router-link
-              class="nav-link d-flex align-items-center nav-profile-link"
-              to="/profile"
-              :title="`Account: ${currentUser.email}`"
-              @click="closeMenu"
-            >
-              <span class="nav-user-avatar">
-                {{ userInitial }}
-              </span>
-              {{ currentUser.displayName || currentUser.email }}
-            </router-link>
-
-            <button class="btn btn-outline-danger btn-sm ms-2" @click="logout">
-              Logout
-            </button>
+            <!-- User Menu Dropdown -->
+            <li class="nav-item dropdown list-unstyled ms-1">
+              <a
+                class="nav-link dropdown-toggle d-flex align-items-center nav-profile-link"
+                href="#"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                :title="`Account: ${currentUser.email}`"
+              >
+                <span class="nav-user-avatar">
+                  {{ userInitial }}
+                </span>
+                <span class="d-lg-none ms-2">{{ currentUser.displayName || currentUser.email }}</span>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 user-dropdown-menu mt-2">
+                <li class="px-3 py-2 small fw-bold text-uppercase d-flex align-items-center" style="letter-spacing: 1px; color: var(--text-primary);">
+                  <span class="nav-dd-icon nav-dd-icon-blue me-2" style="background: linear-gradient(135deg, #0369a1, #0ea5e9); box-shadow: 0 2px 8px rgba(14, 165, 233, 0.4);">
+                    <i class="bi bi-person-circle" style="font-size: 0.85rem;"></i>
+                  </span> My Account
+                </li>
+                <li><hr class="dropdown-divider border-secondary opacity-25 m-0 mb-1"></li>
+                <li>
+                  <router-link class="dropdown-item nav-dd-item" to="/profile" @click="closeMenu">
+                    <span class="nav-dd-icon nav-dd-icon-blue" style="background: linear-gradient(135deg, #0369a1, #0ea5e9); box-shadow: 0 2px 8px rgba(14, 165, 233, 0.4);">
+                      <i class="bi bi-person" style="font-size: 0.85rem;"></i>
+                    </span>
+                    Profile
+                  </router-link>
+                </li>
+                <li>
+                  <router-link class="dropdown-item nav-dd-item" to="/library" @click="closeMenu">
+                    <span class="nav-dd-icon nav-dd-icon-purple">
+                      <i class="bi bi-controller" style="font-size: 0.85rem;"></i>
+                    </span>
+                    My Library
+                  </router-link>
+                </li>
+                <li>
+                  <router-link class="dropdown-item nav-dd-item" to="/favorites" @click="closeMenu">
+                    <span class="nav-dd-icon nav-dd-icon-coral" style="background: linear-gradient(135deg, #9f1239, #f43f5e); box-shadow: 0 2px 8px rgba(244, 63, 94, 0.4);">
+                      <i class="bi bi-heart-fill" style="font-size: 0.85rem;"></i>
+                    </span>
+                    Wishlist
+                  </router-link>
+                </li>
+                <li>
+                  <router-link class="dropdown-item nav-dd-item" to="/profile#reviews" @click="closeMenu">
+                    <span class="nav-dd-icon nav-dd-icon-amber">
+                      <i class="bi bi-star-fill" style="font-size: 0.85rem;"></i>
+                    </span>
+                    My Reviews
+                  </router-link>
+                </li>
+                <li>
+                  <router-link class="dropdown-item nav-dd-item" to="/profile#saved" @click="closeMenu">
+                    <span class="nav-dd-icon nav-dd-icon-cyan">
+                      <i class="bi bi-bookmark-fill" style="font-size: 0.85rem;"></i>
+                    </span>
+                    Saved Articles
+                  </router-link>
+                </li>
+                <li>
+                  <router-link class="dropdown-item nav-dd-item" to="/profile#purchases" @click="closeMenu">
+                    <span class="nav-dd-icon nav-dd-icon-green">
+                      <i class="bi bi-bag-check-fill" style="font-size: 0.85rem;"></i>
+                    </span>
+                    Purchase History
+                  </router-link>
+                </li>
+                <li><hr class="dropdown-divider border-secondary opacity-25"></li>
+                <li>
+                  <a href="#" class="dropdown-item nav-dd-item" @click.prevent.stop="toggleTheme">
+                    <span class="nav-dd-icon" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);">
+                      <i :class="theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill'" style="font-size: 0.85rem; color: var(--warning);"></i>
+                    </span>
+                    {{ theme === 'dark' ? 'Light Mode' : 'Dark Mode' }}
+                  </a>
+                </li>
+                <li>
+                  <router-link class="dropdown-item nav-dd-item" to="/profile#settings" @click="closeMenu">
+                    <span class="nav-dd-icon" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);">
+                      <i class="bi bi-gear-fill" style="font-size: 0.85rem; color: var(--text-muted);"></i>
+                    </span>
+                    Settings
+                  </router-link>
+                </li>
+                <template v-if="isAdmin">
+                  <li><hr class="dropdown-divider border-secondary opacity-25"></li>
+                  <li>
+                    <router-link class="dropdown-item nav-dd-item" to="/admin" @click="closeMenu" style="color: var(--accent-light);">
+                      <span class="nav-dd-icon nav-dd-icon-violet">
+                        <i class="bi bi-shield-lock-fill" style="font-size: 0.85rem;"></i>
+                      </span>
+                      Admin Dashboard
+                    </router-link>
+                  </li>
+                </template>
+                <li><hr class="dropdown-divider border-secondary opacity-25"></li>
+                <li>
+                  <button class="dropdown-item nav-dd-item text-danger" @click="logout">
+                    <span class="nav-dd-icon" style="background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.25);">
+                      <i class="bi bi-box-arrow-right" style="font-size: 0.85rem;"></i>
+                    </span>
+                    Logout
+                  </button>
+                </li>
+              </ul>
+            </li>
           </template>
-        </div>
+</div>
       </div>
     </div>
   </nav>
@@ -949,5 +861,94 @@ export default {
 }
 [data-theme="light"] .nav-search-input {
   color: var(--text-primary);
+}
+[data-theme="light"] .navbar {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+/* User Dropdown styling */
+.user-dropdown-menu {
+  min-width: 240px;
+  background: rgba(10, 14, 26, 0.97);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-glass) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.04) !important;
+  padding: 8px !important;
+}
+
+/* Dropdown item with icon badge */
+.nav-dd-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 9px 12px !important;
+  border-radius: 8px !important;
+  font-size: 0.88rem !important;
+  font-weight: 500 !important;
+  color: var(--text-secondary) !important;
+  transition: all 0.18s ease !important;
+  background: transparent !important;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.nav-dd-item:hover,
+.nav-dd-item:focus {
+  color: var(--text-primary) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  transform: translateX(2px);
+}
+
+.nav-dd-item.router-link-active {
+  color: var(--primary-light) !important;
+  background: rgba(14, 165, 233, 0.08) !important;
+}
+
+/* Icon badge shared base */
+.nav-dd-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  color: white;
+}
+
+/* Color variants */
+.nav-dd-icon-blue {
+  background: linear-gradient(135deg, #0369a1, #0ea5e9);
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.4);
+}
+.nav-dd-icon-purple {
+  background: linear-gradient(135deg, #6d28d9, #8b5cf6);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+}
+.nav-dd-icon-coral {
+  background: linear-gradient(135deg, #9f1239, #f43f5e);
+  box-shadow: 0 2px 8px rgba(244, 63, 94, 0.4);
+}
+.nav-dd-icon-amber {
+  background: linear-gradient(135deg, #92400e, #f59e0b);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+}
+.nav-dd-icon-cyan {
+  background: linear-gradient(135deg, #0e7490, #06b6d4);
+  box-shadow: 0 2px 8px rgba(6, 182, 212, 0.4);
+}
+.nav-dd-icon-green {
+  background: linear-gradient(135deg, #065f46, #10b981);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+}
+.nav-dd-icon-violet {
+  background: linear-gradient(135deg, #4c1d95, #7c3aed);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
 }
 </style>

@@ -404,7 +404,7 @@ export default {
           </div>
 
           <div class="pb-2 flex-grow-1">
-            <h1 class="display-4 fw-bold text-white mb-1 profile-name">
+            <h1 class="display-4 fw-bold profile-text mb-1 profile-name">
               {{ currentUser.displayName || "Gamer" }}
             </h1>
             <div
@@ -417,7 +417,7 @@ export default {
 
           <div class="pb-2 d-none d-md-flex gap-4">
             <div class="text-center">
-              <div class="fs-4 fw-bold text-white">{{ totalFavorites }}</div>
+              <div class="fs-4 fw-bold profile-text">{{ totalFavorites }}</div>
               <div
                 class="text-uppercase text-muted-light"
                 style="font-size: 0.75rem; letter-spacing: 1px"
@@ -426,7 +426,7 @@ export default {
               </div>
             </div>
             <div class="text-center">
-              <div class="fs-4 fw-bold text-white">{{ totalReviews }}</div>
+              <div class="fs-4 fw-bold profile-text">{{ totalReviews }}</div>
               <div
                 class="text-uppercase text-muted-light"
                 style="font-size: 0.75rem; letter-spacing: 1px"
@@ -440,6 +440,46 @@ export default {
     </div>
 
     <div class="container py-5">
+      <!-- Quick Access Cards -->
+      <div class="row g-3 mb-5">
+        <div class="col-6 col-md-3">
+          <router-link to="/library" class="card profile-glass-card quick-access-card h-100 text-decoration-none">
+            <div class="card-body text-center p-4">
+              <i class="bi bi-controller fs-2 text-primary mb-2"></i>
+              <h6 class="profile-text fw-bold mb-1">My Library</h6>
+              <div class="text-muted-light small">{{ purchases.length }} games</div>
+            </div>
+          </router-link>
+        </div>
+        <div class="col-6 col-md-3">
+          <router-link to="/favorites" class="card profile-glass-card quick-access-card h-100 text-decoration-none">
+            <div class="card-body text-center p-4">
+              <i class="bi bi-heart-fill fs-2 text-danger mb-2"></i>
+              <h6 class="profile-text fw-bold mb-1">Wishlist</h6>
+              <div class="text-muted-light small">{{ totalFavorites }} games</div>
+            </div>
+          </router-link>
+        </div>
+        <div class="col-6 col-md-3">
+          <a href="#activity" class="card profile-glass-card quick-access-card h-100 text-decoration-none">
+            <div class="card-body text-center p-4">
+              <i class="bi bi-star-fill fs-2 text-warning mb-2"></i>
+              <h6 class="profile-text fw-bold mb-1">My Reviews</h6>
+              <div class="text-muted-light small">{{ totalReviews }}</div>
+            </div>
+          </a>
+        </div>
+        <div class="col-6 col-md-3">
+          <a href="#activity" class="card profile-glass-card quick-access-card h-100 text-decoration-none">
+            <div class="card-body text-center p-4">
+              <i class="bi bi-bookmark-fill fs-2 text-info mb-2"></i>
+              <h6 class="profile-text fw-bold mb-1">Saved Articles</h6>
+              <div class="text-muted-light small">0</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
       <div class="row g-5">
         <!-- Left Sidebar (Stats & Settings) -->
         <div class="col-lg-4">
@@ -447,7 +487,7 @@ export default {
           <div class="card profile-glass-card mb-4">
             <div class="card-body p-4">
               <h5
-                class="card-title text-white mb-4 d-flex align-items-center gap-2"
+                class="card-title profile-text mb-4 d-flex align-items-center gap-2"
               >
                 <i class="bi bi-bar-chart-fill text-primary"></i> Game
                 Statistics
@@ -465,7 +505,7 @@ export default {
                     ><i class="bi bi-star-fill text-warning me-2"></i>
                     Wishlist</span
                   >
-                  <span class="stat-value text-white fw-bold">{{
+                  <span class="stat-value profile-text fw-bold">{{
                     totalFavorites
                   }}</span>
                 </div>
@@ -475,7 +515,7 @@ export default {
                     ><i class="bi bi-star-fill text-warning me-2"></i>
                     Reviews</span
                   >
-                  <span class="stat-value text-white fw-bold">{{
+                  <span class="stat-value profile-text fw-bold">{{
                     totalReviews
                   }}</span>
                 </div>
@@ -485,7 +525,7 @@ export default {
                     ><i class="bi bi-calculator-fill text-info me-2"></i> Avg
                     Rating Given</span
                   >
-                  <span class="stat-value text-white fw-bold">{{
+                  <span class="stat-value profile-text fw-bold">{{
                     averageRating
                   }}</span>
                 </div>
@@ -495,7 +535,7 @@ export default {
                     ><i class="bi bi-calendar-check-fill text-success me-2"></i>
                     Member Since</span
                   >
-                  <span class="stat-value text-white">{{ memberSince }}</span>
+                  <span class="stat-value profile-text">{{ memberSince }}</span>
                 </div>
               </div>
             </div>
@@ -505,7 +545,7 @@ export default {
           <div class="card profile-glass-card mb-4">
             <div class="card-body p-4">
               <h5
-                class="card-title text-white mb-4 d-flex align-items-center gap-2"
+                class="card-title profile-text mb-4 d-flex align-items-center gap-2"
               >
                 <i class="bi bi-person-badge-fill text-primary"></i> Account
                 Information
@@ -513,7 +553,7 @@ export default {
 
               <div class="stat-row mb-3">
                 <span class="stat-label">Email</span>
-                <span class="stat-value text-white text-break text-end">{{
+                <span class="stat-value profile-text text-break text-end">{{
                   currentUser.email
                 }}</span>
               </div>
@@ -531,7 +571,7 @@ export default {
               </div>
               <div class="stat-row">
                 <span class="stat-label">Joined</span>
-                <span class="stat-value text-white">{{ memberSinceFull }}</span>
+                <span class="stat-value profile-text">{{ memberSinceFull }}</span>
               </div>
             </div>
           </div>
@@ -541,7 +581,7 @@ export default {
             <div class="accordion-item bg-transparent border-0 mb-3">
               <h2 class="accordion-header">
                 <button
-                  class="accordion-button collapsed profile-glass-card text-white py-3"
+                  class="accordion-button collapsed profile-glass-card profile-text py-3"
                   type="button"
                   data-bs-toggle="collapse"
                   data-bs-target="#collapseName"
@@ -599,7 +639,7 @@ export default {
             <div class="accordion-item bg-transparent border-0">
               <h2 class="accordion-header">
                 <button
-                  class="accordion-button collapsed profile-glass-card text-white py-3"
+                  class="accordion-button collapsed profile-glass-card profile-text py-3"
                   type="button"
                   data-bs-toggle="collapse"
                   data-bs-target="#collapsePassword"
@@ -737,7 +777,7 @@ export default {
             <div class="accordion-item bg-transparent border-0">
               <h2 class="accordion-header">
                 <button
-                  class="accordion-button collapsed profile-glass-card text-white py-3"
+                  class="accordion-button collapsed profile-glass-card profile-text py-3"
                   type="button"
                   data-bs-toggle="collapse"
                   data-bs-target="#collapsePurchases"
@@ -770,7 +810,7 @@ export default {
                       class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-secondary border-opacity-25"
                     >
                       <div>
-                        <div class="text-white fw-bold">
+                        <div class="profile-text fw-bold">
                           {{ purchase.gameName }}
                         </div>
                         <div class="text-muted-light small">
@@ -782,7 +822,7 @@ export default {
                         </div>
                       </div>
                       <div class="text-end">
-                        <div class="text-white">
+                        <div class="profile-text">
                           ${{ (purchase.price || 0).toFixed(2) }}
                         </div>
                         <div class="text-success small">
@@ -809,7 +849,7 @@ export default {
           <div
             class="d-flex justify-content-between align-items-end mb-4 mt-4 mt-lg-0"
           >
-            <h3 class="text-white mb-0 fw-bold">Wishlist</h3>
+            <h3 class="profile-text mb-0 fw-bold">Wishlist</h3>
             <router-link
               to="/favorites"
               class="text-primary text-decoration-none d-flex align-items-center gap-1"
@@ -827,10 +867,10 @@ export default {
             class="profile-glass-card p-5 text-center mb-5"
           >
             <i
-              class="bi bi-star fs-1 text-secondary mb-3 d-block"
+              class="bi bi-star fs-1 text-primary mb-3 d-block"
               aria-hidden="true"
             ></i>
-            <h5 class="text-white">Your wishlist is empty.</h5>
+            <h5 class="profile-text">Your wishlist is empty.</h5>
             <p class="text-muted-light mb-4">
               Start discovering games to build your wishlist.
             </p>
@@ -863,7 +903,7 @@ export default {
                     <div class="fav-overlay"></div>
                   </div>
                   <div class="fav-content">
-                    <h6 class="text-white text-truncate mb-1">
+                    <h6 class="profile-text text-truncate mb-1">
                       {{ fav.title }}
                     </h6>
                     <small class="text-muted-light">{{ fav.genre }}</small>
@@ -874,7 +914,7 @@ export default {
           </div>
 
           <!-- Combined Activity Feed -->
-          <h3 class="text-white mb-4 fw-bold">Recent Activity</h3>
+          <h3 id="activity" class="profile-text mb-4 fw-bold" style="scroll-margin-top: 80px;">Recent Activity</h3>
 
           <div v-if="statsLoading" class="text-center py-5">
             <div class="spinner-border text-primary" role="status"></div>
@@ -885,10 +925,10 @@ export default {
             class="profile-glass-card p-5 text-center"
           >
             <i
-              class="bi bi-activity fs-1 text-secondary mb-3 d-block"
+              class="bi bi-activity fs-1 text-primary mb-3 d-block"
               aria-hidden="true"
             ></i>
-            <h5 class="text-white">No activity yet</h5>
+            <h5 class="profile-text">No activity yet</h5>
             <p class="text-muted-light">
               Review games, write news, or save favorites to see them here.
             </p>
@@ -906,7 +946,7 @@ export default {
                   class="d-flex justify-content-between align-items-center mb-3"
                 >
                   <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-secondary bg-opacity-25 text-white"
+                    <span class="badge bg-secondary bg-opacity-25 profile-text"
                       >⭐ Review</span
                     >
                   </div>
@@ -923,7 +963,7 @@ export default {
                       ><i class="bi bi-star" aria-hidden="true"></i
                     ></template>
                   </span>
-                  <span class="text-white fw-bold"
+                  <span class="profile-text fw-bold"
                     >Reviewed
                     {{
                       act.item.gameName || getGameName(act.item.gameId)
@@ -959,7 +999,7 @@ export default {
                   }}</span>
                 </div>
                 <div class="d-flex align-items-center gap-2 mb-3">
-                  <h6 class="text-white fw-bold mb-0">
+                  <h6 class="profile-text fw-bold mb-0">
                     Added {{ act.item.title }} to collection
                   </h6>
                 </div>
@@ -993,7 +1033,7 @@ export default {
                   }}</span>
                 </div>
                 <div class="d-flex align-items-center gap-2 mb-3">
-                  <h6 class="text-white fw-bold mb-0">
+                  <h6 class="profile-text fw-bold mb-0">
                     Published "{{ act.item.title }}"
                   </h6>
                 </div>
@@ -1001,7 +1041,7 @@ export default {
                   class="d-flex justify-content-end pt-2 border-top border-secondary border-opacity-25 mt-2"
                 >
                   <router-link
-                    :to="`/gamehub-news/user/${act.item.id}`"
+                    :to="`/gamehub-news/${act.item.id}`"
                     class="btn btn-sm btn-outline-info rounded-pill px-3"
                     >Read Post</router-link
                   >
@@ -1021,11 +1061,15 @@ export default {
       style="width: 3rem; height: 3rem"
       role="status"
     ></div>
-    <h4 class="text-white mt-4">Loading Profile...</h4>
+    <h4 class="profile-text mt-4">Loading Profile...</h4>
   </div>
 </template>
 
 <style scoped>
+.profile-text {
+  color: var(--text-primary) !important;
+}
+
 .profile-page {
   min-height: 100vh;
   background: var(--bg-deep);
@@ -1097,11 +1141,11 @@ export default {
 
 /* Cards */
 .profile-glass-card {
-  background: rgba(25, 27, 35, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
   border-radius: 16px;
   backdrop-filter: blur(16px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-sm);
 }
 
 .stat-row {
@@ -1117,21 +1161,21 @@ export default {
 
 /* Forms */
 .gd-input {
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
   border-radius: 10px;
   padding: 12px 16px;
   transition: all 0.3s;
 }
 .gd-input:focus {
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--bg-glass-hover);
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
-  color: white;
+  color: var(--text-primary);
 }
 .gd-input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--text-muted);
 }
 
 .gd-input.is-invalid {
@@ -1158,8 +1202,8 @@ export default {
   transition: all 0.2s;
 }
 .profile-accordion .accordion-button:not(.collapsed) {
-  background: rgba(124, 58, 237, 0.1);
-  color: white;
+  background: var(--accent-surface);
+  color: var(--text-primary);
 }
 .profile-accordion .accordion-button::after {
   filter: invert(1);
@@ -1170,8 +1214,8 @@ export default {
   position: relative;
   border-radius: 12px;
   overflow: hidden;
-  background: rgba(25, 27, 35, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
   transition:
     transform 0.3s,
     box-shadow 0.3s;
@@ -1233,4 +1277,74 @@ export default {
   line-height: 1.6;
   font-size: 0.95rem;
 }
+
+.quick-access-card {
+  transition: var(--card-transition);
+}
+.quick-access-card:hover {
+  transform: var(--card-hover-lift);
+  box-shadow: var(--card-hover-shadow);
+  border-color: var(--card-hover-border);
+}
+
+/* Profile glass card updated radius */
+.profile-glass-card {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--card-radius) !important;
+  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Improved stat row contrast */
+.stat-label {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stat-value {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+/* Fav mini card using design tokens */
+.fav-mini-card {
+  position: relative;
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  transition: var(--card-transition);
+  height: 100%;
+}
+.fav-mini-card:hover {
+  transform: var(--card-hover-lift);
+  box-shadow: var(--card-hover-shadow);
+  border-color: var(--card-hover-border);
+}
+
+/* Activity timeline left border accents */
+.activity-review-item {
+  border-left: 3px solid #f59e0b;
+  padding-left: 12px;
+  margin-left: -12px;
+}
+.activity-fav-item {
+  border-left: 3px solid #f43f5e;
+  padding-left: 12px;
+  margin-left: -12px;
+}
+.activity-post-item {
+  border-left: 3px solid #06b6d4;
+  padding-left: 12px;
+  margin-left: -12px;
+}
+
+/* Purchase history anchor target */
+#purchases {
+  scroll-margin-top: 80px;
+}
+
 </style>

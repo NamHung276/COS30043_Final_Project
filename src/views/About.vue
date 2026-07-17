@@ -1,48 +1,45 @@
 <script>
+import { auth } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
+
 export default {
+  name: "AboutView",
   data() {
     return {
+      currentUser: null,
+      unsubscribe: null,
       firstName: "",
       lastName: "",
       selectedScene: "mountain",
-      activeTab: "features",
-      genreIcons: [
-        { name: "MMORPG", src: "/game_icon/mmorpg.png" },
-        { name: "Shooter", src: "/game_icon/shooter.png" },
-        { name: "MOBA", src: "/game_icon/moba.png" },
-        { name: "Strategy", src: "/game_icon/strategy.png" },
-        { name: "Battle Royale", src: "/game_icon/battle_royale.png" },
-        { name: "Sci-Fi", src: "/game_icon/sci-fi.png" },
-        { name: "Fantasy", src: "/game_icon/fantasy.png" },
-        { name: "Sports", src: "/game_icon/sports.png" },
-        { name: "Racing", src: "/game_icon/racing.png" },
-        { name: "Anime", src: "/game_icon/anime.png" },
-        { name: "Horror", src: "/game_icon/horror.png" },
-        { name: "Survival", src: "/game_icon/survival.png" },
-      ],
     };
   },
-
   computed: {
     fullName() {
       return `${this.firstName} ${this.lastName}`.trim();
     },
-
     sceneImage() {
       return this.selectedScene === "mountain"
         ? "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80"
         : "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80";
     },
-
     gamerTitle() {
       return this.selectedScene === "mountain"
         ? "Mountain Explorer"
         : "Ocean Voyager";
     },
-
     gamerEmoji() {
       return this.selectedScene === "mountain" ? "🏔️" : "🌊";
     },
+  },
+  mounted() {
+    this.unsubscribe = onAuthStateChanged(auth, (user) => {
+      this.currentUser = user;
+    });
+  },
+  unmounted() {
+    if (this.unsubscribe) {
+      this.unsubscribe();
+    }
   },
 };
 </script>
@@ -57,565 +54,189 @@ export default {
         <div class="about-hero-orb orb-3"></div>
       </div>
       <div class="container about-hero-content">
-        <div class="about-hero-badge">
-          <i class="bi bi-controller me-2"></i>COS30043 Final Project
-        </div>
         <h1 class="about-hero-title">
-          About <span class="about-gradient-text">GameHub</span>
+          Discover Your <span class="about-gradient-text">Next Adventure</span>
         </h1>
-        <p class="about-hero-sub">
-          A modern Vue 3 gaming platform for discovering free-to-play games,
-          breaking gaming news, and building your personal collection.
+        <p class="about-hero-sub mt-3">
+          GameHub helps players discover games, follow gaming news, build personal collections, and share reviews with the community.
         </p>
-
-        <!-- Stat Pills -->
-        <div class="about-stat-row">
-          <div class="about-stat-pill">
-            <i class="bi bi-controller"></i>
-            <strong>300+</strong>
-            <span>Games</span>
-          </div>
-          <div class="about-stat-pill">
-            <i class="bi bi-broadcast"></i>
-            <strong>24/7</strong>
-            <span>Live News</span>
-          </div>
-          <div class="about-stat-pill">
-            <i class="bi bi-link-45deg"></i>
-            <strong>4</strong>
-            <span>APIs</span>
-          </div>
-          <div class="about-stat-pill">
-            <i class="bi bi-shield-lock"></i>
-            <strong>Firebase</strong>
-            <span>Auth & DB</span>
-          </div>
-        </div>
       </div>
     </div>
 
     <div class="container about-body">
-      <div class="row g-4">
+      <div class="row g-5">
         <!-- Left / Main Column -->
         <div class="col-lg-8">
-          <!-- Welcome Card -->
-          <div class="about-card about-card-welcome mb-4">
-            <div class="about-card-glow"></div>
-            <div class="about-card-inner">
-              <div
-                class="about-section-icon"
-                style="
-                  background: rgba(124, 58, 237, 0.15);
-                  color: var(--primary-light);
-                "
-              >
-                <i class="bi bi-stars"></i>
+          
+          <!-- Section 1: Why GameHub? -->
+          <div class="mb-5">
+            <h3 class="about-text-primary fw-bold mb-4">Why GameHub?</h3>
+            <div class="row g-4">
+              <!-- Cards -->
+              <div class="col-md-6">
+                <div class="about-feature-card h-100">
+                  <div class="about-feature-icon" style="background: rgba(124, 58, 237, 0.15); color: var(--primary-light);">
+                    <i class="bi bi-controller"></i>
+                  </div>
+                  <h5 class="about-text-primary fw-bold mt-3 mb-2">Discover Games</h5>
+                  <p class="text-muted-light mb-0">Browse hundreds of free-to-play and premium games with advanced filters to find your exact match.</p>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="about-feature-card h-100">
+                  <div class="about-feature-icon" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-light);">
+                    <i class="bi bi-newspaper"></i>
+                  </div>
+                  <h5 class="about-text-primary fw-bold mt-3 mb-2">Gaming News</h5>
+                  <p class="text-muted-light mb-0">Stay updated with the latest industry news, announcements, and patch notes from top publications.</p>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="about-feature-card h-100">
+                  <div class="about-feature-icon" style="background: rgba(245, 158, 11, 0.15); color: var(--warning);">
+                    <i class="bi bi-star-fill"></i>
+                  </div>
+                  <h5 class="about-text-primary fw-bold mt-3 mb-2">Community Reviews</h5>
+                  <p class="text-muted-light mb-0">See what other players think before you play. Share your own ratings and detailed reviews.</p>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="about-feature-card h-100">
+                  <div class="about-feature-icon" style="background: rgba(244, 63, 94, 0.15); color: var(--danger);">
+                    <i class="bi bi-heart-fill"></i>
+                  </div>
+                  <h5 class="about-text-primary fw-bold mt-3 mb-2">Build Your Collection</h5>
+                  <p class="text-muted-light mb-0">Save your favorite titles, create custom wishlists, and track the games you want to play next.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Visuals -->
+          <div class="mb-5">
+            <h3 class="about-text-primary fw-bold mb-4">The Experience</h3>
+            <div class="row g-4">
+              <div class="col-12">
+                <router-link to="/games" class="about-visual-card d-block text-decoration-none">
+                  <div class="about-visual-img-wrap shadow mb-3 rounded-4 overflow-hidden position-relative">
+                    <img src="https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=2071&auto=format&fit=crop" class="img-fluid w-100" alt="Browse Games">
+                    <div class="about-visual-overlay">
+                      <span class="fs-4 fw-bold about-text-primary"><i class="bi bi-controller me-2"></i>Browse Games</span>
+                    </div>
+                  </div>
+                  <h5 class="about-text-primary fw-bold">Rich Game Library</h5>
+                  <p class="text-muted-light mb-0">Explore a massive catalog with high-quality media, system requirements, and platform availability.</p>
+                </router-link>
+              </div>
+              <div class="col-md-6">
+                <router-link to="/live-news" class="about-visual-card d-block text-decoration-none">
+                  <div class="about-visual-img-wrap shadow mb-3 rounded-4 overflow-hidden position-relative">
+                    <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop" class="img-fluid w-100" alt="Game Details">
+                    <div class="about-visual-overlay">
+                      <span class="fs-4 fw-bold about-text-primary"><i class="bi bi-people-fill me-2"></i>Community</span>
+                    </div>
+                  </div>
+                  <h5 class="about-text-primary fw-bold">Live Community Hub</h5>
+                  <p class="text-muted-light mb-0">Interact with players worldwide through reviews and community posts.</p>
+                </router-link>
+              </div>
+              <div class="col-md-6">
+                <router-link to="/profile" class="about-visual-card d-block text-decoration-none">
+                  <div class="about-visual-img-wrap shadow mb-3 rounded-4 overflow-hidden position-relative">
+                    <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop" class="img-fluid w-100" alt="User Collections">
+                    <div class="about-visual-overlay">
+                      <span class="fs-4 fw-bold about-text-primary"><i class="bi bi-person-circle me-2"></i>Profile</span>
+                    </div>
+                  </div>
+                  <h5 class="about-text-primary fw-bold">Personalized Dashboard</h5>
+                  <p class="text-muted-light mb-0">Manage your wishlist, library, and settings from a sleek unified account menu.</p>
+                </router-link>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Our Mission -->
+          <div class="mb-5">
+            <div class="about-card about-card-welcome">
+              <div class="about-card-glow"></div>
+              <div class="about-card-inner">
+                <div class="about-section-icon" style="background: rgba(34, 197, 94, 0.15); color: var(--success);">
+                  <i class="bi bi-bullseye"></i>
+                </div>
+                <div>
+                  <h3 class="about-text-primary fw-bold mb-3">Our Mission</h3>
+                  <p class="text-muted-light" style="font-size: 1.05rem; line-height: 1.7;">
+                    We created GameHub to make discovering games simple. Instead of jumping between multiple websites for news, reviews, screenshots, and deals, GameHub brings everything together into one unified experience. Whether you're hunting for the next big free-to-play title or checking the latest patch notes, you'll find it here.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Meet the Developer -->
+          <div class="mb-5">
+            <h3 class="about-text-primary fw-bold mb-4">Meet the Developer</h3>
+            <div class="about-card about-dev-card d-flex flex-column flex-md-row align-items-md-center gap-4 p-4">
+              <div class="about-dev-avatar flex-shrink-0" style="width: 100px; height: 100px; font-size: 3rem;">
+                <i class="bi bi-person-circle"></i>
               </div>
               <div>
-                <h2 class="about-section-title">Welcome to GameHub</h2>
-                <p class="about-section-lead">
-                  Discover free-to-play games, explore gaming news, and build
-                  your personal collection of favourite titles.
+                <h4 class="about-text-primary fw-bold mb-1">Nam Hung Truong</h4>
+                <div class="text-primary mb-3"><i class="bi bi-code-slash me-2"></i>Full-Stack Developer</div>
+                <p class="text-muted-light mb-3">
+                  GameHub was built as a full-stack university project focused on creating a modern gaming platform with authentication, cloud storage, community features, and live game information.
                 </p>
-                <p class="about-section-body">
-                  GameHub is a full-stack web application built with Vue 3 that
-                  allows users to browse free-to-play games, search for titles,
-                  filter by genre, and view detailed game information — powered
-                  by FreeToGame, RAWG, CheapShark, and NewsAPI, all backed by
-                  Firebase cloud storage and authentication.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tab Nav -->
-          <div class="about-tabs mb-4">
-            <button
-              class="about-tab-btn"
-              :class="{ active: activeTab === 'features' }"
-              @click="activeTab = 'features'"
-            >
-              <i class="bi bi-stars me-1"></i>Features
-            </button>
-            <button
-              class="about-tab-btn"
-              :class="{ active: activeTab === 'tech' }"
-              @click="activeTab = 'tech'"
-            >
-              <i class="bi bi-tools me-1"></i>Technologies
-            </button>
-            <button
-              class="about-tab-btn"
-              :class="{ active: activeTab === 'apis' }"
-              @click="activeTab = 'apis'"
-            >
-              <i class="bi bi-link-45deg me-1"></i>APIs
-            </button>
-            <button
-              class="about-tab-btn"
-              :class="{ active: activeTab === 'future' }"
-              @click="activeTab = 'future'"
-            >
-              <i class="bi bi-rocket me-1"></i>Roadmap
-            </button>
-          </div>
-
-          <!-- Features Tab -->
-          <div v-if="activeTab === 'features'" class="about-card mb-4 fade-tab">
-            <h3 class="about-card-heading">
-              <i class="bi bi-stars me-2 text-warning"></i>Platform Features
-            </h3>
-            <div class="about-feature-grid">
-              <div class="about-feature-item">
-                <div
-                  class="about-feature-icon-wrap"
-                  style="background: rgba(124, 58, 237, 0.12)"
-                >
-                  <i
-                    class="bi bi-controller"
-                    style="color: var(--primary-light)"
-                  ></i>
-                </div>
-                <div>
-                  <strong>Browse Games</strong>
-                  <p>Explore 300+ free-to-play titles with genre filters</p>
-                </div>
-              </div>
-              <div class="about-feature-item">
-                <div
-                  class="about-feature-icon-wrap"
-                  style="background: rgba(6, 182, 212, 0.12)"
-                >
-                  <i
-                    class="bi bi-search"
-                    style="color: var(--accent-light)"
-                  ></i>
-                </div>
-                <div>
-                  <strong>Smart Search</strong>
-                  <p>Instant title search across the full game library</p>
-                </div>
-              </div>
-              <div class="about-feature-item">
-                <div
-                  class="about-feature-icon-wrap"
-                  style="background: rgba(244, 63, 94, 0.12)"
-                >
-                  <i class="bi bi-star-fill" style="color: #f59e0b"></i>
-                </div>
-                <div>
-                  <strong>Favorites</strong>
-                  <p>Cloud-saved personal collection via Firestore</p>
-                </div>
-              </div>
-              <div class="about-feature-item">
-                <div
-                  class="about-feature-icon-wrap"
-                  style="background: rgba(34, 197, 94, 0.12)"
-                >
-                  <i class="bi bi-broadcast" style="color: var(--success)"></i>
-                </div>
-                <div>
-                  <strong>Live News</strong>
-                  <p>Real-time gaming news powered by NewsAPI</p>
-                </div>
-              </div>
-              <div class="about-feature-item">
-                <div
-                  class="about-feature-icon-wrap"
-                  style="background: rgba(245, 158, 11, 0.12)"
-                >
-                  <i
-                    class="bi bi-shield-lock"
-                    style="color: var(--warning)"
-                  ></i>
-                </div>
-                <div>
-                  <strong>Auth System</strong>
-                  <p>User registration & login with Firebase Auth</p>
-                </div>
-              </div>
-              <div class="about-feature-item">
-                <div
-                  class="about-feature-icon-wrap"
-                  style="background: rgba(124, 58, 237, 0.12)"
-                >
-                  <i
-                    class="bi bi-camera"
-                    style="color: var(--primary-light)"
-                  ></i>
-                </div>
-                <div>
-                  <strong>Screenshots</strong>
-                  <p>Lazy-loaded game screenshots & media gallery</p>
-                </div>
-              </div>
-              <div class="about-feature-item">
-                <div
-                  class="about-feature-icon-wrap"
-                  style="background: rgba(6, 182, 212, 0.12)"
-                >
-                  <i
-                    class="bi bi-pencil-square"
-                    style="color: var(--accent-light)"
-                  ></i>
-                </div>
-                <div>
-                  <strong>Reviews & Ratings</strong>
-                  <p>User reviews stored in Firestore</p>
-                </div>
-              </div>
-              <div class="about-feature-item">
-                <div
-                  class="about-feature-icon-wrap"
-                  style="background: rgba(34, 197, 94, 0.12)"
-                >
-                  <i class="bi bi-phone" style="color: var(--success)"></i>
-                </div>
-                <div>
-                  <strong>Responsive Design</strong>
-                  <p>Optimised for desktop, tablet &amp; mobile</p>
+                <div class="d-flex gap-2 flex-wrap">
+                  <span class="badge bg-secondary bg-opacity-25 text-light px-3 py-2 rounded-pill">Vue 3</span>
+                  <span class="badge bg-secondary bg-opacity-25 text-light px-3 py-2 rounded-pill">Firebase</span>
+                  <span class="badge bg-secondary bg-opacity-25 text-light px-3 py-2 rounded-pill">REST APIs</span>
+                  <span class="badge bg-secondary bg-opacity-25 text-light px-3 py-2 rounded-pill">UI/UX Design</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Tech Tab -->
-          <div v-if="activeTab === 'tech'" class="about-card mb-4 fade-tab">
-            <h3 class="about-card-heading">
-              <i class="bi bi-tools me-2 text-info"></i>Technologies Used
-            </h3>
-            <div class="about-tech-grid">
-              <div class="about-tech-chip">
-                <span class="about-tech-dot" style="background: #42b883"></span
-                >Vue 3
-              </div>
-              <div class="about-tech-chip">
-                <span class="about-tech-dot" style="background: #7c3aed"></span
-                >Vue Router
-              </div>
-              <div class="about-tech-chip">
-                <span class="about-tech-dot" style="background: #7952b3"></span
-                >Bootstrap 5
-              </div>
-              <div class="about-tech-chip">
-                <span class="about-tech-dot" style="background: #f59e0b"></span
-                >Firebase Auth
-              </div>
-              <div class="about-tech-chip">
-                <span class="about-tech-dot" style="background: #ef4444"></span
-                >Firestore
-              </div>
-              <div class="about-tech-chip">
-                <span class="about-tech-dot" style="background: #06b6d4"></span
-                >FreeToGame API
-              </div>
-              <div class="about-tech-chip">
-                <span class="about-tech-dot" style="background: #22c55e"></span
-                >NewsAPI
-              </div>
-              <div class="about-tech-chip">
-                <span class="about-tech-dot" style="background: #f59e0b"></span
-                >RAWG API
-              </div>
-              <div class="about-tech-chip">
-                <span class="about-tech-dot" style="background: #34d399"></span
-                >CheapShark API
-              </div>
-              <div class="about-tech-chip">
-                <span class="about-tech-dot" style="background: #a78bfa"></span
-                >Vite
-              </div>
-              <div class="about-tech-chip">
-                <span class="about-tech-dot" style="background: #f0f4ff"></span
-                >Vanilla CSS
-              </div>
-              <div class="about-tech-chip">
-                <span class="about-tech-dot" style="background: #fb7185"></span
-                >Bootstrap Icons
-              </div>
-            </div>
-
-            <div class="about-purpose-block mt-4">
-              <i class="bi bi-crosshair me-2" style="color: var(--accent)"></i>
-              <div>
-                <strong>Project Purpose</strong>
-                <p>
-                  GameHub was created as part of the COS30043 Full-Stack
-                  Development course. It demonstrates a complete modern web
-                  application showcasing Vue 3 frontend development,
-                  component-based architecture, API integration, Firebase cloud
-                  services, and responsive design principles.
-                </p>
-              </div>
+          <!-- Section 5: CTA -->
+          <div class="about-card p-5 text-center mb-5" style="background: linear-gradient(145deg, rgba(124, 58, 237, 0.1), transparent); border-color: rgba(124, 58, 237, 0.2);">
+            <h3 class="about-text-primary fw-bold mb-3">Ready to start exploring?</h3>
+            <p class="text-muted-light mb-4">Jump right in and find your next favorite game or catch up on the latest announcements.</p>
+            <div class="d-flex justify-content-center flex-wrap gap-3">
+              <router-link to="/games" class="btn btn-primary px-4 py-2 rounded-pill fw-bold shadow-sm">
+                Browse Games
+              </router-link>
+              <router-link to="/live-news" class="btn btn-outline-light px-4 py-2 rounded-pill fw-bold">
+                Latest News
+              </router-link>
             </div>
           </div>
 
-          <!-- APIs Tab -->
-          <div v-if="activeTab === 'apis'" class="about-card mb-4 fade-tab">
-            <h3 class="about-card-heading">
-              <i class="bi bi-link-45deg me-2 text-success"></i>External APIs
-            </h3>
-
-            <div class="about-api-card">
-              <div
-                class="about-api-icon"
-                style="background: rgba(34, 197, 94, 0.12); color: #4ade80"
-              >
-                <i class="bi bi-controller"></i>
-              </div>
-              <div class="about-api-info">
-                <strong>FreeToGame API</strong>
-                <p>
-                  Provides access to 500+ free-to-play games with detailed
-                  information, genres, screenshots, system requirements, and
-                  platform availability. Drives the Free-to-Play section.
-                </p>
-                <span
-                  class="about-api-badge"
-                  style="border-color: rgba(34, 197, 94, 0.4); color: #4ade80"
-                >
-                  <i
-                    class="bi bi-circle-fill me-1"
-                    style="font-size: 0.4rem"
-                  ></i
-                  >Active
-                </span>
-              </div>
-            </div>
-
-            <div class="about-api-card">
-              <div
-                class="about-api-icon"
-                style="background: rgba(245, 158, 11, 0.12); color: #fbbf24"
-              >
-                <i class="bi bi-joystick"></i>
-              </div>
-              <div class="about-api-info">
-                <strong>RAWG Video Games Database API</strong>
-                <p>
-                  Powers the main Games section with a massive library of
-                  500,000+ games, rich metadata, ratings, genres, screenshots,
-                  and release information spanning all major gaming platforms.
-                </p>
-                <span
-                  class="about-api-badge"
-                  style="border-color: rgba(245, 158, 11, 0.4); color: #fbbf24"
-                >
-                  <i
-                    class="bi bi-circle-fill me-1"
-                    style="font-size: 0.4rem"
-                  ></i
-                  >Active
-                </span>
-              </div>
-            </div>
-
-            <div class="about-api-card">
-              <div
-                class="about-api-icon"
-                style="background: rgba(52, 211, 153, 0.12); color: #34d399"
-              >
-                <i class="bi bi-tags"></i>
-              </div>
-              <div class="about-api-info">
-                <strong>CheapShark Deals API</strong>
-                <p>
-                  Aggregates PC game deals and price comparisons from major
-                  stores like Steam, Epic, GOG, and more. Powers the Deals
-                  section to help gamers find the best prices on their favourite
-                  titles.
-                </p>
-                <span
-                  class="about-api-badge"
-                  style="border-color: rgba(52, 211, 153, 0.4); color: #34d399"
-                >
-                  <i
-                    class="bi bi-circle-fill me-1"
-                    style="font-size: 0.4rem"
-                  ></i
-                  >Active
-                </span>
-              </div>
-            </div>
-
-            <div class="about-api-card">
-              <div
-                class="about-api-icon"
-                style="
-                  background: rgba(6, 182, 212, 0.12);
-                  color: var(--accent-light);
-                "
-              >
-                <i class="bi bi-newspaper"></i>
-              </div>
-              <div class="about-api-info">
-                <strong>NewsAPI</strong>
-                <p>
-                  Delivers real-time gaming news and industry updates from
-                  multiple major gaming news outlets. Powers the Live News
-                  section with continuously updated articles from top gaming
-                  publications.
-                </p>
-                <span
-                  class="about-api-badge"
-                  style="
-                    border-color: rgba(6, 182, 212, 0.4);
-                    color: var(--accent-light);
-                  "
-                >
-                  <i
-                    class="bi bi-circle-fill me-1"
-                    style="font-size: 0.4rem"
-                  ></i
-                  >Active
-                </span>
-              </div>
-            </div>
-
-            <!-- Genre Icons using game_icon assets -->
-            <div class="about-genre-icons">
-              <h6 class="about-genre-icons-title">
-                <i class="bi bi-grid me-1"></i>Game Genre Icons
-              </h6>
-              <div class="about-genre-icons-grid">
-                <div
-                  class="about-genre-icon-item"
-                  v-for="genre in genreIcons"
-                  :key="genre.name"
-                >
-                  <img
-                    :src="genre.src"
-                    :alt="genre.name"
-                    class="about-genre-img"
-                  />
-                  <span>{{ genre.name }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Roadmap Tab -->
-          <div v-if="activeTab === 'future'" class="about-card mb-4 fade-tab">
-            <h3 class="about-card-heading">
-              <i
-                class="bi bi-rocket me-2"
-                style="color: var(--accent2-light)"
-              ></i
-              >Future Roadmap
-            </h3>
-            <p class="about-section-body mb-3">
-              GameHub is continuously evolving. Planned enhancements include:
-            </p>
-            <div class="about-roadmap">
-              <div class="about-roadmap-item">
-                <div
-                  class="about-roadmap-dot"
-                  style="background: var(--primary)"
-                ></div>
-                <div>
-                  <strong>Game Recommendation Engine</strong>
-                  <p>
-                    AI-powered suggestions based on your favorites and play
-                    history
-                  </p>
-                </div>
-              </div>
-              <div class="about-roadmap-item">
-                <div
-                  class="about-roadmap-dot"
-                  style="background: var(--accent)"
-                ></div>
-                <div>
-                  <strong>Advanced Search &amp; Filtering</strong>
-                  <p>
-                    Multi-tag filters, platform selection, and release date
-                    range
-                  </p>
-                </div>
-              </div>
-              <div class="about-roadmap-item">
-                <div
-                  class="about-roadmap-dot"
-                  style="background: #f59e0b"
-                ></div>
-                <div>
-                  <strong>User-generated Reviews</strong>
-                  <p>
-                    Rich text reviews with ratings, verified playtime, and
-                    helpfulness votes
-                  </p>
-                </div>
-              </div>
-              <div class="about-roadmap-item">
-                <div
-                  class="about-roadmap-dot"
-                  style="background: var(--success)"
-                ></div>
-                <div>
-                  <strong>Social Features</strong>
-                  <p>
-                    Follow friends, share collections, and compare libraries
-                  </p>
-                </div>
-              </div>
-              <div class="about-roadmap-item">
-                <div
-                  class="about-roadmap-dot"
-                  style="background: var(--accent2)"
-                ></div>
-                <div>
-                  <strong>Enhanced Admin Dashboard</strong>
-                  <p>
-                    Advanced news management, analytics, and moderation tools
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- Right / Sidebar -->
         <div class="col-lg-4">
-          <div
-            style="
-              position: sticky;
-              top: 80px;
-              display: flex;
-              flex-direction: column;
-              gap: 1.25rem;
-            "
-          >
-            <!-- Developer Card -->
-            <div class="about-card about-dev-card">
-              <div class="about-dev-avatar">
-                <i class="bi bi-person-circle"></i>
+          <div style="position: sticky; top: 100px; display: flex; flex-direction: column; gap: 1.5rem;">
+            
+            <!-- Join Promo -->
+            <div v-if="!currentUser" class="about-card text-center p-5 border-primary border-opacity-50" style="background: linear-gradient(145deg, rgba(124, 58, 237, 0.1), rgba(6, 182, 212, 0.05));">
+              <div class="mb-4">
+                <i class="bi bi-rocket-takeoff text-primary" style="font-size: 3.5rem;"></i>
               </div>
-              <div class="about-dev-name">Nam Hung Truong</div>
-              <div class="about-dev-role">
-                <i class="bi bi-code-slash me-1"></i>Full-Stack Developer
-              </div>
-              <p class="about-dev-desc">
-                COS30043 Full Stack Development student building modern web
-                experiences with Vue 3 and Firebase.
-              </p>
-              <div class="about-dev-tags">
-                <span class="about-dev-tag">Vue 3</span>
-                <span class="about-dev-tag">Firebase</span>
-                <span class="about-dev-tag">REST APIs</span>
+              <h4 class="about-text-primary fw-bold mb-3">Ready to Play?</h4>
+              <p class="text-muted-light mb-4">Join thousands of gamers discovering their next favorite titles today.</p>
+              <router-link to="/register" class="btn btn-primary w-100 py-2 fw-bold rounded-pill shadow-sm">
+                Create Free Account
+              </router-link>
+              <div class="mt-3">
+                <small class="text-muted">Already have an account? <router-link to="/login" class="text-info text-decoration-none">Log in</router-link></small>
               </div>
             </div>
 
             <!-- Gamer Profile Card -->
-            <div class="about-card about-gamer-card">
-              <h5 class="about-card-heading mb-0">
-                <i
-                  class="bi bi-joystick me-2"
-                  style="color: var(--primary-light)"
-                ></i
-                >Gamer Profile
+            <div class="about-card about-gamer-card mb-4 p-4">
+              <h5 class="about-text-primary fw-bold mb-0">
+                <i class="bi bi-joystick me-2 text-primary"></i>Gamer Profile
               </h5>
-              <p class="about-section-body mb-3" style="font-size: 0.82rem">
+              <p class="text-muted-light mb-3" style="font-size: 0.82rem">
                 Create your gaming identity and choose your adventure.
               </p>
 
@@ -630,7 +251,7 @@ export default {
                 />
               </div>
 
-              <div class="about-field">
+              <div class="about-field mt-3">
                 <label for="lastName" class="about-label">Last Name</label>
                 <input
                   id="lastName"
@@ -642,22 +263,22 @@ export default {
               </div>
 
               <!-- Welcome message -->
-              <div v-if="fullName" class="about-welcome">
+              <div v-if="fullName" class="about-welcome mt-3">
                 <div class="about-welcome-icon">🎮</div>
                 <div>
-                  <strong>Welcome, {{ fullName }}!</strong>
+                  <strong class="about-text-primary">Welcome, {{ fullName }}!</strong>
                   <div class="about-welcome-title">
                     {{ gamerEmoji }} {{ gamerTitle }}
                   </div>
                 </div>
               </div>
 
-              <hr class="about-divider" />
+              <hr class="border-secondary opacity-25 my-4" />
 
-              <h6 class="about-label mb-2">
+              <h6 class="about-label mb-2 about-text-primary">
                 <i class="bi bi-map me-1"></i>Choose Your Adventure
               </h6>
-              <p class="about-section-body mb-3" style="font-size: 0.8rem">
+              <p class="text-muted-light mb-3" style="font-size: 0.8rem">
                 Select the world you would like to explore.
               </p>
 
@@ -678,21 +299,78 @@ export default {
                 </button>
               </div>
 
-              <div class="about-scene-img-wrap">
+              <div class="about-scene-img-wrap mt-3 mb-3">
                 <img
                   v-lazy-img="sceneImage"
                   :alt="selectedScene"
                   class="about-scene-img"
                 />
-                <div class="about-scene-label">
-                  {{
-                    selectedScene === "mountain"
-                      ? "🏔️ You are a fearless Mountain Explorer."
-                      : "🌊 You are an adventurous Ocean Voyager."
-                  }}
+              </div>
+              <div class="text-center text-muted-light fst-italic" style="font-size: 0.9rem;">
+                {{
+                  selectedScene === "mountain"
+                    ? "🏔️ You are a fearless Mountain Explorer."
+                    : "🌊 You are an adventurous Ocean Voyager."
+                }}
+              </div>
+            </div>
+
+            <!-- Community Stats -->
+            <div class="about-card p-4">
+              <h5 class="about-text-primary fw-bold mb-4"><i class="bi bi-bar-chart-fill me-2 text-warning"></i>Platform Stats</h5>
+              
+              <div class="d-flex align-items-center mb-4">
+                <div class="fs-1 text-primary me-3"><i class="bi bi-controller"></i></div>
+                <div>
+                  <div class="fs-4 fw-bold about-text-primary">300+</div>
+                  <div class="text-muted-light small text-uppercase" style="letter-spacing: 1px;">Free Games</div>
+                </div>
+              </div>
+              
+              <div class="d-flex align-items-center mb-4">
+                <div class="fs-1 text-success me-3"><i class="bi bi-broadcast"></i></div>
+                <div>
+                  <div class="fs-4 fw-bold about-text-primary">24/7</div>
+                  <div class="text-muted-light small text-uppercase" style="letter-spacing: 1px;">Gaming News</div>
+                </div>
+              </div>
+
+              <div class="d-flex align-items-center mb-4">
+                <div class="fs-1 text-danger me-3"><i class="bi bi-plug-fill"></i></div>
+                <div>
+                  <div class="fs-4 fw-bold about-text-primary">4</div>
+                  <div class="text-muted-light small text-uppercase" style="letter-spacing: 1px;">Integrated APIs</div>
+                </div>
+              </div>
+
+              <div class="d-flex align-items-center">
+                <div class="fs-1 text-info me-3"><i class="bi bi-cloud-check-fill"></i></div>
+                <div>
+                  <div class="fs-4 fw-bold about-text-primary">Firebase</div>
+                  <div class="text-muted-light small text-uppercase" style="letter-spacing: 1px;">Cloud Sync</div>
                 </div>
               </div>
             </div>
+
+            <!-- Latest Update Card -->
+            <div class="about-card p-4" style="background: rgba(34, 197, 94, 0.05); border-color: rgba(34, 197, 94, 0.2);">
+              <div class="d-flex align-items-center mb-2">
+                <span class="badge bg-success bg-opacity-25 text-success rounded-pill me-2">Latest Update</span>
+                <span class="text-muted-light small">v1.0.0 Launched</span>
+              </div>
+              <h6 class="about-text-primary fw-bold mb-1">GameHub is Live!</h6>
+              <p class="text-muted-light small mb-0">Featuring user authentication, personal libraries, live news integration, and community reviews.</p>
+            </div>
+
+            <!-- University Footer Note -->
+            <div class="text-center mt-3 opacity-75">
+              <small class="text-muted d-block mb-1 text-uppercase fw-bold" style="letter-spacing: 1px; font-size: 0.7rem;">Academic Project</small>
+              <div class="badge bg-secondary bg-opacity-25 text-light px-3 py-2 rounded-pill mt-2 mb-2">
+                <i class="bi bi-mortarboard-fill me-2"></i>COS30043 Full Stack Development
+              </div>
+              <small class="text-muted d-block mt-1">Swinburne University &copy; 2026</small>
+            </div>
+
           </div>
         </div>
       </div>
@@ -701,6 +379,13 @@ export default {
 </template>
 
 <style scoped>
+.about-text-primary {
+  color: var(--text-primary) !important;
+}
+.text-muted-light {
+  color: var(--text-secondary) !important;
+}
+
 /* ===== Page ===== */
 .about-page {
   min-height: 100vh;
@@ -710,7 +395,7 @@ export default {
 /* ===== Hero ===== */
 .about-hero {
   position: relative;
-  padding: 4rem 0 3.5rem;
+  padding: 5rem 0 4.5rem;
   overflow: hidden;
   border-bottom: 1px solid var(--border-subtle);
   text-align: center;
@@ -757,25 +442,11 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.25rem;
-}
-
-.about-hero-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 16px;
-  border-radius: 30px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  background: rgba(124, 58, 237, 0.12);
-  border: 1px solid rgba(124, 58, 237, 0.3);
-  color: var(--primary-light);
+  z-index: 1;
 }
 
 .about-hero-title {
-  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-size: clamp(2.5rem, 6vw, 4rem);
   font-weight: 900;
   color: var(--text-primary);
   margin: 0;
@@ -791,54 +462,16 @@ export default {
 
 .about-hero-sub {
   color: var(--text-secondary);
-  font-size: 1rem;
-  max-width: 600px;
+  font-size: 1.15rem;
+  max-width: 650px;
   line-height: 1.7;
   margin: 0;
 }
 
-/* ===== Stat Pills ===== */
-.about-stat-row {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  justify-content: center;
-  margin-top: 0.5rem;
-}
-
-.about-stat-pill {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 10px 20px;
-  background: var(--bg-glass);
-  border: 1px solid var(--border-glass);
-  border-radius: 50px;
-  backdrop-filter: var(--glass-blur);
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  transition:
-    border-color 0.2s,
-    transform 0.2s;
-}
-
-.about-stat-pill:hover {
-  border-color: rgba(124, 58, 237, 0.35);
-  transform: translateY(-2px);
-}
-
-.about-stat-pill i {
-  color: var(--primary-light);
-}
-.about-stat-pill strong {
-  color: var(--text-primary);
-  font-weight: 700;
-}
-
 /* ===== Body ===== */
 .about-body {
-  padding-top: 2.5rem;
-  padding-bottom: 4rem;
+  padding-top: 4rem;
+  padding-bottom: 5rem;
 }
 
 /* ===== Cards ===== */
@@ -846,7 +479,6 @@ export default {
   background: var(--bg-glass);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  padding: 1.5rem;
   backdrop-filter: var(--glass-blur);
   position: relative;
   overflow: hidden;
@@ -858,7 +490,7 @@ export default {
 }
 
 .about-card-welcome {
-  border-color: rgba(124, 58, 237, 0.2);
+  border-color: rgba(34, 197, 94, 0.2);
 }
 
 .about-card-glow {
@@ -870,7 +502,7 @@ export default {
   border-radius: 50%;
   background: radial-gradient(
     ellipse,
-    rgba(124, 58, 237, 0.1) 0%,
+    rgba(34, 197, 94, 0.1) 0%,
     transparent 70%
   );
   pointer-events: none;
@@ -880,488 +512,210 @@ export default {
   display: flex;
   gap: 1.25rem;
   position: relative;
+  padding: 2rem;
 }
 
 .about-section-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.about-feature-card {
+  background: rgba(25, 27, 35, 0.5);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+
+.about-feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+  border-color: rgba(124, 58, 237, 0.4);
+}
+
+.about-feature-icon {
   width: 48px;
   height: 48px;
-  border-radius: 14px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.3rem;
-  flex-shrink: 0;
 }
 
-.about-section-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 0.5rem;
+.about-visual-card {
+  transition: transform 0.3s;
 }
 
-.about-section-lead {
-  color: var(--text-secondary);
-  font-size: 0.95rem;
-  margin-bottom: 0.75rem;
-  font-style: italic;
+.about-visual-card:hover {
+  transform: translateY(-5px);
 }
 
-.about-section-body {
-  color: var(--text-secondary);
-  font-size: 0.88rem;
-  line-height: 1.7;
-  margin: 0;
+.about-visual-img-wrap {
+  aspect-ratio: 16/9;
+}
+.col-12 > .about-visual-card .about-visual-img-wrap {
+  aspect-ratio: 21/9;
 }
 
-.about-card-heading {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 1.25rem;
+.about-visual-img-wrap img {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
 }
 
-/* ===== Tabs ===== */
-.about-tabs {
-  display: flex;
-  gap: 4px;
-  background: var(--bg-glass);
-  border: 1px solid var(--border-glass);
-  border-radius: 14px;
-  padding: 5px;
-  backdrop-filter: var(--glass-blur);
-  flex-wrap: wrap;
+.about-visual-card:hover .about-visual-img-wrap img {
+  transform: scale(1.05);
 }
 
-.about-tab-btn {
-  flex: 1;
-  min-width: 100px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 0.82rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.about-tab-btn:hover {
-  color: var(--text-primary);
-  background: var(--bg-glass-hover);
-}
-
-.about-tab-btn.active {
-  background: rgba(124, 58, 237, 0.22);
-  color: var(--primary-light);
-  font-weight: 700;
-}
-
-/* ===== Feature Grid ===== */
-.about-feature-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.about-feature-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.875rem;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--border-subtle);
-  transition:
-    border-color 0.2s,
-    background 0.2s;
-}
-
-.about-feature-item:hover {
-  border-color: rgba(124, 58, 237, 0.25);
-  background: rgba(124, 58, 237, 0.04);
-}
-
-.about-feature-icon-wrap {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.95rem;
-  flex-shrink: 0;
-}
-
-.about-feature-item strong {
-  display: block;
-  font-size: 0.85rem;
-  color: var(--text-primary);
-  margin-bottom: 2px;
-}
-
-.about-feature-item p {
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  margin: 0;
-  line-height: 1.4;
-}
-
-/* ===== Tech Grid ===== */
-.about-tech-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.about-tech-chip {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 7px 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-glass);
-  border-radius: 30px;
-  font-size: 0.82rem;
-  color: var(--text-primary);
-  transition:
-    border-color 0.2s,
-    transform 0.2s;
-}
-.about-tech-chip:hover {
-  border-color: rgba(124, 58, 237, 0.3);
-  transform: translateY(-1px);
-}
-
-.about-tech-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.about-purpose-block {
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-start;
-  padding: 1rem;
-  border-radius: 12px;
-  background: rgba(6, 182, 212, 0.05);
-  border: 1px solid rgba(6, 182, 212, 0.15);
-}
-.about-purpose-block strong {
-  display: block;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-  font-size: 0.9rem;
-}
-.about-purpose-block p {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: 0.82rem;
-  line-height: 1.6;
-}
-
-/* ===== API Cards ===== */
-.about-api-card {
-  display: flex;
-  gap: 1rem;
-  padding: 1.1rem;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--border-subtle);
-  margin-bottom: 1rem;
-  transition: border-color 0.2s;
-}
-.about-api-card:hover {
-  border-color: rgba(124, 58, 237, 0.25);
-}
-.about-api-card:last-child {
-  margin-bottom: 0;
-}
-
-.about-api-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.1rem;
-  flex-shrink: 0;
-}
-
-.about-api-info strong {
-  display: block;
-  font-size: 0.92rem;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-}
-
-.about-api-info p {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin: 0 0 0.6rem;
-  line-height: 1.5;
-}
-
-.about-api-badge {
-  display: inline-flex;
-  align-items: center;
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 2px 10px;
-  border-radius: 20px;
-  border: 1px solid;
-  background: transparent;
-}
-
-/* ===== Roadmap ===== */
-.about-roadmap {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  position: relative;
-}
-
-.about-roadmap::before {
-  content: "";
+.about-visual-overlay {
   position: absolute;
-  left: 7px;
-  top: 12px;
-  bottom: 12px;
-  width: 2px;
-  background: linear-gradient(
-    180deg,
-    var(--primary),
-    var(--accent),
-    #f59e0b,
-    var(--success),
-    var(--accent2)
-  );
-  opacity: 0.3;
-}
-
-.about-roadmap-item {
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
-  gap: 1rem;
-  align-items: flex-start;
-  padding: 0.75rem 0 0.75rem 0;
-  position: relative;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
-.about-roadmap-dot {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  margin-top: 2px;
-  position: relative;
-  z-index: 1;
-  box-shadow: 0 0 8px currentColor;
-}
-
-.about-roadmap-item strong {
-  display: block;
-  font-size: 0.88rem;
-  color: var(--text-primary);
-  margin-bottom: 2px;
-}
-
-.about-roadmap-item p {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin: 0;
-  line-height: 1.4;
-}
-
-/* ===== Developer Card ===== */
-.about-dev-card {
-  text-align: center;
-  background: linear-gradient(
-    135deg,
-    rgba(124, 58, 237, 0.1),
-    rgba(6, 182, 212, 0.06)
-  );
-  border-color: rgba(124, 58, 237, 0.2);
+.about-visual-card:hover .about-visual-overlay {
+  opacity: 1;
 }
 
 .about-dev-avatar {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    rgba(124, 58, 237, 0.25),
-    rgba(6, 182, 212, 0.2)
-  );
-  border: 2px solid rgba(124, 58, 237, 0.35);
+  background: linear-gradient(135deg, #7c3aed, #06b6d4);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
-  color: var(--primary-light);
-  margin: 0 auto 1rem;
-}
-
-.about-dev-name {
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin-bottom: 0.25rem;
-}
-
-.about-dev-role {
-  font-size: 0.8rem;
-  color: var(--primary-light);
-  margin-bottom: 0.75rem;
-}
-
-.about-dev-desc {
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: 1rem;
-}
-
-.about-dev-tags {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.about-dev-tag {
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 3px 10px;
+  color: white;
   border-radius: 20px;
-  background: rgba(124, 58, 237, 0.12);
-  border: 1px solid rgba(124, 58, 237, 0.25);
-  color: var(--primary-light);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
 }
 
-/* ===== Gamer Profile Card ===== */
+@media (max-width: 768px) {
+  .about-hero {
+    padding: 3rem 1rem;
+  }
+  .about-card-inner {
+    flex-direction: column;
+  }
+}
+
+/* Gamer Profile */
 .about-gamer-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+  border-color: rgba(6, 182, 212, 0.2);
 }
 
 .about-field {
-  margin-bottom: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
 .about-label {
-  display: block;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
+  font-weight: 600;
   color: var(--text-secondary);
-  margin-bottom: 5px;
-  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .about-input {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-glass);
-  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 1rem;
   color: var(--text-primary);
-  padding: 8px 12px;
-  font-size: 0.85rem;
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s;
+  font-size: 0.95rem;
+  transition: all 0.2s;
 }
-.about-input::placeholder {
-  color: var(--text-muted);
-}
+
 .about-input:focus {
   outline: none;
-  border-color: var(--primary);
+  border-color: var(--primary-light);
+  background: rgba(124, 58, 237, 0.1);
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+
+.about-input::placeholder {
+  color: var(--text-muted);
 }
 
 .about-welcome {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.875rem;
-  border-radius: 12px;
-  background: rgba(34, 197, 94, 0.08);
-  border: 1px solid rgba(34, 197, 94, 0.2);
-  margin-bottom: 0.875rem;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(124, 58, 237, 0.15);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: var(--radius-sm);
+  animation: slideUp 0.3s ease forwards;
 }
 
 .about-welcome-icon {
-  font-size: 1.5rem;
-  flex-shrink: 0;
+  font-size: 1.8rem;
 }
-.about-welcome strong {
-  display: block;
-  color: var(--text-primary);
-  font-size: 0.88rem;
-}
+
 .about-welcome-title {
-  font-size: 0.78rem;
-  color: var(--success);
-  margin-top: 2px;
+  font-size: 0.85rem;
+  color: var(--primary-light);
+  font-weight: 600;
 }
 
-.about-divider {
-  border: none;
-  border-top: 1px solid var(--border-subtle);
-  margin: 0.75rem 0;
-}
-
-/* Scene buttons */
 .about-scene-btns {
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
   margin-bottom: 1rem;
 }
 
 .about-scene-btn {
   flex: 1;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: var(--bg-glass);
-  border: 1px solid var(--border-glass);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
-  font-size: 0.8rem;
-  cursor: pointer;
+  padding: 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
   transition: all 0.2s;
 }
 
 .about-scene-btn:hover {
-  border-color: var(--primary-light);
-  color: var(--primary-light);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
 }
 
 .about-scene-btn.active {
-  background: rgba(124, 58, 237, 0.2);
-  border-color: var(--primary);
-  color: var(--primary-light);
-  font-weight: 600;
+  background: rgba(6, 182, 212, 0.15);
+  border-color: rgba(6, 182, 212, 0.4);
+  color: var(--accent-light);
 }
 
 .about-scene-img-wrap {
   position: relative;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   overflow: hidden;
+  aspect-ratio: 16 / 9;
 }
 
 .about-scene-img {
   width: 100%;
-  height: 150px;
+  height: 100%;
   object-fit: cover;
-  display: block;
-  transition: transform 0.4s;
+  transition: transform 0.5s;
 }
 
 .about-scene-img-wrap:hover .about-scene-img {
-  transform: scale(1.04);
+  transform: scale(1.05);
 }
 
 .about-scene-label {
@@ -1369,180 +723,22 @@ export default {
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(transparent, rgba(5, 7, 15, 0.85));
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  padding: 1.5rem 0.75rem 0.6rem;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+  padding: 2rem 1rem 1rem;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 500;
   text-align: center;
 }
 
-/* ===== Tab fade animation ===== */
-.fade-tab {
-  animation: tab-in 0.3s ease;
-}
-
-@keyframes tab-in {
+@keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-/* ===== Genre Icons Section ===== */
-.about-genre-icons {
-  margin-top: 1.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--border-subtle);
-}
-
-.about-genre-icons-title {
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 0.875rem;
-}
-
-.about-genre-icons-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.about-genre-icon-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 8px 10px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  transition:
-    border-color 0.2s,
-    transform 0.2s,
-    background 0.2s;
-  cursor: default;
-  min-width: 70px;
-}
-
-.about-genre-icon-item:hover {
-  border-color: rgba(124, 58, 237, 0.3);
-  background: rgba(124, 58, 237, 0.06);
-  transform: translateY(-2px);
-}
-
-.about-genre-img {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
-}
-
-.about-genre-icon-item span {
-  font-size: 0.68rem;
-  color: var(--text-secondary);
-  text-align: center;
-  text-transform: capitalize;
-  line-height: 1.2;
-}
-
-/* ===== Responsive ===== */
-/* Tablet (iPad, 768px–1023px) */
-@media (max-width: 1023px) {
-  .about-hero {
-    padding: 3rem 0 2.5rem;
-  }
-  .about-stat-pill {
-    padding: 8px 14px;
-    font-size: 0.8rem;
-  }
-  .about-genre-icons-grid {
-    gap: 0.5rem;
-  }
-  .about-genre-icon-item {
-    min-width: 60px;
-    padding: 6px 8px;
-  }
-  .about-genre-img {
-    width: 28px;
-    height: 28px;
-  }
-}
-
-/* Mobile (≤767px) */
-@media (max-width: 767px) {
-  .about-hero {
-    padding: 2rem 0 1.5rem;
-  }
-  .about-hero-sub {
-    font-size: 0.88rem;
-  }
-  .about-stat-row {
-    gap: 0.5rem;
-  }
-  .about-stat-pill {
-    padding: 7px 12px;
-    font-size: 0.78rem;
-    gap: 0.35rem;
-  }
-  .about-card-inner {
-    flex-direction: column;
-  }
-  .about-feature-grid {
-    grid-template-columns: 1fr;
-  }
-  .about-tabs {
-    gap: 2px;
-    padding: 4px;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-  .about-tabs::-webkit-scrollbar {
-    display: none;
-  }
-  .about-tab-btn {
-    font-size: 0.75rem;
-    padding: 7px 10px;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .about-api-card {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  .about-api-icon {
-    width: 36px;
-    height: 36px;
-    font-size: 0.9rem;
-  }
-  .about-roadmap::before {
-    left: 6px;
-  }
-  .about-roadmap-dot {
-    width: 14px;
-    height: 14px;
-  }
-  .about-body {
-    padding-top: 1.5rem;
-    padding-bottom: 2.5rem;
-  }
-  .about-genre-icons-grid {
-    gap: 0.4rem;
-  }
-  .about-genre-icon-item {
-    min-width: 55px;
-    padding: 5px 6px;
-  }
-  .about-genre-img {
-    width: 24px;
-    height: 24px;
   }
 }
 </style>

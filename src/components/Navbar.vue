@@ -35,13 +35,15 @@
 
             <div class="collapse navbar-collapse" id="navbarNav">
         <!-- Left Side: Public Navigation -->
-        <div class="navbar-nav me-auto align-items-center">
-          <router-link class="nav-link" to="/" @click="closeMenu">
-            Home
-          </router-link>
+        <ul class="navbar-nav me-auto align-items-center mb-0 ps-0" style="list-style:none">
+          <li class="nav-item">
+            <router-link class="nav-link" to="/" @click="closeMenu">
+              Home
+            </router-link>
+          </li>
 
           <!-- Games Dropdown -->
-          <li class="nav-item dropdown list-unstyled">
+          <li class="nav-item dropdown">
             <a
               class="nav-link dropdown-toggle"
               href="#"
@@ -103,18 +105,24 @@
             </ul>
           </li>
 
-          <router-link class="nav-link" to="/live-news" @click="closeMenu">
-            News
-          </router-link>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/live-news" @click="closeMenu">
+              News
+            </router-link>
+          </li>
 
-          <router-link class="nav-link" to="/gamehub-news" @click="closeMenu">
-            Community
-          </router-link>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/gamehub-news" @click="closeMenu">
+              Community
+            </router-link>
+          </li>
 
-          <router-link class="nav-link" to="/about" @click="closeMenu">
-            About
-          </router-link>
-        </div>
+          <li class="nav-item">
+            <router-link class="nav-link" to="/about" @click="closeMenu">
+              About
+            </router-link>
+          </li>
+        </ul>
 
         <!-- Right Side: Search & User Menu -->
         <div class="navbar-nav ms-auto align-items-center">
@@ -122,6 +130,8 @@
           <!-- ── Search Bar ─────────────────────────────── -->
           <div class="nav-search-wrapper" ref="searchWrapper">
             <div class="nav-search-container" :class="{ active: searchFocused }">
+              <!-- Visually hidden label associates with the input for screen readers -->
+              <label for="navbar-search-input" class="visually-hidden">Search games</label>
               <svg class="nav-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
               </svg>
@@ -133,7 +143,6 @@
                 class="nav-search-input"
                 placeholder="Search games..."
                 autocomplete="off"
-                aria-label="Search games"
                 @focus="searchFocused = true"
                 @input="onSearchInput"
                 @keydown.enter="submitSearch"
@@ -219,8 +228,14 @@
           <!-- ── /Search Bar ─────────────────────────── -->
 
           <!-- Notification Bell (Placeholder) -->
-          <a class="nav-link position-relative me-2 d-none d-lg-flex" href="#" @click.prevent title="Notifications">
-            <i class="bi bi-bell fs-5"></i>
+          <a
+            class="nav-link position-relative me-2 d-none d-lg-flex"
+            href="#"
+            @click.prevent
+            aria-label="Notifications"
+            title="Notifications"
+          >
+            <i class="bi bi-bell fs-5" aria-hidden="true"></i>
           </a>
 
           <!-- Cart Link -->
@@ -323,11 +338,11 @@
                   </router-link>
                 </li>
                 <li>
-                  <router-link class="dropdown-item nav-dd-item" to="/profile#purchases" @click="closeMenu">
-                    <span class="nav-dd-icon nav-dd-icon-green">
-                      <i class="bi bi-bag-check-fill" style="font-size: 0.85rem;"></i>
+                  <router-link class="dropdown-item nav-dd-item" to="/settings" @click="closeMenu">
+                    <span class="nav-dd-icon nav-dd-icon-green" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);">
+                      <i class="bi bi-gear-fill" style="font-size: 0.85rem;"></i>
                     </span>
-                    Purchase History
+                    Settings
                   </router-link>
                 </li>
                 <li><hr class="dropdown-divider border-secondary opacity-25"></li>

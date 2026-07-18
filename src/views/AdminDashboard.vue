@@ -10,8 +10,11 @@ import {
   deleteDoc,
   orderBy,
   query,
+  limit,
+  startAfter,
+  getCountFromServer,
+  where
 } from "firebase/firestore";
-import { generateMockModerationData } from "../services/mockGenerator";
 
 export default {
   name: "AdminDashboard",
@@ -46,6 +49,12 @@ export default {
       // Confirmation modals
       confirmDelete: null,
       confirmRole: null,
+
+      // Pagination
+      lastUserDoc: null,
+      hasMoreUsers: false,
+      lastPostDoc: null,
+      hasMorePosts: false,
 
       unsubscribe: null,
     };
@@ -105,7 +114,6 @@ export default {
   async mounted() {
     this.unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        this.$router.push("/login");
         return;
       }
       this.currentUser = user;
@@ -120,12 +128,9 @@ export default {
       await Promise.all([
         this.loadUsers(),
         this.loadPosts(),
-        this.loadReviewsCount()
+        this.loadReviewsCount(),
+        this.loadReports()
       ]);
-      
-      const mocks = generateMockModerationData(this.users, this.posts, this.totalReviews);
-      this.reportedItems = mocks.reports;
-      this.recentActivity = mocks.activities;
     });
   },
 
@@ -134,6 +139,21 @@ export default {
   },
 
   methods: {
+    async loadReports() {
+      try {
+        const snap = await getDocs(query(collection(db, "reports"), orderBy("createdAt", "desc")));
+        this.reportedItems = snap.docs.map(d => {
+          const data = d.data();
+          return {
+            id: d.id,
+            ...data,
+            time: this.formatDate(data.createdAt)
+          };
+        });
+      } catch(e) {
+        console.error("Failed to load reports", e);
+      }
+    },
     async loadReviewsCount() {
       try {
         const snap = await getDocs(collection(db, "reviews"));
@@ -143,22 +163,42 @@ export default {
       }
     },
 
-    async loadUsers() {
-      this.loadingUsers = true;
+    async loadUsers(loadMore = false) {
+      if (!loadMore) {
+        this.loadingUsers = true;
+        this.users = [];
+      }
       try {
-        const q = query(collection(db, "users"), orderBy("createdAt", "desc"));
+        let q = query(collection(db, "users"), orderBy("createdAt", "desc"), limit(10));
+        if (loadMore && this.lastUserDoc) {
+          q = query(collection(db, "users"), orderBy("createdAt", "desc"), startAfter(this.lastUserDoc), limit(10));
+        }
         const snap = await getDocs(q);
-        this.users = snap.docs.map((d) => {
+        this.lastUserDoc = snap.docs[snap.docs.length - 1];
+        this.hasMoreUsers = snap.docs.length === 10;
+
+        const fetchedUsers = await Promise.all(snap.docs.map(async (d) => {
           const data = d.data();
-          const charCode = d.id.charCodeAt(0) || 0;
+          const articlesQuery = query(collection(db, "news"), where("userId", "==", d.id));
+          const articlesCountSnap = await getCountFromServer(articlesQuery);
+          
+          const reviewsQuery = query(collection(db, "reviews"), where("userId", "==", d.id));
+          const reviewsCountSnap = await getCountFromServer(reviewsQuery);
+
           return {
             uid: d.id,
             ...data,
-            mockArticles: charCode % 5,
-            mockReviews: (charCode % 20) + 2,
-            mockStatus: charCode % 10 === 0 ? "Warned" : "Active"
+            mockArticles: articlesCountSnap.data().count,
+            mockReviews: reviewsCountSnap.data().count,
+            mockStatus: "Active"
           };
-        });
+        }));
+        
+        if (loadMore) {
+          this.users = [...this.users, ...fetchedUsers];
+        } else {
+          this.users = fetchedUsers;
+        }
       } catch (e) {
         console.error(e);
         this.toast.show("Failed to load users.", "error");
@@ -167,12 +207,21 @@ export default {
       }
     },
 
-    async loadPosts() {
-      this.loadingPosts = true;
+    async loadPosts(loadMore = false) {
+      if (!loadMore) {
+        this.loadingPosts = true;
+        this.posts = [];
+      }
       try {
-        const q = query(collection(db, "news"), orderBy("createdAt", "desc"));
+        let q = query(collection(db, "news"), orderBy("createdAt", "desc"), limit(10));
+        if (loadMore && this.lastPostDoc) {
+          q = query(collection(db, "news"), orderBy("createdAt", "desc"), startAfter(this.lastPostDoc), limit(10));
+        }
         const snap = await getDocs(q);
-        this.posts = snap.docs.map((d) => {
+        this.lastPostDoc = snap.docs[snap.docs.length - 1];
+        this.hasMorePosts = snap.docs.length === 10;
+
+        const fetchedPosts = snap.docs.map((d) => {
           const data = d.data();
           return {
             id: d.id,
@@ -180,6 +229,12 @@ export default {
             authorName: data.authorName || "Community Member"
           };
         });
+
+        if (loadMore) {
+          this.posts = [...this.posts, ...fetchedPosts];
+        } else {
+          this.posts = fetchedPosts;
+        }
       } catch (e) {
         console.error(e);
         this.toast.show("Failed to load posts.", "error");
@@ -254,20 +309,33 @@ export default {
       this.toast.show(`Coming in Version 2`, "info");
     },
 
-    reportAction(id, actionStr, target) {
-      if (actionStr === "Dismiss" || actionStr === "Delete") {
+    async reportAction(id, actionStr, target) {
+      try {
+        const report = this.reportedItems.find(r => r.id === id);
+        if (actionStr === "Delete" && report) {
+          if (report.type === "Article") {
+            await deleteDoc(doc(db, "news", report.targetId));
+          } else if (report.type === "Review") {
+            await deleteDoc(doc(db, "reviews", report.targetId));
+          }
+        }
+        await deleteDoc(doc(db, "reports", id));
         this.reportedItems = this.reportedItems.filter(r => r.id !== id);
-      }
-      this.toast.show(`Report action executed: ${actionStr}`, "success");
-      
-      if(actionStr === "Delete") {
-        this.recentActivity.unshift({
-          id: Date.now(),
-          action: `Deleted reported content: ${target}`,
-          time: "Just now",
-          type: "delete"
-        });
-        if(this.recentActivity.length > 5) this.recentActivity.pop();
+        
+        this.toast.show(`Report action executed: ${actionStr}`, "success");
+        
+        if (actionStr === "Delete") {
+          this.recentActivity.unshift({
+            id: Date.now(),
+            action: `Deleted reported content: ${target}`,
+            time: "Just now",
+            type: "delete"
+          });
+          if(this.recentActivity.length > 5) this.recentActivity.pop();
+        }
+      } catch(e) {
+        console.error(e);
+        this.toast.show("Action failed", "error");
       }
     },
 
@@ -286,7 +354,7 @@ export default {
 <template>
   <div class="admin-wrapper" v-if="isAdmin">
     <!-- ── Sidebar ── -->
-    <aside class="gh-sidebar">
+    <aside class="gh-sidebar" :class="{ 'sidebar-mobile-open': sidebarOpen }">
       <div class="sidebar-header">
         <div class="gh-logo">
           <i class="bi bi-controller"></i>
@@ -318,8 +386,8 @@ export default {
         </button>
       </nav>
 
-      <div class="sidebar-section-title mt-4">System</div>
-      <nav class="sidebar-nav">
+      <div class="sidebar-section-title mt-4" v-show="false">System</div>
+      <nav class="sidebar-nav" v-show="false">
         <button class="nav-btn" @click="actionComingSoon('Settings')">
           <i class="bi bi-gear-fill"></i> 
           <span>Platform Settings</span>
@@ -339,7 +407,17 @@ export default {
 
     <!-- ── Main Content Area ── -->
     <main class="gh-main">
-      <div class="content-container">
+      <div class="d-md-none d-flex align-items-center justify-content-between p-3 border-bottom border-secondary" style="background: var(--bg-dark); position: sticky; top: 0; z-index: 10;">
+        <div class="gh-logo m-0" style="font-size: 1.2rem;">
+          <i class="bi bi-controller"></i>
+          <span>GameHub</span>
+        </div>
+        <button class="btn btn-outline-secondary btn-sm border-0 text-white" @click="sidebarOpen = !sidebarOpen">
+          <i class="bi bi-list fs-4"></i>
+        </button>
+      </div>
+
+      <div class="content-container" @click="sidebarOpen = false">
         
         <!-- ── TAB: DASHBOARD ── -->
         <div v-if="activeTab === 'dashboard'" class="gh-tab-pane fade-in">
@@ -426,7 +504,7 @@ export default {
               </div>
             </div>
 
-            <div class="gh-widget w-quick">
+            <div class="gh-widget w-quick" v-show="false">
               <div class="widget-header">
                 <div class="d-flex align-items-center gap-3">
                   <h3 class="mb-0"><i class="bi bi-lightning-charge-fill text-primary"></i> Platform Actions</h3>
@@ -528,6 +606,12 @@ export default {
                   </tr>
                 </tbody>
               </table>
+            </div>
+            <div class="d-flex justify-content-center mt-3" v-if="hasMorePosts && !searchNews">
+              <button class="btn-gh-outline" @click="loadPosts(true)">
+                <span v-if="loadingPosts" class="spinner-border spinner-border-sm me-2"></span>
+                Load More Articles
+              </button>
             </div>
           </div>
         </div>
@@ -645,12 +729,17 @@ export default {
                     <td class="muted-col">{{ u.mockReviews }}</td>
                     <td>
                       <span class="gh-badge" :class="u.mockStatus === 'Active' ? 'badge-neutral' : 'badge-danger'">
+                        <i v-if="u.mockStatus === 'Active'" class="bi bi-circle-fill text-success" style="font-size: 0.5rem; vertical-align: middle; margin-right: 4px;"></i>
                         {{ u.mockStatus }}
                       </span>
                     </td>
                     <td class="text-end">
+                      <div v-if="u.uid === currentUser?.uid" class="d-inline-block px-3 py-1 rounded" style="background: rgba(13, 110, 253, 0.1); border: 1px solid rgba(13, 110, 253, 0.2);">
+                        <i class="bi bi-shield-fill-check text-primary me-1"></i> 
+                        <span class="text-primary fw-bold" style="font-size: 0.85rem;">Administrator</span>
+                      </div>
                       <button 
-                        v-if="u.role !== 'admin'" 
+                        v-else-if="u.role !== 'admin'" 
                         class="btn-gh-outline" 
                         @click="askChangeRole(u, 'admin')">
                         Promote to Admin
@@ -658,8 +747,7 @@ export default {
                       <button 
                         v-else 
                         class="btn-gh-danger" 
-                        @click="askChangeRole(u, 'user')"
-                        :disabled="u.uid === currentUser?.uid">
+                        @click="askChangeRole(u, 'user')">
                         Revoke Admin
                       </button>
                     </td>
@@ -669,6 +757,12 @@ export default {
                   </tr>
                 </tbody>
               </table>
+            </div>
+            <div class="d-flex justify-content-center mt-3" v-if="hasMoreUsers && filterRole === 'All' && !searchUsers">
+              <button class="btn-gh-outline" @click="loadUsers(true)">
+                <span v-if="loadingUsers" class="spinner-border spinner-border-sm me-2"></span>
+                Load More Players
+              </button>
             </div>
           </div>
         </div>
@@ -1357,5 +1451,19 @@ export default {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .gh-sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    height: 100vh;
+    z-index: 1000;
+    transition: left 0.3s ease;
+  }
+  .gh-sidebar.sidebar-mobile-open {
+    left: 0;
+  }
 }
 </style>

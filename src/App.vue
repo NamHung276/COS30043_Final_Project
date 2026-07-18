@@ -16,9 +16,12 @@ provide("toast", {
 </script>
 
 <template>
+  <!-- Skip Navigation Link (WCAG 2.4.1) -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
   <Navbar />
 
-  <main style="flex: 1; min-width: 0">
+  <main id="main-content" style="flex: 1; min-width: 0">
     <router-view v-slot="{ Component }">
       <transition name="page" mode="out-in">
         <component :is="Component" />

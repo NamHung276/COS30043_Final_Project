@@ -1,14 +1,16 @@
 <script>
 import newsData from "../data/news.json";
 import LikeButton from "../components/LikeButton.vue";
-import { db } from "../firebase";
-import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import { db, auth } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { collection, query, where, getDocs, doc, getDoc, deleteDoc, addDoc, serverTimestamp } from "firebase/firestore";
 
 export default {
   components: { LikeButton },
 
   data() {
     return {
+      currentUser: null,
       article: null,
       relatedArticles: [],
       copyFeedback: false,
@@ -37,10 +39,57 @@ export default {
   },
 
   mounted() {
+    this.unsubscribe = onAuthStateChanged(auth, (user) => {
+      this.currentUser = user;
+    });
     this.loadArticle();
   },
 
+  beforeUnmount() {
+    if (this.unsubscribe) {
+      this.unsubscribe();
+    }
+  },
+
   methods: {
+    async deleteArticle() {
+      if (!confirm("Are you sure you want to delete this article? This cannot be undone.")) return;
+      try {
+        await deleteDoc(doc(db, "news", this.article.id));
+        this.$router.push("/gamehub-news");
+      } catch (err) {
+        console.error("Error deleting article:", err);
+      }
+    },
+    
+    async reportArticle() {
+      if (!this.currentUser) {
+        this.$router.push("/login");
+        return;
+      }
+      const reason = prompt("Please provide a reason for reporting this article:");
+      if (!reason || !reason.trim()) return;
+
+      try {
+        await addDoc(collection(db, "reports"), {
+          type: "Article",
+          target: this.article.title,
+          targetId: this.article.id,
+          reason: reason.trim(),
+          user: this.currentUser.displayName || this.currentUser.email,
+          userId: this.currentUser.uid,
+          severity: "Medium",
+          icon: "📰",
+          createdAt: serverTimestamp(),
+          status: "Pending"
+        });
+        alert("Report submitted successfully. Thank you.");
+      } catch (error) {
+        console.error("Failed to submit report:", error);
+        alert("Failed to submit report.");
+      }
+    },
+
     async loadArticle() {
       const articleId = this.$route.params.id;
 
@@ -108,6 +157,27 @@ export default {
         setTimeout(() => (this.copyFeedback = false), 2000);
       }
     },
+    formatDate(val) {
+      if (!val) return "";
+      // If it's a Firebase Timestamp
+      if (val.seconds) {
+        return new Date(val.seconds * 1000).toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      }
+      // If it's a JS Date object
+      if (typeof val.toDateString === "function") {
+        return val.toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      }
+      // Fallback for strings
+      return String(val);
+    },
   },
 };
 </script>
@@ -116,7 +186,7 @@ export default {
   <div v-if="article" class="news-detail-page">
     <!-- Hero Image -->
     <div class="news-hero" v-if="article.image">
-      <img :src="article.image" :alt="article.title" class="news-hero-img" />
+      <img :src="article.image" :alt="article.title" class="news-hero-img" @error="$event.target.src = 'https://placehold.co/1200x600?text=Image+Not+Found'" />
       <div class="news-hero-overlay"></div>
     </div>
 
@@ -145,23 +215,41 @@ export default {
         <h1 class="news-article-title">{{ article.title }}</h1>
 
         <!-- Action bar -->
-        <div class="news-action-bar">
-          <LikeButton :article-id="article.id" />
-          <button
-            class="news-share-btn"
-            @click="copyLink"
-            :class="{ copied: copyFeedback }"
-            :title="copyFeedback ? 'Link copied!' : 'Copy link to article'"
-          >
-            <template v-if="copyFeedback">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-              Copied!
+        <div class="news-action-bar d-flex align-items-center flex-wrap gap-3">
+          <div class="d-flex align-items-center gap-2">
+            <LikeButton :article-id="article.id" />
+            <button
+              class="news-share-btn"
+              @click="copyLink"
+              :class="{ copied: copyFeedback }"
+              :title="copyFeedback ? 'Link copied!' : 'Copy link to article'"
+            >
+              <template v-if="copyFeedback">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                Copied!
+              </template>
+              <template v-else>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                Share
+              </template>
+            </button>
+          </div>
+          
+          <div class="ms-auto d-flex align-items-center gap-2">
+            <template v-if="currentUser && article.userId === currentUser.uid">
+              <router-link :to="`/gamehub-news/edit/${article.id}`" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1">
+                <i class="bi bi-pencil-fill me-1"></i> Edit
+              </router-link>
+              <button class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1" @click="deleteArticle">
+                <i class="bi bi-trash-fill me-1"></i> Delete
+              </button>
             </template>
-            <template v-else>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-              Share
+            <template v-else-if="currentUser && article.userId">
+              <button class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1" @click="reportArticle">
+                <i class="bi bi-flag-fill me-1"></i> Report
+              </button>
             </template>
-          </button>
+          </div>
         </div>
 
         <!-- Article Body -->
@@ -192,6 +280,7 @@ export default {
                 v-if="related.image"
                 :src="related.image"
                 :alt="related.title"
+                @error="$event.target.src = 'https://placehold.co/600x400?text=Image+Not+Found'"
               />
               <div v-else class="news-related-img-placeholder">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>
@@ -200,7 +289,7 @@ export default {
             <div class="news-related-body">
               <span class="news-related-category">{{ related.category }}</span>
               <h3 class="news-related-title-text">{{ related.title }}</h3>
-              <span class="news-related-date">{{ related.date }}</span>
+              <span class="news-related-date">{{ formatDate(related.date) }}</span>
             </div>
           </router-link>
         </div>

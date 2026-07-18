@@ -5,21 +5,21 @@ import { rawgApi } from "../services/api";
 // RAWG parent_platform IDs
 const PLATFORMS = [
   { key: "all", label: "All Platforms", icon: null, id: null },
-  { key: "pc", label: "PC", icon: "/logo/pc.svg", id: 1 },
+  { key: "pc", label: "PC", icon: "/game_logo/pc.svg", id: 1 },
   {
     key: "ps",
     label: "PlayStation",
-    icon: "/logo/playstation_logo.png",
+    icon: "/game_logo/playstation_logo.png",
     id: 2,
   },
-  { key: "xbox", label: "Xbox", icon: "/logo/xbox_logo.png", id: 3 },
+  { key: "xbox", label: "Xbox", icon: "/game_logo/xbox_logo.png", id: 3 },
   {
     key: "nintendo",
     label: "Nintendo",
-    icon: "/logo/nintendo_logo.png",
+    icon: "/game_logo/nintendo_logo.png",
     id: 7,
   },
-  { key: "mobile", label: "Mobile", icon: "/logo/mobile.svg", id: "4,8" },
+  { key: "mobile", label: "Mobile", icon: "/game_logo/mobile.svg", id: "4,8" },
 ];
 
 export default {
@@ -442,46 +442,49 @@ export default {
               v-if="platformIcons(game.platforms).length"
             >
               <span
-                v-for="p in platformIcons(game.platforms)"
+                v-for="p in platformIcons(game.platforms).slice(0, 4)"
                 :key="p.key"
                 class="platform-icon"
                 :title="p.label"
               >
                 <img
                   v-if="p.key === 'pc'"
-                  src="/logo/pc.svg"
+                  src="/game_logo/pc.svg"
                   width="13"
                   height="13"
                   alt="PC"
                 />
                 <img
                   v-else-if="p.key === 'ps'"
-                  src="/logo/playstation_logo.png"
+                  src="/game_logo/playstation_logo.png"
                   width="13"
                   height="13"
                   alt="PlayStation"
                 />
                 <img
                   v-else-if="p.key === 'xbox'"
-                  src="/logo/xbox_logo.png"
+                  src="/game_logo/xbox_logo.png"
                   width="13"
                   height="13"
                   alt="Xbox"
                 />
                 <img
                   v-else-if="p.key === 'nintendo'"
-                  src="/logo/nintendo_logo.png"
+                  src="/game_logo/nintendo_logo.png"
                   width="13"
                   height="13"
                   alt="Nintendo"
                 />
                 <img
                   v-else-if="p.key === 'mobile'"
-                  src="/logo/mobile.svg"
+                  src="/game_logo/mobile.svg"
                   width="13"
                   height="13"
                   alt="Mobile"
                 />
+              </span>
+              <span v-if="platformIcons(game.platforms).length > 4" class="platform-icon-more" style="font-size: 0.65rem; color: var(--text-muted); font-weight: bold; margin-left: 2px;">
+                +{{ platformIcons(game.platforms).length - 4 }}
               </span>
             </div>
           </div>
@@ -498,9 +501,13 @@ export default {
               <span
                 v-for="genre in (game.genres || []).slice(0, 2)"
                 :key="genre.id"
-                class="game-genre-tag"
+                class="game-genre-tag text-muted"
+                style="background: transparent; border: 1px solid var(--border-glass);"
               >
                 {{ genre.name }}
+              </span>
+              <span v-if="(game.genres || []).length > 2" class="game-genre-tag text-muted" style="background: transparent; border: 1px solid var(--border-glass);">
+                +{{ game.genres.length - 2 }}
               </span>
             </div>
             <!-- Star Rating -->
@@ -563,9 +570,13 @@ export default {
               <span
                 v-for="g in (game.genres || []).slice(0, 2)"
                 :key="g.id"
-                class="game-genre-tag"
+                class="game-genre-tag text-muted"
+                style="background: transparent; border: 1px solid var(--border-glass);"
                 >{{ g.name }}</span
               >
+              <span v-if="(game.genres || []).length > 2" class="game-genre-tag text-muted" style="background: transparent; border: 1px solid var(--border-glass);">
+                +{{ game.genres.length - 2 }}
+              </span>
               <span v-if="game.released" class="glr-year">{{
                 game.released.split("-")[0]
               }}</span>

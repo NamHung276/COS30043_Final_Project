@@ -131,6 +131,9 @@ export default {
       // Hot Deals (CheapShark)
       hotDeals: [],
       dealsLoading: true,
+
+      // Carousel autoplay paused by user (WCAG 2.2.2)
+      isAutopaused: false,
     };
   },
 
@@ -401,6 +404,7 @@ export default {
       this.goTo(idx, "prev");
     },
     startAutoplay() {
+      if (this.isAutopaused) return; // respect user pause
       this.autoplayTimer = setInterval(() => this.next(), 6000);
     },
     stopAutoplay() {
@@ -410,6 +414,14 @@ export default {
     resetAutoplay() {
       this.stopAutoplay();
       this.startAutoplay();
+    },
+    toggleAutoplay() {
+      this.isAutopaused = !this.isAutopaused;
+      if (this.isAutopaused) {
+        this.stopAutoplay();
+      } else {
+        this.startAutoplay();
+      }
     },
 
     metacriticClass(score) {
@@ -507,8 +519,19 @@ export default {
           v-else-if="featuredGames.length && currentGame"
           class="steam-carousel mb-5"
           @mouseenter="stopAutoplay"
-          @mouseleave="startAutoplay"
+          @mouseleave="!isAutopaused && startAutoplay()"
+          role="region"
+          aria-label="Featured games carousel"
         >
+          <!-- aria-live region: announces slide changes to screen readers (WCAG 1.3.1) -->
+          <div
+            aria-live="polite"
+            aria-atomic="true"
+            class="visually-hidden"
+          >
+            {{ currentGame ? `${activeIndex + 1} of ${featuredGames.length}: ${currentGame.displayTitle}` : '' }}
+          </div>
+
           <button
             class="steam-arrow steam-arrow-left"
             @click="prev"
@@ -638,6 +661,17 @@ export default {
             {{ featuredGames.length }}
           </div>
 
+          <!-- Pause / Play toggle button (WCAG 2.2.2 — user control over auto-moving content) -->
+          <button
+            class="steam-carousel-pause-btn"
+            @click="toggleAutoplay"
+            :aria-label="isAutopaused ? 'Play carousel autoplay' : 'Pause carousel autoplay'"
+            :title="isAutopaused ? 'Resume autoplay' : 'Pause autoplay'"
+          >
+            <svg v-if="isAutopaused" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+            <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          </button>
+
           <div class="steam-dots">
             <button
               v-for="(game, i) in featuredGames"
@@ -701,34 +735,56 @@ export default {
       <!-- ══════════════════════════════════════
            TABBED DISCOVERY
            ══════════════════════════════════════ -->
-      <div class="mb-5 steam-tabs-container">
+      <div class="steam-tabs-container" style="margin-bottom: var(--section-gap);">
         <!-- Tabs -->
-        <div class="steam-tabs-header">
+        <div
+          class="steam-tabs-header"
+          role="tablist"
+          aria-label="Game discovery categories"
+        >
           <button
+            id="tab-newReleases"
             class="steam-tab-btn"
+            role="tab"
             :class="{ active: activeTab === 'newReleases' }"
+            :aria-selected="activeTab === 'newReleases'"
+            aria-controls="tabpanel-newReleases"
             @click="setTab('newReleases')"
           >
-            Popular New Releases
+            🆕 Popular New Releases
           </button>
           <button
+            id="tab-comingSoon"
             class="steam-tab-btn"
+            role="tab"
             :class="{ active: activeTab === 'comingSoon' }"
+            :aria-selected="activeTab === 'comingSoon'"
+            aria-controls="tabpanel-comingSoon"
             @click="setTab('comingSoon')"
           >
-            Popular Upcoming
+            📅 Popular Upcoming
           </button>
           <button
+            id="tab-trendingFree"
             class="steam-tab-btn"
+            role="tab"
             :class="{ active: activeTab === 'trendingFree' }"
+            :aria-selected="activeTab === 'trendingFree'"
+            aria-controls="tabpanel-trendingFree"
             @click="setTab('trendingFree')"
           >
-            Trending Free
+            🔥 Trending Free
           </button>
         </div>
 
         <!-- Tab Content -->
-        <div class="steam-tab-content">
+        <div
+          :id="'tabpanel-' + activeTab"
+          class="steam-tab-content"
+          role="tabpanel"
+          :aria-labelledby="'tab-' + activeTab"
+          tabindex="0"
+        >
           <div class="row g-0">
             <!-- Left List -->
             <div class="col-md-7 col-lg-8 steam-tab-list">
@@ -905,8 +961,8 @@ export default {
       <!-- ══════════════════════════════════════
            HOT DEALS — Horizontal Scroll Strip
            ══════════════════════════════════════ -->
-      <div class="mb-5">
-        <div class="section-header mb-3">
+      <div style="margin-bottom: var(--section-gap);">
+        <div class="section-header mb-4">
           <span
             class="section-icon"
             style="
@@ -932,7 +988,7 @@ export default {
               <path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z" />
             </svg>
           </span>
-          <h2 class="mb-0">Special Offers</h2>
+          <h2 class="mb-0">💰 Best Deals Right Now</h2>
           <router-link
             to="/deals"
             class="ms-auto btn btn-sm"
@@ -945,7 +1001,9 @@ export default {
               padding: 4px 16px;
             "
           >
-            View All →
+            View All
+            <span class="visually-hidden"> game deals</span>
+            →
           </router-link>
         </div>
 
@@ -1035,8 +1093,8 @@ export default {
       <!-- ══════════════════════════════════════
            WHY GAMEHUB — Premium Feature Cards
            ══════════════════════════════════════ -->
-      <div class="mb-5">
-        <div class="section-header mb-4">
+      <div style="margin-bottom: var(--section-gap);">
+        <div class="section-header mb-5">
           <span class="section-icon">
             <svg
               width="20"
@@ -1180,6 +1238,38 @@ export default {
   background: var(--bg-glass) !important;
   color: var(--text-muted) !important;
 }
+
+/* ---- Carousel Pause/Play button (WCAG 2.2.2) ---- */
+.steam-carousel-pause-btn {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  z-index: 10;
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.55);
+  color: rgba(255, 255, 255, 0.75);
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  backdrop-filter: blur(6px);
+}
+.steam-carousel-pause-btn:hover {
+  background: rgba(14, 165, 233, 0.4);
+  border-color: rgba(14, 165, 233, 0.6);
+  color: #fff;
+}
+.steam-carousel-pause-btn:focus-visible {
+  outline: 3px solid var(--primary-light);
+  outline-offset: 2px;
+}
+
+
+
 .h-scroll-strip {
   display: flex;
   gap: 16px;

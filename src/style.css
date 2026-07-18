@@ -84,7 +84,8 @@
   --card-hover-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(124, 58, 237, 0.18);
   --card-hover-border: rgba(124, 58, 237, 0.35);
   --card-transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s ease;
-  --section-gap: 56px;
+  --section-gap: 64px;
+  --section-gap-sm: 48px;
 
   /* Typography */
   --font-display: "Chakra Petch", sans-serif;
@@ -172,6 +173,58 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+/* ---- Accessibility Utilities (WCAG) ---- */
+
+/* Skip-to-content link — visually hidden until keyboard-focused */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 8px;
+  z-index: 99999;
+  padding: 10px 18px;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border-radius: 0 0 8px 8px;
+  text-decoration: none;
+  transition: top 0.15s ease;
+  white-space: nowrap;
+}
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Screen-reader only utility (mirrors Bootstrap's .visually-hidden) */
+.visually-hidden,
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Global :focus-visible ring — applies only on keyboard navigation,
+   not mouse/touch, so it doesn't interfere with design on click */
+:focus-visible {
+  outline: 3px solid var(--primary-light);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Remove default outline for mouse users (re-added for keyboard via :focus-visible) */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 
 /* ---- Custom Scrollbar ---- */
 ::-webkit-scrollbar {
@@ -3885,3 +3938,39 @@ a:focus-visible,
   transform: translateX(3px);
   transition: all 0.2s ease;
 }
+
+/* ── Phase 2: Information Hierarchy ───────────────── */
+.gh-meta-label {
+  display: block;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+/* ── Phase 4: Skeleton Loaders ────────────────────── */
+@keyframes gh-skeleton-shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.gh-skeleton {
+  background: var(--bg-glass);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.05) 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 1000px 100%;
+  animation: gh-skeleton-shimmer 2s infinite linear forwards;
+  border-radius: var(--card-radius);
+}
+

@@ -103,6 +103,15 @@ export default {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       return this.filteredNews.slice(start, start + this.itemsPerPage);
     },
+    
+    newsByCategory() {
+      const map = {};
+      this.scoredNews.forEach(item => {
+        if (!map[item.category]) map[item.category] = [];
+        map[item.category].push(item);
+      });
+      return map;
+    },
   },
 
   watch: {
@@ -216,6 +225,27 @@ export default {
     detailLink(item) {
       return `/gamehub-news/${item.id}`;
     },
+    formatDate(val) {
+      if (!val) return "";
+      // If it's a Firebase Timestamp
+      if (val.seconds) {
+        return new Date(val.seconds * 1000).toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      }
+      // If it's a JS Date object
+      if (typeof val.toDateString === "function") {
+        return val.toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      }
+      // Fallback for strings
+      return String(val);
+    },
   },
 };
 </script>
@@ -326,6 +356,7 @@ export default {
               v-lazy-img="featuredStory.image"
               :alt="featuredStory.title"
               class="ghn-featured-img"
+              @error="$event.target.src = 'https://placehold.co/600x400?text=Image+Not+Found'"
             />
             <div class="ghn-featured-overlay"></div>
           </div>
@@ -384,7 +415,7 @@ export default {
               {{ featuredStory.content.substring(0, 200) }}…
             </p>
             <div class="ghn-featured-footer">
-              <span class="ghn-featured-date">{{ featuredStory.date }}</span>
+              <span class="ghn-featured-date">{{ formatDate(featuredStory.date) }}</span>
               <span class="ghn-read-cta">
                 Read Full Story
                 <svg
@@ -410,15 +441,15 @@ export default {
       <!-- SEARCH/FILTER RESULTS -->
       <section
         v-if="searchTerm || selectedCategory !== 'All'"
-        class="ghn-section"
+        class="ghn-section" style="margin-top: var(--section-gap); margin-bottom: var(--section-gap);"
       >
         <div class="ghn-section-header">
-          <h2 class="ghn-section-title">
+          <h2 class="ghn-section-title mb-4">
             <span v-if="searchTerm" class="ghn-section-label"
-              >Search Results: "{{ searchTerm }}"</span
+              ><i class="bi bi-search me-2 text-primary"></i>Search Results: "{{ searchTerm }}"</span
             >
             <span v-else class="ghn-section-label"
-              >{{ selectedCategory }} News</span
+              ><i class="bi bi-newspaper me-2 text-primary"></i>{{ selectedCategory }} News</span
             >
           </h2>
           <span class="ghn-section-count"
@@ -463,6 +494,7 @@ export default {
                   v-lazy-img="item.image"
                   :alt="item.title"
                   class="ghn-list-img"
+                  @error="$event.target.src = 'https://placehold.co/600x400?text=Image+Not+Found'"
                 />
                 <div class="ghn-list-img-overlay"></div>
               </div>
@@ -503,7 +535,7 @@ export default {
                   </svg>
                   Official
                 </span>
-                <span class="ghn-list-date">{{ item.date }}</span>
+                <span class="ghn-list-date">{{ formatDate(item.date) }}</span>
               </div>
               <router-link :to="detailLink(item)" class="ghn-list-title-link">
                 <h3 class="ghn-list-title">{{ item.title }}</h3>
@@ -589,7 +621,7 @@ export default {
         v-if="
           !searchTerm && selectedCategory === 'All' && trendingStories.length
         "
-        class="ghn-section"
+        class="ghn-section" style="margin-top: var(--section-gap); margin-bottom: var(--section-gap);"
       >
         <div class="ghn-section-header">
           <h2 class="ghn-section-title">
@@ -627,7 +659,7 @@ export default {
               </div>
               <h4 class="ghn-trending-title">{{ article.title }}</h4>
               <div class="ghn-trending-meta">
-                <span class="ghn-trending-date">{{ article.date }}</span>
+                <span class="ghn-trending-date">{{ formatDate(article.date) }}</span>
                 <span v-if="!article.isOfficial" class="ghn-trending-community"
                   >Community</span
                 >
@@ -655,7 +687,7 @@ export default {
       <!-- CATEGORIES BROWSER -->
       <section
         v-if="!searchTerm && selectedCategory === 'All' && categories.length"
-        class="ghn-section"
+        class="ghn-section" style="margin-top: var(--section-gap); margin-bottom: var(--section-gap);"
       >
         <div class="ghn-section-header">
           <h2 class="ghn-section-title">
@@ -771,7 +803,7 @@ export default {
                     </svg>
                     Community
                   </span>
-                  <span class="ghn-list-date">{{ item.date }}</span>
+                  <span class="ghn-list-date">{{ formatDate(item.date) }}</span>
                 </div>
                 <router-link :to="detailLink(item)" class="ghn-list-title-link">
                   <h3 class="ghn-list-title">{{ item.title }}</h3>

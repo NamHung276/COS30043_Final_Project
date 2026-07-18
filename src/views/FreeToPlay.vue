@@ -136,9 +136,9 @@ export default {
 
   methods: {
     platformIcon(platform) {
-      if (!platform) return "/logo/pc.svg";
+      if (!platform) return "/game_logo/pc.svg";
       if (platform.toLowerCase().includes("browser")) return null; // use inline SVG
-      return "/logo/pc.svg";
+      return "/game_logo/pc.svg";
     },
 
     isBrowser(platform) {
@@ -311,7 +311,7 @@ export default {
               >
                 <img
                   v-if="p === 'windows'"
-                  src="/logo/pc.svg"
+                  src="/game_logo/pc.svg"
                   width="14"
                   height="14"
                   alt="Windows"

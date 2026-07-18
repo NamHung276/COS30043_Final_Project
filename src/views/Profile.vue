@@ -24,21 +24,7 @@ export default {
       posts: [],
       purchases: [],
 
-      // Edit name
-      newName: "",
-      nameLoading: false,
-      nameTouched: false,
-
-      // Change password
-      currentPassword: "",
-      newPassword: "",
-      confirmNewPassword: "",
-      pwLoading: false,
-      pwTouched: {
-        currentPassword: false,
-        newPassword: false,
-        confirmNewPassword: false,
-      },
+      // Removed edit name and change password states
 
       unsubscribe: null,
     };
@@ -141,89 +127,13 @@ export default {
       return {}; // Fallback to default CSS background
     },
 
-    // Name validation
-    nameError() {
-      if (!this.nameTouched) return "";
-      if (!this.newName.trim()) return "Name cannot be empty.";
-      if (this.newName.trim().length < 2)
-        return "Name must be at least 2 characters.";
-      return "";
-    },
-
-    nameUnchanged() {
-      return this.newName.trim() === (this.currentUser?.displayName || "");
-    },
-
-    // Password validation
-    currentPasswordError() {
-      if (!this.pwTouched.currentPassword) return "";
-      if (!this.currentPassword) return "Current password is required.";
-      return "";
-    },
-
-    newPasswordError() {
-      if (!this.pwTouched.newPassword) return "";
-      if (!this.newPassword) return "New password is required.";
-      if (this.newPassword.length < 6)
-        return "Password must be at least 6 characters.";
-      return "";
-    },
-
-    confirmNewPasswordError() {
-      if (!this.pwTouched.confirmNewPassword) return "";
-      if (!this.confirmNewPassword) return "Please confirm your new password.";
-      if (this.newPassword !== this.confirmNewPassword)
-        return "Passwords do not match.";
-      return "";
-    },
-
-    isPwFormValid() {
-      return (
-        !this.currentPasswordError &&
-        !this.newPasswordError &&
-        !this.confirmNewPasswordError &&
-        this.currentPassword &&
-        this.newPassword &&
-        this.confirmNewPassword
-      );
-    },
-
-    passwordStrength() {
-      if (!this.newPassword) return 0;
-      let s = 0;
-      if (this.newPassword.length >= 6) s++;
-      if (this.newPassword.length >= 8) s++;
-      if (/[A-Z]/.test(this.newPassword)) s++;
-      if (/[0-9]/.test(this.newPassword)) s++;
-      if (/[^A-Za-z0-9]/.test(this.newPassword)) s++;
-      return s;
-    },
-
-    strengthLabel() {
-      return (
-        ["", "Weak", "Fair", "Good", "Strong", "Very Strong"][
-          this.passwordStrength
-        ] || ""
-      );
-    },
-
-    strengthColor() {
-      return (
-        ["", "#ef4444", "#f59e0b", "#eab308", "#22c55e", "#06b6d4"][
-          this.passwordStrength
-        ] || ""
-      );
-    },
   },
 
   mounted() {
     this.unsubscribe = onAuthStateChanged(auth, async (user) => {
       this.currentUser = user;
       if (user) {
-        this.newName = user.displayName || "";
         await this.fetchUserStats(user.uid);
-      } else {
-        this.$router.push("/login");
       }
     });
   },
@@ -319,72 +229,6 @@ export default {
         (f) => String(f.gameId) === String(gameId),
       );
       return fav ? fav.title : `Game #${gameId}`;
-    },
-
-    touchPw(field) {
-      this.pwTouched[field] = true;
-    },
-
-    async saveName() {
-      this.nameTouched = true;
-      if (this.nameError || this.nameUnchanged || this.nameLoading) return;
-
-      this.nameLoading = true;
-      try {
-        await updateProfile(this.currentUser, {
-          displayName: this.newName.trim(),
-        });
-        await this.currentUser.reload();
-        this.currentUser = auth.currentUser;
-        this.toast.show("Display name updated! ✨", "success");
-      } catch (err) {
-        console.error(err);
-        this.toast.show("Failed to update name. Please try again.", "error");
-      } finally {
-        this.nameLoading = false;
-      }
-    },
-
-    async changePassword() {
-      Object.keys(this.pwTouched).forEach((k) => (this.pwTouched[k] = true));
-      if (!this.isPwFormValid || this.pwLoading) return;
-
-      this.pwLoading = true;
-      try {
-        const credential = EmailAuthProvider.credential(
-          this.currentUser.email,
-          this.currentPassword,
-        );
-        await reauthenticateWithCredential(this.currentUser, credential);
-        await updatePassword(this.currentUser, this.newPassword);
-
-        this.toast.show("Password changed successfully! 🔒", "success");
-
-        this.currentPassword = "";
-        this.newPassword = "";
-        this.confirmNewPassword = "";
-        Object.keys(this.pwTouched).forEach((k) => (this.pwTouched[k] = false));
-      } catch (err) {
-        console.error(err);
-        if (
-          err.code === "auth/wrong-password" ||
-          err.code === "auth/invalid-credential"
-        ) {
-          this.toast.show("Current password is incorrect.", "error");
-        } else if (err.code === "auth/too-many-requests") {
-          this.toast.show(
-            "Too many attempts. Please try again later.",
-            "warning",
-          );
-        } else {
-          this.toast.show(
-            "Failed to change password. Please try again.",
-            "error",
-          );
-        }
-      } finally {
-        this.pwLoading = false;
-      }
     },
   },
 };
@@ -576,269 +420,18 @@ export default {
             </div>
           </div>
 
-          <!-- Settings Accordion -->
-          <div class="accordion profile-accordion" id="settingsAccordion">
-            <div class="accordion-item bg-transparent border-0 mb-3">
-              <h2 class="accordion-header">
-                <button
-                  class="accordion-button collapsed profile-glass-card profile-text py-3"
-                  type="button"
-                  data-bs-toggle="collapse"
-                  data-bs-target="#collapseName"
-                >
-                  <i class="bi bi-pencil-square me-2 text-primary"></i> Edit
-                  Profile
-                </button>
-              </h2>
-              <div
-                id="collapseName"
-                class="accordion-collapse collapse"
-                data-bs-parent="#settingsAccordion"
-              >
-                <div class="accordion-body profile-glass-card mt-2 p-4">
-                  <form @submit.prevent="saveName">
-                    <div class="mb-3">
-                      <label
-                        for="profileName"
-                        class="form-label text-muted-light small text-uppercase"
-                        >Display Name</label
-                      >
-                      <input
-                        id="profileName"
-                        v-model="newName"
-                        type="text"
-                        class="form-control gd-input"
-                        :class="{
-                          'is-invalid': nameError,
-                          'is-valid':
-                            nameTouched && !nameError && !nameUnchanged,
-                        }"
-                        placeholder="Your display name"
-                        @blur="nameTouched = true"
-                      />
-                      <div v-if="nameError" class="invalid-feedback mt-1">
-                        {{ nameError }}
-                      </div>
-                    </div>
-                    <button
-                      type="submit"
-                      class="btn btn-primary w-100"
-                      :disabled="nameLoading || nameUnchanged || !!nameError"
-                    >
-                      <span
-                        v-if="nameLoading"
-                        class="spinner-border spinner-border-sm me-2"
-                      ></span>
-                      Save Changes
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </div>
-
-            <div class="accordion-item bg-transparent border-0">
-              <h2 class="accordion-header">
-                <button
-                  class="accordion-button collapsed profile-glass-card profile-text py-3"
-                  type="button"
-                  data-bs-toggle="collapse"
-                  data-bs-target="#collapsePassword"
-                >
-                  <i class="bi bi-shield-lock-fill me-2 text-primary"></i>
-                  Change Password
-                </button>
-              </h2>
-              <div
-                id="collapsePassword"
-                class="accordion-collapse collapse"
-                data-bs-parent="#settingsAccordion"
-              >
-                <div class="accordion-body profile-glass-card mt-2 p-4">
-                  <form @submit.prevent="changePassword">
-                    <div class="mb-3">
-                      <label
-                        class="form-label text-muted-light small text-uppercase"
-                        >Current Password</label
-                      >
-                      <input
-                        v-model="currentPassword"
-                        type="password"
-                        class="form-control gd-input"
-                        :class="{
-                          'is-invalid': currentPasswordError,
-                          'is-valid':
-                            pwTouched.currentPassword && !currentPasswordError,
-                        }"
-                        @blur="touchPw('currentPassword')"
-                      />
-                      <div
-                        v-if="currentPasswordError"
-                        class="invalid-feedback mt-1"
-                      >
-                        {{ currentPasswordError }}
-                      </div>
-                    </div>
-                    <div class="mb-3">
-                      <label
-                        class="form-label text-muted-light small text-uppercase"
-                        >New Password</label
-                      >
-                      <input
-                        v-model="newPassword"
-                        type="password"
-                        class="form-control gd-input"
-                        :class="{
-                          'is-invalid': newPasswordError,
-                          'is-valid':
-                            pwTouched.newPassword && !newPasswordError,
-                        }"
-                        @blur="touchPw('newPassword')"
-                      />
-
-                      <!-- Password Strength Meter -->
-                      <div class="mt-2" v-if="newPassword">
-                        <div
-                          class="d-flex justify-content-between align-items-center mb-1"
-                        >
-                          <small
-                            class="text-muted-light"
-                            style="font-size: 0.75rem"
-                            >Password Strength</small
-                          >
-                          <small
-                            :style="{ color: strengthColor }"
-                            class="fw-bold"
-                            style="font-size: 0.75rem"
-                            >{{ strengthLabel }}</small
-                          >
-                        </div>
-                        <div class="d-flex gap-1" style="height: 4px">
-                          <div
-                            v-for="n in 5"
-                            :key="n"
-                            class="flex-grow-1 rounded-pill"
-                            :style="{
-                              background:
-                                n <= passwordStrength
-                                  ? strengthColor
-                                  : 'rgba(255,255,255,0.1)',
-                              transition: 'background 0.3s',
-                            }"
-                          ></div>
-                        </div>
-                      </div>
-
-                      <div
-                        v-if="newPasswordError"
-                        class="invalid-feedback mt-1"
-                      >
-                        {{ newPasswordError }}
-                      </div>
-                    </div>
-                    <div class="mb-4">
-                      <label
-                        class="form-label text-muted-light small text-uppercase"
-                        >Confirm Password</label
-                      >
-                      <input
-                        v-model="confirmNewPassword"
-                        type="password"
-                        class="form-control gd-input"
-                        :class="{
-                          'is-invalid': confirmNewPasswordError,
-                          'is-valid':
-                            pwTouched.confirmNewPassword &&
-                            !confirmNewPasswordError,
-                        }"
-                        @blur="touchPw('confirmNewPassword')"
-                      />
-                      <div
-                        v-if="confirmNewPasswordError"
-                        class="invalid-feedback mt-1"
-                      >
-                        {{ confirmNewPasswordError }}
-                      </div>
-                    </div>
-                    <button
-                      type="submit"
-                      class="btn btn-primary w-100"
-                      :disabled="!isPwFormValid || pwLoading"
-                    >
-                      <span
-                        v-if="pwLoading"
-                        class="spinner-border spinner-border-sm me-2"
-                      ></span>
-                      Update Password
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </div>
-            <div class="accordion-item bg-transparent border-0">
-              <h2 class="accordion-header">
-                <button
-                  class="accordion-button collapsed profile-glass-card profile-text py-3"
-                  type="button"
-                  data-bs-toggle="collapse"
-                  data-bs-target="#collapsePurchases"
-                >
-                  <i class="bi bi-receipt me-2 text-primary"></i> Purchase
-                  History
-                </button>
-              </h2>
-              <div
-                id="collapsePurchases"
-                class="accordion-collapse collapse"
-                data-bs-parent="#settingsAccordion"
-              >
-                <div class="accordion-body profile-glass-card mt-2 p-4">
-                  <div v-if="statsLoading" class="text-center py-3">
-                    <span
-                      class="spinner-border spinner-border-sm text-primary"
-                    ></span>
-                  </div>
-                  <div
-                    v-else-if="purchases.length === 0"
-                    class="text-center py-3 text-muted-light"
-                  >
-                    No purchases found.
-                  </div>
-                  <div v-else>
-                    <div
-                      v-for="purchase in purchases"
-                      :key="purchase.id"
-                      class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom border-secondary border-opacity-25"
-                    >
-                      <div>
-                        <div class="profile-text fw-bold">
-                          {{ purchase.gameName }}
-                        </div>
-                        <div class="text-muted-light small">
-                          {{
-                            new Date(
-                              purchase.purchasedAt?.seconds * 1000,
-                            ).toLocaleDateString()
-                          }}
-                        </div>
-                      </div>
-                      <div class="text-end">
-                        <div class="profile-text">
-                          ${{ (purchase.price || 0).toFixed(2) }}
-                        </div>
-                        <div class="text-success small">
-                          <i class="bi bi-check-circle-fill me-1"></i
-                          >{{ purchase.status || "Completed" }}
-                        </div>
-                      </div>
-                    </div>
-                    <router-link
-                      to="/library"
-                      class="btn btn-outline-primary w-100 mt-2"
-                      >View Library</router-link
-                    >
-                  </div>
-                </div>
-              </div>
+          <!-- Settings Link -->
+          <div class="card profile-glass-card mb-4">
+            <div class="card-body p-4 text-center">
+              <h5 class="card-title profile-text mb-3">
+                <i class="bi bi-gear-fill text-primary me-2"></i> Account Settings
+              </h5>
+              <p class="text-muted-light small mb-4">
+                Manage your profile, security, notifications, and view purchase history.
+              </p>
+              <router-link to="/settings" class="btn btn-primary w-100 fw-bold">
+                Go to Settings
+              </router-link>
             </div>
           </div>
         </div>

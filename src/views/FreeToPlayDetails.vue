@@ -86,7 +86,7 @@ export default {
   methods: {
     platformIcon(name) {
       const n = name.toLowerCase();
-      if (n.includes("pc") || n.includes("windows")) return "/logo/pc.svg";
+      if (n.includes("pc") || n.includes("windows")) return "/game_logo/pc.svg";
       if (n.includes("browser") || n.includes("web")) return "/logo/search.svg";
       return "/logo/gamepad.svg";
     },

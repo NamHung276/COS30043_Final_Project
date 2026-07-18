@@ -218,15 +218,15 @@ export default {
 
     platformIcon(name) {
       const n = name.toLowerCase();
-      if (n.includes("pc") || n.includes("windows")) return "/logo/pc.svg";
-      if (n.includes("playstation")) return "/logo/playstation_logo.png";
-      if (n.includes("xbox")) return "/logo/xbox_logo.png";
+      if (n.includes("pc") || n.includes("windows")) return "/game_logo/pc.svg";
+      if (n.includes("playstation")) return "/game_logo/playstation_logo.png";
+      if (n.includes("xbox")) return "/game_logo/xbox_logo.png";
       if (n.includes("nintendo") || n.includes("switch"))
-        return "/logo/nintendo_logo.png";
-      if (n.includes("mac")) return "/logo/macos.png";
-      if (n.includes("linux")) return "/logo/linux.png";
+        return "/game_logo/nintendo_logo.png";
+      if (n.includes("mac")) return "/game_logo/macos.png";
+      if (n.includes("linux")) return "/game_logo/linux.png";
       if (n.includes("android") || n.includes("ios") || n.includes("mobile"))
-        return "/logo/mobile.svg";
+        return "/game_logo/mobile.svg";
       return "/logo/gamepad.svg";
     },
 
@@ -581,8 +581,8 @@ export default {
           <!-- ── LEFT: Screenshots + About + Tags ── -->
           <div class="col-lg-8">
             <!-- Gameplay Trailer -->
-            <div v-if="hasTrailer" class="gd-section mb-4">
-              <h2 class="gd-section-title mb-3">Gameplay Trailer</h2>
+            <div v-if="hasTrailer" class="gd-section" style="margin-bottom: var(--section-gap);">
+              <h2 class="gd-section-title mb-4"><i class="bi bi-film me-2 text-primary"></i> Gameplay Trailer</h2>
               <div
                 class="gd-trailer-thumb"
                 @click="showTrailerModal = true"
@@ -647,14 +647,14 @@ export default {
             </div>
 
             <!-- About -->
-            <div class="gd-section mb-5">
-              <h2 class="gd-section-title">About this game</h2>
+            <div class="gd-section" style="margin-bottom: var(--section-gap);">
+              <h2 class="gd-section-title mb-4"><i class="bi bi-card-text me-2 text-primary"></i> About this game</h2>
               <div class="gd-description" v-html="game.description || 'No description available.'"></div>
             </div>
 
             <!-- Tags -->
-            <div v-if="game.tags?.length" class="gd-section mb-5">
-              <h2 class="gd-section-title">Tags</h2>
+            <div v-if="game.tags?.length" class="gd-section" style="margin-bottom: var(--section-gap);">
+              <h2 class="gd-section-title mb-4"><i class="bi bi-tags-fill me-2 text-primary"></i> Tags</h2>
               <div class="gd-tags d-flex flex-wrap gap-2">
                 <router-link
                   v-for="tag in game.tags.slice(0, 20)"
@@ -670,9 +670,9 @@ export default {
             <!-- System Requirements -->
             <div
               v-if="pcRequirements?.minimum || pcRequirements?.recommended"
-              class="gd-section mb-5"
+              class="gd-section" style="margin-bottom: var(--section-gap);"
             >
-              <h2 class="gd-section-title">System Requirements</h2>
+              <h2 class="gd-section-title mb-4"><i class="bi bi-pc-display me-2 text-primary"></i> System Requirements</h2>
               <div class="gd-sysreq-grid">
                 <div v-if="pcRequirements.minimum" class="gd-sysreq-col">
                   <div class="gd-sysreq-label">Minimum</div>
@@ -688,8 +688,8 @@ export default {
             </div>
 
             <!-- Similar Games / Series -->
-            <div v-if="similarGames.length" class="gd-section mb-5">
-              <h2 class="gd-section-title">More in This Series</h2>
+            <div v-if="similarGames.length" class="gd-section" style="margin-bottom: var(--section-gap);">
+              <h2 class="gd-section-title mb-4"><i class="bi bi-collection-play-fill me-2 text-primary"></i> More in This Series</h2>
               <div class="gd-similar-grid">
                 <router-link
                   v-for="g in similarGames"
@@ -732,10 +732,10 @@ export default {
             </div>
 
             <!-- REVIEWS (Moved Above Discover) -->
-            <div class="gd-section gd-review-section-tint mb-5">
-              <div class="gd-review-header">
+            <div class="gd-section gd-review-section-tint" style="margin-bottom: var(--section-gap);">
+              <div class="gd-review-header mb-4">
                 <div>
-                  <h2 class="gd-section-title">Community Reviews</h2>
+                  <h2 class="gd-section-title"><i class="bi bi-chat-quote-fill me-2 text-primary"></i> Community Reviews</h2>
                   <p
                     class="gd-review-subtitle text-muted"
                     style="margin-top: -10px; margin-bottom: 20px"
@@ -748,8 +748,8 @@ export default {
             </div>
 
             <!-- Discover More -->
-            <div v-if="discoverMoreGames.length" class="gd-section mb-5">
-              <h2 class="gd-section-title">More Games to Discover</h2>
+            <div v-if="discoverMoreGames.length" class="gd-section" style="margin-bottom: var(--section-gap);">
+              <h2 class="gd-section-title mb-4"><i class="bi bi-compass-fill me-2 text-primary"></i> 🎯 Similar Games</h2>
               <div class="gd-similar-grid">
                 <router-link
                   v-for="g in discoverMoreGames"
@@ -792,8 +792,8 @@ export default {
             </div>
 
             <!-- Recent Releases -->
-            <div v-if="recentGames.length" class="gd-section mb-5">
-              <h2 class="gd-section-title">Recent Releases</h2>
+            <div v-if="recentGames.length" class="gd-section" style="margin-bottom: var(--section-gap);">
+              <h2 class="gd-section-title mb-4"><i class="bi bi-fire me-2 text-primary"></i> 🔥 Trending This Week</h2>
               <div class="gd-similar-grid">
                 <router-link
                   v-for="g in recentGames"
@@ -950,35 +950,31 @@ export default {
               <div class="gd-details-card mb-4 profile-glass-card p-4 rounded-4" style="background: var(--bg-surface);">
                 <h5 class="gd-details-heading mb-4"><i class="bi bi-info-circle-fill text-primary me-2"></i> Game Info</h5>
 
-                <div class="gd-detail-row" v-if="developerNames !== '—'">
-                  <span class="gd-detail-label text-muted"><i class="bi bi-code-slash me-1"></i> Developer</span>
-                  <span class="gd-detail-value fw-bold" style="color: var(--text-primary);">{{ developerNames }}</span>
-                </div>
-                <div class="gd-detail-row" v-if="publisherNames !== '—'">
-                  <span class="gd-detail-label text-muted"><i class="bi bi-building me-1"></i> Publisher</span>
-                  <span class="gd-detail-value fw-bold" style="color: var(--text-primary);">{{ publisherNames }}</span>
-                </div>
-                <div class="gd-detail-row" v-if="game.released">
-                  <span class="gd-detail-label text-muted"><i class="bi bi-calendar-event me-1"></i> Release</span>
-                  <span class="gd-detail-value fw-bold" style="color: var(--text-primary);">{{
-                    formatDate(game.released)
-                  }}</span>
-                </div>
-                <div class="gd-detail-row" v-if="game.playtime">
-                  <span class="gd-detail-label text-muted"><i class="bi bi-clock-history me-1"></i> Playtime</span>
-                  <span class="gd-detail-value fw-bold" style="color: var(--text-primary);">~{{ game.playtime }} hours</span>
-                </div>
-                <div class="gd-detail-row" v-if="game.esrb_rating">
-                  <span class="gd-detail-label text-muted"><i class="bi bi-shield-check me-1"></i> ESRB</span>
-                  <span class="gd-detail-value fw-bold" style="color: var(--text-primary);">{{
-                    game.esrb_rating.name
-                  }}</span>
-                </div>
-                <div class="gd-detail-row" v-if="game.ratings_count">
-                  <span class="gd-detail-label text-muted"><i class="bi bi-bar-chart-fill me-1"></i> Reviews</span>
-                  <span class="gd-detail-value fw-bold" style="color: var(--text-primary);">{{
-                    game.ratings_count.toLocaleString()
-                  }}</span>
+                <div class="row g-4">
+                  <div class="col-6" v-if="developerNames !== '—'">
+                    <span class="gh-meta-label">Developer</span>
+                    <span class="fw-bold" style="color: var(--text-primary);">{{ developerNames }}</span>
+                  </div>
+                  <div class="col-6" v-if="publisherNames !== '—'">
+                    <span class="gh-meta-label">Publisher</span>
+                    <span class="fw-bold" style="color: var(--text-primary);">{{ publisherNames }}</span>
+                  </div>
+                  <div class="col-6" v-if="game.released">
+                    <span class="gh-meta-label">Release</span>
+                    <span class="fw-bold" style="color: var(--text-primary);">{{ formatDate(game.released) }}</span>
+                  </div>
+                  <div class="col-6" v-if="game.playtime">
+                    <span class="gh-meta-label">Playtime</span>
+                    <span class="fw-bold" style="color: var(--text-primary);">~{{ game.playtime }} hrs</span>
+                  </div>
+                  <div class="col-6" v-if="game.esrb_rating">
+                    <span class="gh-meta-label">ESRB</span>
+                    <span class="fw-bold" style="color: var(--text-primary);">{{ game.esrb_rating.name }}</span>
+                  </div>
+                  <div class="col-6" v-if="game.ratings_count">
+                    <span class="gh-meta-label">Reviews</span>
+                    <span class="fw-bold" style="color: var(--text-primary);">{{ game.ratings_count.toLocaleString() }}</span>
+                  </div>
                 </div>
               </div>
 
@@ -1015,26 +1011,27 @@ export default {
                 </div>
               </div>
 
-              <!-- Community Stats -->
               <div class="gd-stats-card profile-glass-card p-4 rounded-4 mt-4" style="background: var(--bg-surface);">
                 <h5 class="gd-details-heading mb-4">
                   <i class="bi bi-people-fill text-primary me-2"></i> Community Stats
                 </h5>
-                <div class="gd-detail-row">
-                  <span class="gd-detail-label text-muted"><i class="bi bi-star-fill text-warning me-1"></i> Average</span>
-                  <span class="gd-detail-value fw-bold" style="color: var(--text-primary);">{{ game.rating ? game.rating.toFixed(1) : '4.6' }} / 5</span>
-                </div>
-                <div class="gd-detail-row">
-                  <span class="gd-detail-label text-muted"><i class="bi bi-chat-text-fill text-info me-1"></i> Reviews</span>
-                  <span class="gd-detail-value fw-bold" style="color: var(--text-primary);">{{ (game.ratings_count || 1254).toLocaleString() }}</span>
-                </div>
-                <div class="gd-detail-row">
-                  <span class="gd-detail-label text-muted"><i class="bi bi-heart-fill text-danger me-1"></i> Wishlists</span>
-                  <span class="gd-detail-value fw-bold" style="color: var(--text-primary);">{{ (game.added || 3912).toLocaleString() }}</span>
-                </div>
-                <div class="gd-detail-row">
-                  <span class="gd-detail-label text-muted"><i class="bi bi-collection-fill text-success me-1"></i> Libraries</span>
-                  <span class="gd-detail-value fw-bold" style="color: var(--text-primary);">{{ (game.added_by_status?.owned || 1884).toLocaleString() }}</span>
+                <div class="row g-4">
+                  <div class="col-6">
+                    <span class="gh-meta-label"><i class="bi bi-star-fill text-warning me-1"></i> Average</span>
+                    <span class="fw-bold" style="color: var(--text-primary);">{{ game.rating ? game.rating.toFixed(1) : '4.6' }} / 5</span>
+                  </div>
+                  <div class="col-6">
+                    <span class="gh-meta-label"><i class="bi bi-chat-text-fill text-info me-1"></i> Reviews</span>
+                    <span class="fw-bold" style="color: var(--text-primary);">{{ (game.ratings_count || 1254).toLocaleString() }}</span>
+                  </div>
+                  <div class="col-6">
+                    <span class="gh-meta-label"><i class="bi bi-heart-fill text-danger me-1"></i> Wishlists</span>
+                    <span class="fw-bold" style="color: var(--text-primary);">{{ (game.added || 3912).toLocaleString() }}</span>
+                  </div>
+                  <div class="col-6">
+                    <span class="gh-meta-label"><i class="bi bi-collection-fill text-success me-1"></i> Libraries</span>
+                    <span class="fw-bold" style="color: var(--text-primary);">{{ (game.added_by_status?.owned || 1884).toLocaleString() }}</span>
+                  </div>
                 </div>
               </div>
             </div>

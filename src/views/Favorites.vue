@@ -129,7 +129,6 @@ export default {
       if (!user) {
         this.favorites = [];
         this.currentUser = null;
-        this.$router.push("/login");
         return;
       }
       this.currentUser = user;

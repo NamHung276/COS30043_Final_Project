@@ -87,8 +87,6 @@ export default {
       this.currentUser = user;
       if (user) {
         this.fetchLibrary();
-      } else {
-        this.$router.push("/login");
       }
     });
 

@@ -1,17 +1,19 @@
 <script>
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 export default {
   data() {
     return {
       currentUser: null,
+      articleId: null,
       title: "",
       category: "General",
       content: "",
       image: "",
       submitting: false,
+      loading: true,
       error: "",
       touched: {
         title: false,
@@ -47,7 +49,36 @@ export default {
       this.touched[field] = true;
     },
 
-    async submitArticle() {
+    async loadArticle() {
+      this.articleId = this.$route.params.id;
+      try {
+        const docRef = doc(db, "news", this.articleId);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          
+          // Only allow author or admin to edit
+          if (this.currentUser && (this.currentUser.uid === data.userId || this.currentUser.role === 'admin')) {
+            this.title = data.title;
+            this.category = data.category;
+            this.content = data.content;
+            this.image = data.image && !data.image.includes('placehold.co') ? data.image : '';
+          } else {
+            this.$router.push("/gamehub-news");
+          }
+        } else {
+          this.error = "Article not found.";
+        }
+      } catch (err) {
+        console.error("Error loading article:", err);
+        this.error = "Failed to load article.";
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async saveArticle() {
       this.touched.title = true;
       this.touched.content = true;
       this.error = "";
@@ -62,7 +93,7 @@ export default {
       this.submitting = true;
 
       try {
-        const docRef = await addDoc(collection(db, "news"), {
+        await updateDoc(doc(db, "news", this.articleId), {
           title: this.title.trim(),
           category: this.category,
           content: this.content.trim(),
@@ -70,15 +101,11 @@ export default {
             this.image.trim() ||
             "https://placehold.co/600x400?text=" +
               encodeURIComponent(this.category),
-          date: new Date().toISOString().split("T")[0],
-          userId: this.currentUser.uid,
-          userName: this.currentUser.displayName || this.currentUser.email,
-          createdAt: serverTimestamp(),
         });
 
-        this.$router.push(`/gamehub-news/${docRef.id}`);
+        this.$router.push(`/gamehub-news/${this.articleId}`);
       } catch (error) {
-        console.error("Failed to submit article:", error);
+        console.error("Failed to update article:", error);
         this.error = "Something went wrong. Please try again.";
       } finally {
         this.submitting = false;
@@ -95,6 +122,9 @@ export default {
   mounted() {
     this.unsubscribe = onAuthStateChanged(auth, (user) => {
       this.currentUser = user;
+      if (user) {
+        this.loadArticle();
+      }
     });
   },
 };
@@ -104,10 +134,14 @@ export default {
   <div class="container py-4">
     <div class="section-header">
       <span class="section-icon"><i class="bi bi-pencil-square"></i></span>
-      <h1 class="mb-0">Submit a News Article</h1>
+      <h1 class="mb-0">Edit News Article</h1>
     </div>
 
-    <div class="row g-4">
+    <div v-if="loading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+    
+    <div v-else class="row g-4">
       <!-- Form -->
       <div class="col-md-7">
         <div class="card auth-card">
@@ -191,15 +225,15 @@ export default {
               <button
                 class="btn btn-primary"
                 :disabled="submitting"
-                @click="submitArticle"
+                @click="saveArticle"
               >
-                <template v-if="submitting">Publishing...</template>
+                <template v-if="submitting">Saving...</template>
                 <template v-else
-                  ><i class="bi bi-send me-1"></i>Publish Article</template
+                  ><i class="bi bi-save me-1"></i>Save Changes</template
                 >
               </button>
 
-              <router-link to="/gamehub-news" class="btn btn-outline-secondary">
+              <router-link :to="`/gamehub-news/${articleId}`" class="btn btn-outline-secondary">
                 Cancel
               </router-link>
             </div>
@@ -221,7 +255,7 @@ export default {
               style="border: 1px solid var(--border-subtle)"
             >
               <div
-                v-if="image"
+                v-if="image || category"
                 style="
                   height: 160px;
                   overflow: hidden;
@@ -229,10 +263,10 @@ export default {
                 "
               >
                 <img
-                  :src="image"
+                  :src="image || `https://placehold.co/600x400?text=${encodeURIComponent(category)}`"
                   alt="Preview"
                   style="width: 100%; height: 100%; object-fit: cover"
-                  @error="$event.target.style.display = 'none'"
+                  @error="$event.target.src = 'https://placehold.co/600x400?text=Error'"
                 />
               </div>
               <div class="card-body" style="padding: 14px">
@@ -247,12 +281,6 @@ export default {
                   }}
                 </p>
               </div>
-            </div>
-
-            <div v-else class="text-center py-4">
-              <p class="text-muted small mb-0">
-                Start writing to see a preview here
-              </p>
             </div>
           </div>
         </div>

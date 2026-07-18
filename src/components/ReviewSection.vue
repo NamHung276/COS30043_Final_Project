@@ -243,6 +243,34 @@ export default {
       }
     },
 
+    async reportReview(review) {
+      if (!this.currentUser) {
+        this.$router.push("/login");
+        return;
+      }
+      const reason = prompt("Please provide a reason for reporting this review:");
+      if (!reason || !reason.trim()) return;
+
+      try {
+        await addDoc(collection(db, "reports"), {
+          type: "Review",
+          target: review.gameName || this.gameTitle || "Game",
+          targetId: review.id,
+          reason: reason.trim(),
+          user: this.currentUser.displayName || this.currentUser.email,
+          userId: this.currentUser.uid,
+          severity: "Medium",
+          icon: "⭐",
+          createdAt: serverTimestamp(),
+          status: "Pending"
+        });
+        this.toast?.show("Report submitted successfully. Thank you.", "success");
+      } catch (error) {
+        console.error("Failed to submit report:", error);
+        this.toast?.show("Failed to submit report.", "error");
+      }
+    },
+
     focusForm() {
       const el = document.getElementById("newComment");
       if (el) {
@@ -728,7 +756,7 @@ export default {
                 {{ review.comment }}
               </p>
 
-              <div class="d-flex gap-2 mt-4">
+              <div class="d-flex gap-2 mt-4 flex-wrap w-100">
                 <button
                   class="btn btn-sm btn-outline-secondary rounded-pill px-3"
                   :class="{ active: review.likes?.includes(currentUser?.uid) }"
@@ -742,6 +770,11 @@ export default {
                 <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" style="cursor: not-allowed; opacity: 0.7;">
                   <i class="bi bi-award-fill me-1"></i> Award
                 </button>
+                <div class="ms-auto" v-if="currentUser && review.userId !== currentUser.uid">
+                  <button class="btn btn-sm btn-outline-danger rounded-pill px-3" @click="reportReview(review)">
+                    <i class="bi bi-flag-fill me-1"></i> Report
+                  </button>
+                </div>
               </div>
             </div>
           </div>

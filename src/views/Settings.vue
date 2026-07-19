@@ -439,9 +439,8 @@ export default {
               Review your past transactions and game library additions.
             </div>
 
-            <div v-if="statsLoading" class="text-center py-5">
-              <span class="spinner-border spinner-border-sm text-primary"></span>
-              <p class="mt-3 text-muted">Loading history...</p>
+            <div v-if="statsLoading" class="purchase-list">
+              <div v-for="i in 3" :key="i" class="purchase-item p-4 mb-3 profile-glass-card gh-skeleton" style="height: 104px;"></div>
             </div>
             
             <div v-else-if="purchases.length === 0" class="text-center py-5">

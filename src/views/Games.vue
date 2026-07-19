@@ -1141,7 +1141,7 @@ export default {
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 .platform-tabs::-webkit-scrollbar {
   display: none;

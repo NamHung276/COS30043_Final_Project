@@ -10,8 +10,10 @@ import {
   deleteDoc,
   doc,
 } from "firebase/firestore";
+import SkeletonCard from "../components/SkeletonCard.vue";
 
 export default {
+  components: { SkeletonCard },
   setup() {
     const toast = inject("toast");
     return { toast };
@@ -241,20 +243,16 @@ export default {
         >
       </div>
 
-      <!-- Loading -->
-      <div v-if="loading" class="fav-loading">
-        <div class="fav-spinner">
-          <div class="fav-spinner-ring"></div>
-          <i class="bi bi-star-fill fav-spinner-icon"></i>
-        </div>
-        <p class="fav-loading-text">Loading your collection…</p>
+      <!-- Loading Skeletons -->
+      <div v-if="loading" class="fav-grid">
+        <SkeletonCard v-for="i in 8" :key="i" />
       </div>
 
       <!-- Empty Collection -->
       <div v-else-if="favorites.length === 0" class="fav-empty">
         <div class="fav-empty-glow"></div>
         <div class="fav-empty-icon">
-          <i class="bi bi-star"></i>
+          <i class="bi bi-heart"></i>
         </div>
         <h2 class="fav-empty-title">Your wishlist is empty</h2>
         <p class="fav-empty-desc">

@@ -1280,7 +1280,6 @@ export default {
   display: flex;
   align-items: center;
   gap: 3px;
-  margin-top: auto;
 }
 .star-icon {
   font-size: 0.85rem;
@@ -1307,7 +1306,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 2px;
+  margin-top: auto;
   padding-top: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }

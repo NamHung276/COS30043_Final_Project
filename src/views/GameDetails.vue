@@ -1477,6 +1477,45 @@ export default {
   margin-bottom: 0.5rem;
 }
 
+/* ── System Requirements ──────────────────── */
+.gd-sysreq-text {
+  max-height: 250px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-glass);
+}
+.gd-sysreq-text::-webkit-scrollbar {
+  width: 6px;
+}
+.gd-sysreq-text::-webkit-scrollbar-track {
+  background: transparent;
+}
+.gd-sysreq-text::-webkit-scrollbar-thumb {
+  background: var(--border-glass);
+  border-radius: 10px;
+}
+.gd-sysreq-label {
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  font-size: 1rem;
+}
+.gd-sysreq-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+@media (min-width: 768px) {
+  .gd-sysreq-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 /* ── Tags ─────────────────────────────────── */
 .gd-tags {
   display: flex;

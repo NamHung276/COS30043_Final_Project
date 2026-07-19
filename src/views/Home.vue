@@ -1242,11 +1242,11 @@ export default {
 /* ---- Carousel Pause/Play button (WCAG 2.2.2) ---- */
 .steam-carousel-pause-btn {
   position: absolute;
-  bottom: 14px;
-  right: 14px;
+  top: 16px;
+  right: 16px;
   z-index: 10;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(0, 0, 0, 0.55);
   color: rgba(255, 255, 255, 0.75);
@@ -1275,6 +1275,12 @@ export default {
   gap: 16px;
   overflow-x: auto;
   padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.h-scroll-strip::-webkit-scrollbar {
+  display: none;
 }
 .h-scroll-card {
   width: 220px;
@@ -1285,6 +1291,7 @@ export default {
   border: 1px solid var(--border-glass);
   text-decoration: none;
   color: inherit;
+  scroll-snap-align: start;
 }
 .h-scroll-img-wrap {
   position: relative;

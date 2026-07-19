@@ -189,6 +189,7 @@ export default {
         this.newRecommended = true;
         this.newPlaytime = "";
         await this.loadReviews();
+        this.toast?.show("Review submitted successfully!", "success");
       } catch (error) {
         console.error("Failed to submit review:", error);
         this.formError = "Something went wrong. Please try again.";
@@ -584,18 +585,12 @@ export default {
     <!-- Empty State -->
     <div
       v-else-if="reviews.length === 0"
-      class="gd-glass-card text-center p-5 mb-4 empty-state-box"
+      class="gd-glass-card mb-4 gh-empty-state"
     >
-      <div class="mb-2">
-        <i class="bi bi-star text-muted fs-4"></i>
-        <i class="bi bi-star text-muted fs-4 mx-1"></i>
-        <i class="bi bi-star text-muted fs-4"></i>
-        <i class="bi bi-star text-muted fs-4 mx-1"></i>
-        <i class="bi bi-star text-muted fs-4"></i>
-      </div>
-      <h4 class="text-white mb-2 mt-3">No reviews yet</h4>
-      <p class="text-muted mb-4">Be the first explorer to share your experience!</p>
-      <button class="btn btn-primary px-4 rounded-pill fw-bold" @click="focusForm">
+      <i class="bi bi-chat-square-text"></i>
+      <h3>No reviews yet</h3>
+      <p>Be the first explorer to share your experience!</p>
+      <button class="btn btn-primary" @click="focusForm">
         Write the first review
       </button>
     </div>

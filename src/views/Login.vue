@@ -1,6 +1,7 @@
 <script>
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
 export default {
   data() {
@@ -19,7 +20,30 @@ export default {
       this.loading = true;
 
       try {
-        await signInWithEmailAndPassword(auth, this.email, this.password);
+        const { user } = await signInWithEmailAndPassword(auth, this.email, this.password);
+
+        // Self-healing: ensure a Firestore profile document exists.
+        // Accounts created directly in Firebase Console (or via Auth SDK only)
+        // may not have a corresponding Firestore document. We create one here
+        // using data already available on the Auth user object.
+        try {
+          const userRef = doc(db, "users", user.uid);
+          const snap = await getDoc(userRef);
+          if (!snap.exists()) {
+            await setDoc(userRef, {
+              displayName: user.displayName || user.email.split("@")[0],
+              email: user.email,
+              role: "user",
+              createdAt: serverTimestamp(),
+              healedAt: serverTimestamp(),
+            });
+            console.info("Profile document auto-created for:", user.email);
+          }
+        } catch (firestoreErr) {
+          // Non-fatal — user can still browse but some features may be limited.
+          console.warn("Could not verify/create Firestore profile:", firestoreErr);
+        }
+
         this.$router.push("/");
       } catch (error) {
         if (

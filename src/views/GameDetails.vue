@@ -54,6 +54,7 @@ export default {
       discoverMoreGames: [],
       recentGames: [],
       carouselInterval: null,
+      showFullDescription: false,
       // Trailer modal
       showTrailerModal: false,
       // CheapShark deals
@@ -649,7 +650,19 @@ export default {
             <!-- About -->
             <div class="gd-section" style="margin-bottom: var(--section-gap);">
               <h2 class="gd-section-title mb-4"><i class="bi bi-card-text me-2 text-primary"></i> About this game</h2>
-              <div class="gd-description" v-html="game.description || 'No description available.'"></div>
+              <div 
+                class="gd-desc-container" 
+                :class="{ 'is-expanded': showFullDescription }"
+              >
+                <div class="gd-description" v-html="game.description || 'No description available.'"></div>
+                <div class="gd-desc-fade" v-if="!showFullDescription"></div>
+              </div>
+              <button 
+                class="btn btn-outline-secondary w-100 mt-3 fw-bold"
+                @click="showFullDescription = !showFullDescription"
+              >
+                {{ showFullDescription ? 'Show Less' : 'Read More' }}
+              </button>
             </div>
 
             <!-- Tags -->
@@ -903,13 +916,14 @@ export default {
                   </div>
 
                 <!-- Wishlist Block -->
-                <div class="p-3 text-center border-bottom border-secondary border-opacity-25">
+                <div class="p-3 text-center border-bottom border-secondary border-opacity-25" style="background: rgba(255, 255, 255, 0.02);">
                   <button
-                    class="gd-wishlist-btn w-100"
+                    class="gd-wishlist-btn w-100 d-flex justify-content-between align-items-center"
                     @click="addToFavorites"
                     aria-label="Add to wishlist"
                   >
-                    <i class="bi bi-heart me-2"></i> Add to Wishlist
+                    <span>Add to your Wishlist</span>
+                    <i class="bi bi-heart fs-5"></i>
                   </button>
                 </div>
                 
@@ -950,30 +964,30 @@ export default {
               <div class="gd-details-card mb-4 profile-glass-card p-4 rounded-4" style="background: var(--bg-surface);">
                 <h5 class="gd-details-heading mb-4"><i class="bi bi-info-circle-fill text-primary me-2"></i> Game Info</h5>
 
-                <div class="row g-4">
-                  <div class="col-6" v-if="developerNames !== '—'">
-                    <span class="gh-meta-label">Developer</span>
-                    <span class="fw-bold" style="color: var(--text-primary);">{{ developerNames }}</span>
+                <div class="gd-meta-list">
+                  <div class="gd-meta-row" v-if="developerNames !== '—'">
+                    <span class="gd-meta-label">Developer</span>
+                    <span class="gd-meta-value">{{ developerNames }}</span>
                   </div>
-                  <div class="col-6" v-if="publisherNames !== '—'">
-                    <span class="gh-meta-label">Publisher</span>
-                    <span class="fw-bold" style="color: var(--text-primary);">{{ publisherNames }}</span>
+                  <div class="gd-meta-row" v-if="publisherNames !== '—'">
+                    <span class="gd-meta-label">Publisher</span>
+                    <span class="gd-meta-value">{{ publisherNames }}</span>
                   </div>
-                  <div class="col-6" v-if="game.released">
-                    <span class="gh-meta-label">Release</span>
-                    <span class="fw-bold" style="color: var(--text-primary);">{{ formatDate(game.released) }}</span>
+                  <div class="gd-meta-row" v-if="game.released">
+                    <span class="gd-meta-label">Release Date</span>
+                    <span class="gd-meta-value">{{ formatDate(game.released) }}</span>
                   </div>
-                  <div class="col-6" v-if="game.playtime">
-                    <span class="gh-meta-label">Playtime</span>
-                    <span class="fw-bold" style="color: var(--text-primary);">~{{ game.playtime }} hrs</span>
+                  <div class="gd-meta-row" v-if="game.playtime">
+                    <span class="gd-meta-label">Playtime</span>
+                    <span class="gd-meta-value">~{{ game.playtime }} hrs</span>
                   </div>
-                  <div class="col-6" v-if="game.esrb_rating">
-                    <span class="gh-meta-label">ESRB</span>
-                    <span class="fw-bold" style="color: var(--text-primary);">{{ game.esrb_rating.name }}</span>
+                  <div class="gd-meta-row" v-if="game.esrb_rating">
+                    <span class="gd-meta-label">ESRB Rating</span>
+                    <span class="gd-meta-value">{{ game.esrb_rating.name }}</span>
                   </div>
-                  <div class="col-6" v-if="game.ratings_count">
-                    <span class="gh-meta-label">Reviews</span>
-                    <span class="fw-bold" style="color: var(--text-primary);">{{ game.ratings_count.toLocaleString() }}</span>
+                  <div class="gd-meta-row" v-if="game.ratings_count">
+                    <span class="gd-meta-label">Total Reviews</span>
+                    <span class="gd-meta-value">{{ game.ratings_count.toLocaleString() }}</span>
                   </div>
                 </div>
               </div>
@@ -1426,6 +1440,32 @@ export default {
   letter-spacing: 0.02em;
 }
 
+.gd-meta-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gd-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+.gd-meta-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.gd-meta-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: right;
+}
+
 .gd-sidebar {
   position: sticky;
   top: 100px;
@@ -1447,6 +1487,24 @@ export default {
 }
 
 /* ── Description ──────────────────────────── */
+.gd-desc-container {
+  position: relative;
+  max-height: 250px;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+.gd-desc-container.is-expanded {
+  max-height: 5000px;
+}
+.gd-desc-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(to bottom, transparent, var(--bg-surface));
+  pointer-events: none;
+}
 .gd-description {
   font-size: 1.05rem;
   line-height: 1.8;
@@ -1723,16 +1781,19 @@ export default {
 .gd-wishlist-btn {
   display: block;
   width: 100%;
-  padding: 10px 20px;
-  background: transparent;
-  border: none;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid transparent;
+  border-radius: 6px;
   color: var(--text-secondary);
-  font-weight: 600;
-  font-size: 0.88rem;
+  font-weight: 500;
+  font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 .gd-wishlist-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
   color: var(--danger);
 }
 

@@ -2248,9 +2248,49 @@ a:hover {
 }
 .steam-play-btn:hover {
   filter: brightness(1.15);
-  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.45);
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.35);
   transform: translateY(-1px);
-  color: white;
+}
+
+/* ── Hero Info Panel Stagger Animations ── */
+@keyframes hero-stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.steam-info-panel .steam-title {
+  animation: hero-stagger-in 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.steam-info-panel .steam-meta-row {
+  opacity: 0;
+  animation: hero-stagger-in 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.05s;
+}
+.steam-info-panel .steam-desc {
+  opacity: 0;
+  animation: hero-stagger-in 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.1s;
+}
+.steam-info-panel .steam-publisher {
+  opacity: 0;
+  animation: hero-stagger-in 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.15s;
+}
+.steam-info-panel .steam-screenshots-grid {
+  opacity: 0;
+  animation: hero-stagger-in 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.2s;
+}
+.steam-info-panel .steam-info-bottom {
+  opacity: 0;
+  animation: hero-stagger-in 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.25s;
 }
 
 /* ---- Arrow buttons ---- */

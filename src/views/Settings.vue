@@ -443,10 +443,10 @@ export default {
               <div v-for="i in 3" :key="i" class="purchase-item p-4 mb-3 profile-glass-card gh-skeleton" style="height: 104px;"></div>
             </div>
             
-            <div v-else-if="purchases.length === 0" class="text-center py-5">
-              <i class="bi bi-receipt display-1 text-muted opacity-50 mb-4 d-block"></i>
-              <h5 class="profile-text mb-3">No purchases yet</h5>
-              <p class="text-muted-light mb-4">When you buy games or claim free titles, they will appear here.</p>
+            <div v-else-if="purchases.length === 0" class="gh-empty-state">
+              <i class="bi bi-receipt"></i>
+              <h3>No purchases yet</h3>
+              <p>When you buy games or claim free titles, they will appear here.</p>
               <router-link to="/deals" class="btn btn-outline-primary px-4">Browse Deals</router-link>
             </div>
 

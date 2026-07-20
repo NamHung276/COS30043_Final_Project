@@ -1071,8 +1071,12 @@ export default {
   padding-bottom: 16px;
 }
 .games-search-wrap {
-  flex: 1;
+  flex: 0 1 280px;
   position: relative;
+  transition: flex 0.3s ease;
+}
+.games-search-wrap:focus-within {
+  flex: 1;
 }
 .games-search-icon {
   position: absolute;
@@ -1093,7 +1097,8 @@ export default {
   font-family: var(--font-family);
   transition:
     border-color 0.25s,
-    box-shadow 0.25s;
+    box-shadow 0.25s,
+    background 0.25s;
   outline: none;
 }
 .games-search-input::placeholder {

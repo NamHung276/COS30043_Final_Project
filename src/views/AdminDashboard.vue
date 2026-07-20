@@ -602,7 +602,13 @@ export default {
                     </td>
                   </tr>
                   <tr v-if="filteredPosts.length === 0">
-                    <td colspan="5" class="text-center text-muted py-5">No articles found matching "{{ searchNews }}".</td>
+                    <td colspan="5" class="py-5">
+                      <div class="gh-empty-state" style="padding: 2rem 1rem;">
+                        <i class="bi bi-newspaper"></i>
+                        <h3>No articles found</h3>
+                        <p>No articles match "{{ searchNews }}".</p>
+                      </div>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -640,8 +646,9 @@ export default {
               <h3>Flagged Content Queue ({{ filteredReports.length }})</h3>
             </div>
             <div class="widget-body">
-              <div v-if="filteredReports.length === 0" class="empty-state">
+              <div v-if="filteredReports.length === 0" class="gh-empty-state">
                 <i class="bi bi-shield-check text-success"></i>
+                <h3>All Clear</h3>
                 <p>No flagged content at the moment.</p>
               </div>
               <div v-else class="report-list">
@@ -753,7 +760,13 @@ export default {
                     </td>
                   </tr>
                   <tr v-if="filteredUsers.length === 0">
-                    <td colspan="6" class="text-center text-muted py-5">No players found matching your filters.</td>
+                    <td colspan="6" class="py-5">
+                      <div class="gh-empty-state" style="padding: 2rem 1rem;">
+                        <i class="bi bi-people"></i>
+                        <h3>No players found</h3>
+                        <p>No players match your current filters.</p>
+                      </div>
+                    </td>
                   </tr>
                 </tbody>
               </table>

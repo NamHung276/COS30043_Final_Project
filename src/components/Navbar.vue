@@ -322,7 +322,7 @@
                   </router-link>
                 </li>
                 <li>
-                  <router-link class="dropdown-item nav-dd-item" to="/profile#reviews" @click="closeMenu">
+                  <router-link class="dropdown-item nav-dd-item" to="/reviews" @click="closeMenu">
                     <span class="nav-dd-icon nav-dd-icon-amber">
                       <i class="bi bi-star-fill" style="font-size: 0.85rem;"></i>
                     </span>

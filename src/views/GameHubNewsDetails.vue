@@ -4,9 +4,11 @@ import LikeButton from "../components/LikeButton.vue";
 import { db, auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, query, where, getDocs, doc, getDoc, deleteDoc, addDoc, serverTimestamp } from "firebase/firestore";
+import { MdPreview } from 'md-editor-v3';
+import 'md-editor-v3/lib/preview.css';
 
 export default {
-  components: { LikeButton },
+  components: { LikeButton, MdPreview },
 
   data() {
     return {
@@ -19,6 +21,7 @@ export default {
 
   computed: {
     readingTime() {
+      if (this.article?.readingTime) return this.article.readingTime;
       if (!this.article?.content) return 1;
       const words = this.article.content.trim().split(/\s+/).length;
       return Math.max(1, Math.ceil(words / 200));
@@ -213,6 +216,11 @@ export default {
 
         <!-- Title -->
         <h1 class="news-article-title">{{ article.title }}</h1>
+        <h2 v-if="article.subtitle" class="news-article-subtitle text-muted fw-normal mb-4 fs-4">{{ article.subtitle }}</h2>
+        
+        <div v-if="article.tags && article.tags.length" class="mb-4 d-flex gap-2 flex-wrap">
+          <span v-for="tag in article.tags" :key="tag" class="badge bg-secondary opacity-75 rounded-pill px-3 py-2 fw-normal">#{{ tag }}</span>
+        </div>
 
         <!-- Action bar -->
         <div class="news-action-bar d-flex align-items-center flex-wrap gap-3">
@@ -254,7 +262,7 @@ export default {
 
         <!-- Article Body -->
         <div class="news-article-body">
-          <p class="news-article-content">{{ article.content }}</p>
+          <MdPreview :modelValue="article.content" theme="dark" language="en-US" class="news-markdown-preview" />
           <div class="news-article-footer">
             <p>This article is part of the GameHub News archive. Stay updated with the latest gaming news, reviews, esports events, and industry announcements.</p>
           </div>
@@ -462,17 +470,28 @@ export default {
   margin-bottom: 48px;
 }
 
-.news-article-content {
+/* Markdown Preview overrides */
+.news-markdown-preview {
+  background: transparent !important;
+  color: var(--text-secondary);
+}
+:deep(.md-editor-preview) {
   font-size: 1.0625rem;
   line-height: 1.9;
-  color: var(--text-secondary);
-  white-space: pre-line;
-  max-width: 680px;
-  letter-spacing: 0.01em;
+  word-break: break-word;
+}
+:deep(.md-editor-preview h1), :deep(.md-editor-preview h2), :deep(.md-editor-preview h3) {
+  color: var(--text-primary);
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+:deep(.md-editor-preview img) {
+  border-radius: 8px;
+  max-width: 100%;
 }
 
 /* Drop-cap on first letter of article for editorial feel */
-.news-article-content::first-letter {
+:deep(.md-editor-preview > p:first-of-type::first-letter) {
   font-size: 3.5rem;
   font-weight: 900;
   float: left;

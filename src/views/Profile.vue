@@ -381,9 +381,11 @@ export default {
                     ><i class="bi bi-star-fill text-warning me-2"></i>
                     Reviews</span
                   >
-                  <span class="stat-value profile-text fw-bold">{{
-                    totalReviews
-                  }}</span>
+                  <router-link to="/reviews" class="text-decoration-none">
+                    <span class="stat-value text-primary fw-bold">{{
+                      totalReviews
+                    }} <i class="bi bi-arrow-right-short"></i></span>
+                  </router-link>
                 </div>
                 <hr class="border-secondary opacity-25 my-3" />
                 <div class="stat-row">

@@ -149,8 +149,13 @@ export default {
                 <span class="text-muted small">Digital Download</span>
               </div>
               <div class="text-end d-flex flex-column align-items-end gap-2">
-                <div class="text-primary-var fw-bold fs-5">
-                  ${{ (parseFloat(item.price) || 0).toFixed(2) }}
+                <div class="d-flex flex-column align-items-end">
+                  <div v-if="item.originalPrice && item.originalPrice !== item.price" class="text-muted text-decoration-line-through small">
+                    ${{ (parseFloat(item.originalPrice) || 0).toFixed(2) }}
+                  </div>
+                  <div class="text-primary-var fw-bold fs-5">
+                    ${{ (parseFloat(item.price) || 0).toFixed(2) }}
+                  </div>
                 </div>
                 <button
                   class="btn btn-outline-danger btn-sm px-3 rounded-pill"

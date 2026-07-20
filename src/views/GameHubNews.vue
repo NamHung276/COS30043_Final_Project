@@ -3,10 +3,11 @@ import newsData from "../data/news.json";
 import LikeButton from "../components/LikeButton.vue";
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, getDocs, addDoc, query, where, Timestamp } from "firebase/firestore";
+import { collection, getDocs, addDoc, query, where, Timestamp, doc, deleteDoc } from "firebase/firestore";
 
 export default {
   components: { LikeButton },
+  inject: ["toast"],
 
   data() {
     return {
@@ -245,6 +246,17 @@ export default {
       }
       // Fallback for strings
       return String(val);
+    },
+    async deleteArticle(id, title) {
+      if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
+      try {
+        await deleteDoc(doc(db, "news", id));
+        this.allNews = this.allNews.filter((item) => item.id !== id);
+        if (this.toast) this.toast.show("News article deleted successfully.", "success");
+      } catch (err) {
+        console.error("Failed to delete article:", err);
+        if (this.toast) this.toast.show("Failed to delete article.", "error");
+      }
     },
   },
 };
@@ -536,10 +548,17 @@ export default {
                   Official
                 </span>
                 <span class="ghn-list-date">{{ formatDate(item.date) }}</span>
+                <span class="ghn-list-read-time" v-if="item.readingTime || item.content">
+                  &bull; {{ item.readingTime || Math.max(1, Math.ceil((item.content?.length || 0) / 1000)) }} min read
+                </span>
               </div>
               <router-link :to="detailLink(item)" class="ghn-list-title-link">
                 <h3 class="ghn-list-title">{{ item.title }}</h3>
+                <h4 class="ghn-list-subtitle" v-if="item.subtitle">{{ item.subtitle }}</h4>
               </router-link>
+              <div v-if="item.tags && item.tags.length" class="ghn-list-tags mb-2 d-flex gap-2 flex-wrap">
+                <span v-for="tag in item.tags.slice(0,3)" :key="tag" class="badge bg-secondary opacity-50 rounded-pill px-2 py-1" style="font-size: 0.65rem;">#{{ tag }}</span>
+              </div>
               <p class="ghn-list-excerpt">
                 {{ item.content.substring(0, 160) }}…
               </p>
@@ -562,7 +581,18 @@ export default {
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
                 </router-link>
-                <LikeButton :article-id="item.id" />
+                
+                <div class="ms-auto d-flex align-items-center gap-2">
+                  <template v-if="currentUser && item.userId === currentUser.uid">
+                    <router-link :to="`/gamehub-news/edit/${item.id}`" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;" title="Edit Article" @click.stop>
+                      <i class="bi bi-pencil-fill"></i> Edit
+                    </router-link>
+                    <button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size: 0.75rem;" @click.prevent="deleteArticle(item.id, item.title)" title="Delete Article">
+                      <i class="bi bi-trash-fill"></i> Delete
+                    </button>
+                  </template>
+                  <LikeButton :article-id="item.id" />
+                </div>
               </div>
             </div>
           </div>
@@ -1521,6 +1551,10 @@ export default {
 }
 .ghn-list-card:hover .ghn-read-btn {
   color: var(--primary-light) !important;
+}
+.ghn-list-read-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
 }
 
 /* ── Pagination ───────────────────────────────────── */

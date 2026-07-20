@@ -176,7 +176,7 @@ export default {
         });
         await this.currentUser.reload();
         this.currentUser = auth.currentUser;
-        this.toast.show("Display name updated! ✨", "success");
+        this.toast.show("Display name updated!", "success");
       } catch (err) {
         console.error(err);
         this.toast.show("Failed to update name. Please try again.", "error");
@@ -198,7 +198,7 @@ export default {
         await reauthenticateWithCredential(this.currentUser, credential);
         await updatePassword(this.currentUser, this.newPassword);
 
-        this.toast.show("Password changed successfully! 🔒", "success");
+        this.toast.show("Password changed successfully!", "success");
 
         this.currentPassword = "";
         this.newPassword = "";

@@ -993,7 +993,7 @@ export default {
   </div>
 </template>
 
-<style scoped>
+<style>
 .games-page {
   min-height: 100vh;
   background: var(--bg-deep);

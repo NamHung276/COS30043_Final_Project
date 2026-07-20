@@ -139,7 +139,7 @@ export default {
           source: "freetogame",
           createdAt: serverTimestamp(),
         });
-        this.showFavStatus("⭐ Added to wishlist!", "success");
+        this.showFavStatus("Added to wishlist!", "success");
       } catch (err) {
         console.error(err);
         this.showFavStatus("Something went wrong. Please try again.", "error");
@@ -300,23 +300,23 @@ export default {
         <div class="gd-hero-overlay" aria-hidden="true"></div>
 
         <!-- Content -->
-        <div class="container gd-hero-content">
-          <router-link to="/free-to-play" class="gd-back-btn">
-            ← Free to Play
+        <div class="container gd-hero-content pb-5">
+          <router-link to="/free-to-play" class="gd-back-btn mb-4 d-inline-block">
+            ← Back to Free to Play
           </router-link>
 
-          <div class="gd-hero-bottom">
+          <div class="gd-hero-bottom align-items-end">
             <!-- Cover thumbnail -->
             <img
               v-if="game.thumbnail"
               v-lazy-img="game.thumbnail"
-              class="gd-cover"
+              class="gd-cover shadow-lg"
               :alt="`${game.title} cover`"
             />
 
             <!-- Title + meta -->
-            <div class="gd-hero-info">
-              <div class="d-flex flex-wrap gap-2 mb-2">
+            <div class="gd-hero-info w-100">
+              <div class="d-flex flex-wrap gap-2 mb-3">
                 <span class="gd-badge-genre">{{ game.genre }}</span>
                 <span
                   class="gd-badge-esrb"
@@ -329,14 +329,16 @@ export default {
                   <i class="bi bi-gift me-1"></i>Free to Play
                 </span>
               </div>
-              <h1 class="gd-title">{{ game.title }}</h1>
+              
+              <h1 class="gd-title display-3 fw-bold mb-3 text-white">{{ game.title }}</h1>
 
               <!-- Platform chips -->
-              <div class="d-flex flex-wrap gap-2 mt-2">
+              <div class="d-flex flex-wrap gap-2 mb-4">
                 <span
                   v-for="p in platforms"
                   :key="p.name"
-                  class="gd-platform-chip"
+                  class="gd-platform-chip border-0 bg-dark bg-opacity-50 text-white shadow-sm"
+                  :title="`Available on ${p.name}`"
                 >
                   <img
                     :src="p.icon"
@@ -347,16 +349,38 @@ export default {
                 </span>
                 <span
                   v-if="game.status"
-                  class="gd-platform-chip"
+                  class="gd-platform-chip border-0 shadow-sm"
                   style="
                     background: rgba(34, 197, 94, 0.15);
-                    border-color: rgba(34, 197, 94, 0.3);
                     color: #86efac;
                   "
                 >
                   {{ game.status }}
                 </span>
               </div>
+
+              <!-- Quick Actions in Hero -->
+              <div class="d-flex flex-wrap gap-3 mt-4">
+                <a
+                  v-if="game.game_url"
+                  :href="game.game_url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="gd-hero-btn-primary btn btn-primary btn-lg fw-bold px-5 shadow-sm text-white text-decoration-none"
+                  aria-label="Play Now"
+                >
+                  <i class="bi bi-controller me-2"></i> Play Now (FreeToGame)
+                </a>
+
+                <button
+                  class="gd-hero-btn-tertiary btn btn-lg px-4"
+                  @click="addToFavorites"
+                  aria-label="Add to wishlist"
+                >
+                  <i class="bi bi-heart me-2"></i> Wishlist
+                </button>
+              </div>
+
             </div>
           </div>
         </div>
@@ -403,29 +427,26 @@ export default {
             </div>
 
             <!-- About -->
-            <div class="gd-section mb-5">
-              <h2 class="gd-section-title">About this game</h2>
+            <div class="gd-section" style="margin-bottom: var(--section-gap);">
+              <h2 class="gd-section-title mb-4"><i class="bi bi-card-text me-2 text-primary"></i> About this game</h2>
               <div class="gd-description">
-                {{ game.description || "No description available." }}
+                <span v-html="game.description || 'No description available.'"></span>
               </div>
             </div>
 
             <!-- Tags -->
-            <div v-if="game.genre" class="gd-section mb-5">
-              <h2 class="gd-section-title">Tags</h2>
-              <div class="gd-tags">
-                <span class="gd-tag">{{ game.genre }}</span>
+            <div v-if="game.genre" class="gd-section" style="margin-bottom: var(--section-gap);">
+              <h2 class="gd-section-title mb-4"><i class="bi bi-tags-fill me-2 text-primary"></i> Tags</h2>
+              <div class="gd-tags d-flex flex-wrap gap-2">
+                <span class="gd-tag text-decoration-none bg-dark text-white border-0 opacity-75" style="cursor: default;">{{ game.genre }}</span>
               </div>
             </div>
 
             <!-- System Requirements -->
-            <div class="gd-section mb-5">
-              <h2 class="gd-section-title">Minimum System Requirements</h2>
+            <div class="gd-section" style="margin-bottom: var(--section-gap);">
+              <h2 class="gd-section-title mb-4"><i class="bi bi-pc-display me-2 text-primary"></i> Minimum System Requirements</h2>
               <div class="table-responsive" v-if="sysReqs">
-                  <table
-                    class="table table-striped mb-0 gd-table"
-                    style="font-size: 0.85rem"
-                  >
+                <table class="table table-striped mb-0 gd-table" style="font-size: 0.85rem">
                   <tbody>
                     <tr v-for="req in sysReqs" :key="req.label">
                       <th
@@ -451,14 +472,11 @@ export default {
             </div>
 
             <!-- REVIEWS (Moved Above Discover) -->
-            <div class="gd-section mb-5">
-              <div class="gd-review-header">
+            <div class="gd-section gd-review-section-tint" style="margin-bottom: var(--section-gap);">
+              <div class="gd-review-header mb-4">
                 <div>
-                  <h2 class="gd-section-title">Community Reviews</h2>
-                  <p
-                    class="gd-review-subtitle text-muted"
-                    style="margin-top: -10px; margin-bottom: 20px"
-                  >
+                  <h2 class="gd-section-title"><i class="bi bi-chat-left-text me-2 text-primary"></i> Community Reviews</h2>
+                  <p class="gd-review-subtitle text-muted mt-2 mb-0">
                     Share your thoughts and help other players decide.
                   </p>
                 </div>
@@ -470,8 +488,8 @@ export default {
             </div>
 
             <!-- Discover More -->
-            <div v-if="discoverMoreGames.length" class="gd-section mb-5">
-              <h2 class="gd-section-title">More Games to Discover</h2>
+            <div v-if="discoverMoreGames.length" class="gd-section" style="margin-bottom: var(--section-gap);">
+              <h2 class="gd-section-title mb-4"><i class="bi bi-compass-fill me-2 text-primary"></i> Similar Games</h2>
               <div class="gd-similar-grid">
                 <router-link
                   v-for="g in discoverMoreGames"
@@ -501,8 +519,8 @@ export default {
             </div>
 
             <!-- Recent Releases -->
-            <div v-if="recentGames.length" class="gd-section mb-5">
-              <h2 class="gd-section-title">Recent Releases</h2>
+            <div v-if="recentGames.length" class="gd-section" style="margin-bottom: var(--section-gap);">
+              <h2 class="gd-section-title mb-4"><i class="bi bi-fire me-2 text-primary"></i> Trending This Week</h2>
               <div class="gd-similar-grid">
                 <router-link
                   v-for="g in recentGames"
@@ -535,44 +553,18 @@ export default {
           <!-- ── RIGHT: Sidebar ── -->
           <div class="col-lg-4">
             <div class="gd-sidebar">
-              <!-- Sidebar Buy Actions Block -->
-              <div class="p-4 border-bottom border-secondary border-opacity-25">
-                <a
-                  v-if="game.game_url"
-                  :href="game.game_url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="gd-buy-now-btn w-100 mb-3 text-center text-decoration-none"
-                  aria-label="Official Website"
+              <!-- Status toast -->
+              <transition name="fav-fade">
+                <div
+                  v-if="favStatus.visible"
+                  class="fav-status-msg mt-3"
+                  :class="`fav-status-${favStatus.type}`"
+                  role="status"
+                  aria-live="polite"
                 >
-                  <i class="bi bi-controller me-2"></i>
-                  Play Now (FreeToGame)
-                </a>
-
-                <!-- Status toast -->
-                <transition name="fav-fade">
-                  <div
-                    v-if="favStatus.visible"
-                    class="fav-status-msg"
-                    :class="`fav-status-${favStatus.type}`"
-                    role="status"
-                    aria-live="polite"
-                  >
-                    {{ favStatus.message }}
-                  </div>
-                </transition>
-              </div>
-
-              <!-- Wishlist Block -->
-              <div class="p-3 text-center border-bottom border-secondary border-opacity-25">
-                <button
-                  class="gd-wishlist-btn w-100"
-                  @click="addToFavorites"
-                  aria-label="Add to wishlist"
-                >
-                  <i class="bi bi-heart me-2"></i> Add to Wishlist
-                </button>
-              </div>
+                  {{ favStatus.message }}
+                </div>
+              </transition>
 
               <!-- Details table -->
               <div class="gd-details-card">
@@ -631,561 +623,4 @@ export default {
   </div>
 </template>
 
-<style scoped>
-/* ── Loading Skeleton ─────────────────────── */
-.gd-skeleton-loader {
-  animation: pulse 1.5s infinite;
-}
-.gd-skeleton-hero {
-  height: 380px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 0 0 20px 20px;
-}
-.gd-skeleton-box {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
-}
-@keyframes pulse {
-  0% {
-    opacity: 0.6;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.6;
-  }
-}
 
-/* ── Hero ──────────────────────────────────── */
-.gd-hero {
-  position: relative;
-  min-height: 380px;
-  display: flex;
-  align-items: flex-end;
-  overflow: hidden;
-  isolation: isolate;
-}
-.gd-hero-bg {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  animation: gdFadeIn 1s ease-out forwards;
-}
-.gd-hero-bg img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: blur(2px) brightness(0.35) saturate(0.7);
-  transform: scale(1.05);
-  display: block;
-}
-.gd-hero-overlay {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(
-      to top,
-      var(--bg-deep) 0%,
-      rgba(5, 7, 15, 0.6) 50%,
-      rgba(5, 7, 15, 0.2) 100%
-    ),
-    linear-gradient(to right, rgba(5, 7, 15, 0.7) 0%, transparent 60%);
-}
-.gd-hero-content {
-  position: relative;
-  z-index: 2;
-  padding-bottom: 32px;
-  width: 100%;
-}
-.gd-back-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: rgba(255, 255, 255, 0.75);
-  text-decoration: none;
-  font-size: 0.88rem;
-  font-weight: 600;
-  padding: 8px 14px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  margin-bottom: 28px;
-  transition: all 0.2s;
-  margin-top: 20px;
-  backdrop-filter: blur(8px);
-}
-.gd-back-btn:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.25);
-}
-
-.gd-hero-bottom {
-  display: flex;
-  align-items: flex-end;
-  gap: 28px;
-  flex-wrap: wrap;
-}
-.gd-cover {
-  width: 180px;
-  height: 120px;
-  object-fit: cover;
-  border-radius: 10px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
-  flex-shrink: 0;
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  animation: gdSlideUp 0.6s ease-out forwards;
-  animation-delay: 0.1s;
-  opacity: 0;
-  transform: translateY(20px);
-}
-.gd-hero-info {
-  flex: 1;
-  min-width: 240px;
-  animation: gdFadeIn 0.8s ease-out forwards;
-  animation-delay: 0.3s;
-  opacity: 0;
-}
-.gd-title {
-  font-size: clamp(1.6rem, 4vw, 2.8rem);
-  font-weight: 900;
-  color: #fff;
-  margin-bottom: 12px;
-  letter-spacing: -0.02em;
-  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
-  line-height: 1.1;
-}
-
-@keyframes gdFadeIn {
-  to {
-    opacity: 1;
-  }
-}
-@keyframes gdSlideUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Genre/ESRB badges */
-.gd-badge-genre {
-  padding: 3px 12px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: rgba(124, 58, 237, 0.3);
-  border: 1px solid rgba(124, 58, 237, 0.4);
-  color: #c4b5fd;
-}
-.gd-badge-esrb {
-  padding: 3px 12px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: var(--border-glass);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-}
-
-/* Platform chips */
-.gd-platform-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.72rem;
-  padding: 4px 10px;
-  border-radius: 20px;
-  background: var(--border-glass);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-.gd-platform-logo {
-  width: 16px;
-  height: 16px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-
-/* ── Body Layout ──────────────────────────── */
-.gd-body {
-  padding-top: 32px;
-  padding-bottom: 60px;
-}
-
-/* ── Screenshots ──────────────────────────── */
-.gd-shot-main {
-  position: relative;
-  border-radius: 12px;
-  overflow: hidden;
-  cursor: zoom-in;
-  background: var(--bg-glass);
-  margin-bottom: 10px;
-}
-.gd-shot-main-img {
-  width: 100%;
-  height: 380px;
-  object-fit: cover;
-  display: block;
-  transition: filter 0.2s ease;
-}
-.gd-shot-main:hover .gd-shot-main-img {
-  filter: brightness(0.85);
-}
-.gd-shot-zoom-hint {
-  position: absolute;
-  bottom: 14px;
-  right: 14px;
-  background: rgba(0, 0, 0, 0.6);
-  color: var(--text-primary);
-  font-size: 0.72rem;
-  padding: 4px 10px;
-  border-radius: 20px;
-  backdrop-filter: blur(4px);
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.gd-shot-main:hover .gd-shot-zoom-hint {
-  opacity: 1;
-}
-
-.gd-shot-strip {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(124, 58, 237, 0.3) transparent;
-}
-.gd-shot-thumb {
-  flex: 0 0 100px;
-  height: 64px;
-  border-radius: 6px;
-  overflow: hidden;
-  cursor: pointer;
-  border: 2px solid transparent;
-  transition: all 0.2s ease;
-  opacity: 0.6;
-}
-.gd-shot-thumb:hover {
-  opacity: 0.85;
-}
-.gd-shot-thumb.active {
-  border-color: var(--primary);
-  opacity: 1;
-  box-shadow: 0 0 12px rgba(124, 58, 237, 0.5);
-}
-.gd-shot-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-/* ── Section blocks ──────────────────────── */
-.gd-section {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-glass);
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
-}
-.gd-section-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 16px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border-glass);
-  letter-spacing: 0.02em;
-}
-
-/* ── Description ──────────────────────────── */
-.gd-description {
-  font-size: 0.98rem;
-  line-height: 1.9;
-  color: var(--text-secondary);
-  white-space: pre-wrap;
-  max-width: 72ch;
-}
-
-/* ── Tags ─────────────────────────────────── */
-.gd-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.gd-tag {
-  padding: 4px 14px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  background: rgba(124, 58, 237, 0.1);
-  border: 1px solid rgba(124, 58, 237, 0.2);
-  color: var(--text-secondary);
-  transition: all 0.2s ease;
-  cursor: default;
-}
-.gd-tag:hover {
-  background: rgba(124, 58, 237, 0.22);
-  border-color: rgba(124, 58, 237, 0.4);
-  color: var(--text-primary);
-}
-
-/* ── Similar games grid ───────────────────── */
-.gd-similar-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-.gd-similar-card {
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid var(--border-glass);
-  text-decoration: none;
-  background: var(--bg-glass);
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-  display: block;
-}
-.gd-similar-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(124, 58, 237, 0.35);
-  border-color: rgba(124, 58, 237, 0.4);
-}
-.gd-similar-img {
-  width: 100%;
-  height: 80px;
-  object-fit: cover;
-  display: block;
-}
-.gd-similar-body {
-  padding: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 6px;
-}
-.gd-similar-title {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin: 0 0 2px 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.gd-similar-meta {
-  font-size: 0.7rem;
-  color: var(--text-muted);
-}
-.gd-similar-info {
-  flex: 1;
-  overflow: hidden;
-}
-
-/* ── Sidebar ──────────────────────────────── */
-.gd-sidebar {
-  position: sticky;
-  top: 80px;
-}
-
-/* Actions */
-.gd-action-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  transition: all 0.25s ease;
-}
-
-/* ── Sidebar Purchase Buttons ──────────────── */
-.gd-buy-now-btn {
-  display: block;
-  width: 100%;
-  padding: 14px 20px;
-  background: linear-gradient(135deg, #0ea5e9, #6366f1);
-  border: none;
-  border-radius: 10px;
-  color: white;
-  font-weight: 700;
-  font-size: 1rem;
-  letter-spacing: 0.01em;
-  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.35);
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-}
-.gd-buy-now-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.5);
-  filter: brightness(1.08);
-  color: white;
-}
-
-.gd-wishlist-btn {
-  display: block;
-  width: 100%;
-  padding: 10px 20px;
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  font-weight: 600;
-  font-size: 0.88rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.gd-wishlist-btn:hover {
-  color: var(--danger);
-}
-
-/* ── Screenshot zoom hint ──────────────────── */
-.gd-shot-zoom-hint {
-  position: absolute;
-  bottom: 14px;
-  right: 14px;
-  background: rgba(0, 0, 0, 0.65);
-  color: var(--text-primary);
-  font-size: 0.72rem;
-  padding: 5px 12px;
-  border-radius: 20px;
-  backdrop-filter: blur(8px);
-  opacity: 0;
-  transition: opacity 0.2s;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.gd-action-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-}
-.gd-action-icon {
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-
-/* Details card */
-.gd-details-card {
-  background: var(--bg-glass);
-  border: 1px solid var(--border-glass);
-  border-radius: 12px;
-  overflow: hidden;
-}
-.gd-details-heading {
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--text-muted);
-  padding: 14px 18px 10px;
-  margin: 0;
-  border-bottom: 1px solid var(--border-glass);
-}
-.gd-detail-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 10px 18px;
-  border-bottom: 1px solid var(--border-subtle);
-  font-size: 0.85rem;
-}
-.gd-detail-row:last-child {
-  border-bottom: none;
-}
-.gd-detail-label {
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
-.gd-detail-value {
-  color: var(--text-primary);
-  font-weight: 600;
-  text-align: right;
-}
-
-/* ── Lightbox ─────────────────────────────── */
-.gd-lightbox {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.92);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  padding: 24px;
-  cursor: zoom-out;
-}
-.gd-lb-img {
-  max-width: 92vw;
-  max-height: 88vh;
-  border-radius: 12px;
-  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8);
-  cursor: default;
-}
-.gd-lb-close {
-  position: absolute;
-  top: 20px;
-  right: 24px;
-  background: var(--border-glass);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-primary);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.gd-lb-close:hover {
-  background: var(--border-subtle);
-}
-
-/* Transitions */
-.lb-enter-active,
-.lb-leave-active {
-  transition: opacity 0.2s ease;
-}
-.lb-enter-from,
-.lb-leave-to {
-  opacity: 0;
-}
-
-.fav-fade-enter-active,
-.fav-fade-leave-active {
-  transition: all 0.3s ease;
-}
-.fav-fade-enter-from,
-.fav-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-6px);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .gd-hero {
-    min-height: 280px;
-  }
-  .gd-cover {
-    width: 120px;
-    height: 80px;
-  }
-  .gd-title {
-    font-size: 1.4rem;
-  }
-  .gd-shot-main-img {
-    height: 220px;
-  }
-  .gd-sidebar {
-    position: static;
-  }
-}
-</style>

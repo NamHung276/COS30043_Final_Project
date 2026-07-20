@@ -7,10 +7,27 @@ import {
   reauthenticateWithCredential,
   EmailAuthProvider,
 } from "firebase/auth";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  orderBy,
+  limit,
+} from "firebase/firestore";
+import { Trophy, Medal, Gamepad2, MessageSquare, Heart, FileText } from "@lucide/vue";
 
 export default {
-  name: "ProfileView",
+  name: "Profile",
+
+  components: {
+    Trophy,
+    Medal,
+    Gamepad2,
+    MessageSquare,
+    Heart,
+    FileText,
+  },
 
   inject: ["toast"],
 
@@ -107,9 +124,9 @@ export default {
     },
 
     profileTitle() {
-      if (this.totalFavorites >= 10) return "🏆 Game Collector";
-      if (this.totalReviews >= 5) return "⭐ Community Reviewer";
-      return "🎮 GameHub Member";
+      if (this.totalFavorites >= 10) return "Game Collector";
+      if (this.totalReviews >= 5) return "Community Reviewer";
+      return "GameHub Member";
     },
 
     bannerStyle() {
@@ -254,7 +271,12 @@ export default {
             <div
               class="d-flex align-items-center gap-3 text-muted-light flex-wrap"
             >
-              <span class="badge-explorer">{{ profileTitle }}</span>
+              <span class="badge-explorer">
+                <Trophy v-if="profileTitle === 'Game Collector'" size="16" class="me-1" style="vertical-align: text-top" />
+                <Medal v-else-if="profileTitle === 'Community Reviewer'" size="16" class="me-1" style="vertical-align: text-top" />
+                <Gamepad2 v-else size="16" class="me-1" style="vertical-align: text-top" />
+                {{ profileTitle }}
+              </span>
               <span>Joined {{ memberSince }}</span>
             </div>
           </div>
@@ -540,7 +562,7 @@ export default {
                 >
                   <div class="d-flex align-items-center gap-2">
                     <span class="badge bg-secondary bg-opacity-25 profile-text"
-                      >⭐ Review</span
+                      ><MessageSquare size="14" class="me-1" style="vertical-align: text-top"/> Review</span
                     >
                   </div>
                   <span class="text-muted-light small">{{
@@ -584,7 +606,7 @@ export default {
                 >
                   <div class="d-flex align-items-center gap-2">
                     <span class="badge bg-danger bg-opacity-25 text-danger"
-                      >❤️ Favorite</span
+                      ><Heart size="14" class="me-1" style="vertical-align: text-top"/> Favorite</span
                     >
                   </div>
                   <span class="text-muted-light small">{{
@@ -618,7 +640,7 @@ export default {
                 >
                   <div class="d-flex align-items-center gap-2">
                     <span class="badge bg-info bg-opacity-25 text-info"
-                      >📰 Post</span
+                      ><FileText size="14" class="me-1" style="vertical-align: text-top"/> Post</span
                     >
                   </div>
                   <span class="text-muted-light small">{{

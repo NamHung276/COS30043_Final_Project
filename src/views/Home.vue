@@ -1,6 +1,7 @@
 <script>
 import { inject } from "vue";
 import { rawgApi, freeToGameApi, cheapSharkApi } from "../services/api";
+import { Sparkles, CalendarDays, Flame } from "@lucide/vue";
 
 const GENRES = [
   {
@@ -90,6 +91,11 @@ const GENRES = [
 ];
 
 export default {
+  components: {
+    Sparkles,
+    CalendarDays,
+    Flame,
+  },
   setup() {
     const toast = inject("toast");
     return { toast };
@@ -524,12 +530,12 @@ export default {
           aria-label="Featured games carousel"
         >
           <!-- aria-live region: announces slide changes to screen readers (WCAG 1.3.1) -->
-          <div
-            aria-live="polite"
-            aria-atomic="true"
-            class="visually-hidden"
-          >
-            {{ currentGame ? `${activeIndex + 1} of ${featuredGames.length}: ${currentGame.displayTitle}` : '' }}
+          <div aria-live="polite" aria-atomic="true" class="visually-hidden">
+            {{
+              currentGame
+                ? `${activeIndex + 1} of ${featuredGames.length}: ${currentGame.displayTitle}`
+                : ""
+            }}
           </div>
 
           <button
@@ -665,11 +671,33 @@ export default {
           <button
             class="steam-carousel-pause-btn"
             @click="toggleAutoplay"
-            :aria-label="isAutopaused ? 'Play carousel autoplay' : 'Pause carousel autoplay'"
+            :aria-label="
+              isAutopaused
+                ? 'Play carousel autoplay'
+                : 'Pause carousel autoplay'
+            "
             :title="isAutopaused ? 'Resume autoplay' : 'Pause autoplay'"
           >
-            <svg v-if="isAutopaused" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-            <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            <svg
+              v-if="isAutopaused"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            <svg
+              v-else
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+            </svg>
           </button>
 
           <div class="steam-dots">
@@ -692,7 +720,18 @@ export default {
       <div class="container">
         <router-link to="/games" class="hero-shortcut-card">
           <span class="shortcut-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <rect x="2" y="3" width="20" height="14" rx="2" />
+              <path d="M8 21h8M12 17v4" />
+            </svg>
           </span>
           <span class="shortcut-title">Browse Games</span>
           <small>RAWG database</small>
@@ -700,7 +739,19 @@ export default {
 
         <router-link to="/live-news" class="hero-shortcut-card">
           <span class="shortcut-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12.55a11 11 0 0114.08 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.95 0M12 20h.01"/></svg>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path
+                d="M5 12.55a11 11 0 0114.08 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.95 0M12 20h.01"
+              />
+            </svg>
           </span>
           <span class="shortcut-title">Gaming News</span>
           <small>Live updates</small>
@@ -708,7 +759,19 @@ export default {
 
         <router-link to="/free-to-play" class="hero-shortcut-card">
           <span class="shortcut-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M12 2L2 7l10 5 10-5-10-5z" />
+              <path d="M2 17l10 5 10-5" />
+              <path d="M2 12l10 5 10-5" />
+            </svg>
           </span>
           <span class="shortcut-title">Free to Play</span>
           <small>400+ titles</small>
@@ -716,7 +779,21 @@ export default {
 
         <router-link to="/deals" class="hero-shortcut-card">
           <span class="shortcut-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M20 12V22H4V12" />
+              <path d="M22 7H2v5h20V7z" />
+              <path d="M12 22V7" />
+              <path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z" />
+              <path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z" />
+            </svg>
           </span>
           <span class="shortcut-title">Game Deals</span>
           <small>CheapShark prices</small>
@@ -724,7 +801,20 @@ export default {
 
         <router-link to="/library" class="hero-shortcut-card">
           <span class="shortcut-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+              <path
+                d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"
+              />
+            </svg>
           </span>
           <span class="shortcut-title">My Library</span>
           <small>Your games</small>
@@ -735,7 +825,10 @@ export default {
       <!-- ══════════════════════════════════════
            TABBED DISCOVERY
            ══════════════════════════════════════ -->
-      <div class="steam-tabs-container" style="margin-bottom: var(--section-gap);">
+      <div
+        class="steam-tabs-container"
+        style="margin-bottom: var(--section-gap)"
+      >
         <!-- Tabs -->
         <div
           class="steam-tabs-header"
@@ -751,7 +844,7 @@ export default {
             aria-controls="tabpanel-newReleases"
             @click="setTab('newReleases')"
           >
-            🆕 Popular New Releases
+            <Sparkles size="18" class="me-2" /> Popular New Releases
           </button>
           <button
             id="tab-comingSoon"
@@ -762,7 +855,7 @@ export default {
             aria-controls="tabpanel-comingSoon"
             @click="setTab('comingSoon')"
           >
-            📅 Popular Upcoming
+            <CalendarDays size="18" class="me-2" /> Popular Upcoming
           </button>
           <button
             id="tab-trendingFree"
@@ -773,7 +866,7 @@ export default {
             aria-controls="tabpanel-trendingFree"
             @click="setTab('trendingFree')"
           >
-            🔥 Trending Free
+            <Flame size="18" class="me-2" /> Trending Free
           </button>
         </div>
 
@@ -961,7 +1054,7 @@ export default {
       <!-- ══════════════════════════════════════
            HOT DEALS — Horizontal Scroll Strip
            ══════════════════════════════════════ -->
-      <div style="margin-bottom: var(--section-gap);">
+      <div style="margin-bottom: var(--section-gap)">
         <div class="section-header mb-4">
           <span
             class="section-icon"
@@ -970,25 +1063,12 @@ export default {
               box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
             "
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M20 12V22H4V12" />
-              <path d="M22 7H2v5h20V7z" />
-              <path d="M12 22V7" />
-              <path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z" />
-              <path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z" />
-            </svg>
+            <i
+              class="bi bi-tags-fill"
+              style="color: white; font-size: 1.1rem"
+            ></i>
           </span>
-          <h2 class="mb-0">💰 Best Deals Right Now</h2>
+          <h2 class="mb-0">Best Deals Right Now</h2>
           <router-link
             to="/deals"
             class="ms-auto btn btn-sm"
@@ -1093,7 +1173,7 @@ export default {
       <!-- ══════════════════════════════════════
            WHY GAMEHUB — Premium Feature Cards
            ══════════════════════════════════════ -->
-      <div style="margin-bottom: var(--section-gap);">
+      <div style="margin-bottom: var(--section-gap)">
         <div class="section-header mb-5">
           <span class="section-icon">
             <svg
@@ -1255,7 +1335,10 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    border-color 0.2s;
   backdrop-filter: blur(6px);
 }
 .steam-carousel-pause-btn:hover {
@@ -1268,16 +1351,14 @@ export default {
   outline-offset: 2px;
 }
 
-
-
 .h-scroll-strip {
   display: flex;
   gap: 16px;
   overflow-x: auto;
   padding-bottom: 8px;
   scroll-snap-type: x mandatory;
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 .h-scroll-strip::-webkit-scrollbar {
   display: none;

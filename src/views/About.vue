@@ -1,8 +1,12 @@
 <script>
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { Gamepad2 } from "@lucide/vue";
 
 export default {
+  components: {
+    Gamepad2,
+  },
   name: "AboutView",
   data() {
     return {
@@ -264,7 +268,9 @@ export default {
 
               <!-- Welcome message -->
               <div v-if="fullName" class="about-welcome mt-3">
-                <div class="about-welcome-icon">🎮</div>
+                <div class="about-welcome-icon">
+                  <Gamepad2 size="32" class="text-primary" />
+                </div>
                 <div>
                   <strong class="about-text-primary">Welcome, {{ fullName }}!</strong>
                   <div class="about-welcome-title">

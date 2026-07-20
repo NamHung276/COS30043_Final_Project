@@ -261,7 +261,7 @@ export default {
           user: this.currentUser.displayName || this.currentUser.email,
           userId: this.currentUser.uid,
           severity: "Medium",
-          icon: "⭐",
+          icon: "",
           createdAt: serverTimestamp(),
           status: "Pending"
         });

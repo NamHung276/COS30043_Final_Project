@@ -199,6 +199,74 @@ export default {
         return parseFloat(d.salePrice) < parseFloat(best.salePrice) ? d : best;
       });
     },
+
+    groupedPlatforms() {
+      if (!this.game?.platforms?.length) return {};
+
+      const groups = {
+        PC: [],
+        PlayStation: [],
+        Xbox: [],
+        Nintendo: [],
+        Mobile: [],
+        Other: [],
+      };
+
+      this.game.platforms.forEach((p) => {
+        const name = p.platform?.name || "";
+        if (!name) return;
+
+        const lowerName = name.toLowerCase();
+        if (
+          lowerName.includes("pc") ||
+          lowerName.includes("windows") ||
+          lowerName.includes("mac") ||
+          lowerName.includes("linux")
+        ) {
+          groups.PC.push(name);
+        } else if (
+          lowerName.includes("playstation") ||
+          lowerName.includes("ps vita") ||
+          lowerName.includes("psp")
+        ) {
+          groups.PlayStation.push(name);
+        } else if (lowerName.includes("xbox")) {
+          groups.Xbox.push(name);
+        } else if (
+          lowerName.includes("nintendo") ||
+          lowerName.includes("switch") ||
+          lowerName.includes("wii") ||
+          lowerName.includes("gamecube") ||
+          lowerName.includes("game boy") ||
+          lowerName.includes("ds") ||
+          lowerName.includes("nes") ||
+          lowerName.match(/\bnes\b/) ||
+          lowerName.match(/\bsnes\b/)
+        ) {
+          groups.Nintendo.push(name);
+        } else if (
+          lowerName.includes("ios") ||
+          lowerName.includes("android") ||
+          lowerName.includes("mobile")
+        ) {
+          groups.Mobile.push(name);
+        } else {
+          groups.Other.push(name);
+        }
+      });
+
+      // Remove empty groups
+      for (const key in groups) {
+        if (groups[key].length === 0) {
+          delete groups[key];
+        } else {
+          // Sort platforms alphabetically or keep as is? Let's sort alphabetically
+          groups[key].sort((a, b) => a.localeCompare(b));
+        }
+      }
+
+      return groups;
+    },
   },
 
   watch: {
@@ -275,7 +343,7 @@ export default {
           thumbnail: this.game.background_image,
           genre: this.game.genres?.[0]?.name || "",
         });
-        this.showFavStatus("⭐ Added to wishlist!", "success");
+        this.showFavStatus("Added to wishlist!", "success");
       } catch (err) {
         console.error(err);
         this.showFavStatus("Something went wrong. Please try again.", "error");
@@ -481,7 +549,9 @@ export default {
 
         <!-- Content -->
         <div class="container gd-hero-content pb-5">
-          <router-link to="/games" class="gd-back-btn mb-4 d-inline-block"> ← Back to Games </router-link>
+          <router-link to="/games" class="gd-back-btn mb-4 d-inline-block">
+            ← Back to Games
+          </router-link>
 
           <div class="gd-hero-bottom align-items-end">
             <!-- Cover thumbnail -->
@@ -495,15 +565,29 @@ export default {
             <!-- Title + meta -->
             <div class="gd-hero-info w-100">
               <div class="d-flex flex-wrap gap-2 mb-3">
-                <span v-for="g in genreNames" :key="g" class="gd-badge-genre">{{ g }}</span>
-                <span v-if="game.esrb_rating" class="gd-badge-esrb">{{ game.esrb_rating.name }}</span>
-                <span v-if="game.released" class="gd-badge-esrb" style="background: rgba(255,255,255,0.15);"><i class="bi bi-calendar3"></i> {{ game.released.split("-")[0] }}</span>
+                <span v-for="g in genreNames" :key="g" class="gd-badge-genre">{{
+                  g
+                }}</span>
+                <span v-if="game.esrb_rating" class="gd-badge-esrb">{{
+                  game.esrb_rating.name
+                }}</span>
+                <span
+                  v-if="game.released"
+                  class="gd-badge-esrb"
+                  style="background: rgba(255, 255, 255, 0.15)"
+                  ><i class="bi bi-calendar3"></i>
+                  {{ game.released.split("-")[0] }}</span
+                >
               </div>
-              
-              <h1 class="gd-title display-3 fw-bold mb-3 text-white">{{ game.name }}</h1>
+
+              <h1 class="gd-title display-3 fw-bold mb-3 text-white">
+                {{ game.name }}
+              </h1>
 
               <!-- Rating bar & Platforms -->
-              <div class="gd-rating-row d-flex align-items-center flex-wrap gap-4 mb-4">
+              <div
+                class="gd-rating-row d-flex align-items-center flex-wrap gap-4 mb-4"
+              >
                 <div v-if="game.rating" class="d-flex align-items-center gap-2">
                   <div class="gd-stars">
                     <div
@@ -511,16 +595,27 @@ export default {
                       :style="{ width: ratingPercent + '%' }"
                     ></div>
                   </div>
-                  <span class="gd-rating-text fs-5 text-white fw-bold m-0" style="opacity: 1;">
+                  <span
+                    class="gd-rating-text fs-5 text-white fw-bold m-0"
+                    style="opacity: 1"
+                  >
                     {{ game.rating.toFixed(1) }}/5
                   </span>
                 </div>
-                
-                <div v-if="game.metacritic" class="d-flex align-items-center gap-2">
+
+                <div
+                  v-if="game.metacritic"
+                  class="d-flex align-items-center gap-2"
+                >
                   <div
                     class="gd-metacritic fs-5 d-flex align-items-center justify-content-center"
                     :class="metacriticClass"
-                    style="width: 44px; height: 44px; border-radius: 50%; box-shadow: 0 0 15px rgba(0,0,0,0.5);"
+                    style="
+                      width: 44px;
+                      height: 44px;
+                      border-radius: 50%;
+                      box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+                    "
                   >
                     {{ game.metacritic }}
                   </div>
@@ -543,7 +638,7 @@ export default {
                   </span>
                 </div>
               </div>
-              
+
               <!-- Quick Actions in Hero -->
               <div class="d-flex flex-wrap gap-3 mt-4">
                 <button
@@ -551,7 +646,9 @@ export default {
                   @click="buyNow"
                   aria-label="Buy Now"
                 >
-                  <i class="bi bi-lightning-charge-fill me-2"></i> Buy Now — ${{ discountedPrice || fakePrice }}
+                  <i class="bi bi-lightning-charge-fill me-2"></i> Buy Now — ${{
+                    discountedPrice || fakePrice
+                  }}
                 </button>
 
                 <button
@@ -570,7 +667,6 @@ export default {
                   <i class="bi bi-heart me-2"></i> Wishlist
                 </button>
               </div>
-
             </div>
           </div>
         </div>
@@ -582,8 +678,14 @@ export default {
           <!-- ── LEFT: Screenshots + About + Tags ── -->
           <div class="col-lg-8">
             <!-- Gameplay Trailer -->
-            <div v-if="hasTrailer" class="gd-section" style="margin-bottom: var(--section-gap);">
-              <h2 class="gd-section-title mb-4"><i class="bi bi-film me-2 text-primary"></i> Gameplay Trailer</h2>
+            <div
+              v-if="hasTrailer"
+              class="gd-section"
+              style="margin-bottom: var(--section-gap)"
+            >
+              <h2 class="gd-section-title mb-4">
+                <i class="bi bi-film me-2 text-primary"></i> Gameplay Trailer
+              </h2>
               <div
                 class="gd-trailer-thumb"
                 @click="showTrailerModal = true"
@@ -648,26 +750,38 @@ export default {
             </div>
 
             <!-- About -->
-            <div class="gd-section" style="margin-bottom: var(--section-gap);">
-              <h2 class="gd-section-title mb-4"><i class="bi bi-card-text me-2 text-primary"></i> About this game</h2>
-              <div 
-                class="gd-desc-container" 
+            <div class="gd-section" style="margin-bottom: var(--section-gap)">
+              <h2 class="gd-section-title mb-4">
+                <i class="bi bi-card-text me-2 text-primary"></i> About this
+                game
+              </h2>
+              <div
+                class="gd-desc-container"
                 :class="{ 'is-expanded': showFullDescription }"
               >
-                <div class="gd-description" v-html="game.description || 'No description available.'"></div>
+                <div
+                  class="gd-description"
+                  v-html="game.description || 'No description available.'"
+                ></div>
                 <div class="gd-desc-fade" v-if="!showFullDescription"></div>
               </div>
-              <button 
+              <button
                 class="btn btn-outline-secondary w-100 mt-3 fw-bold"
                 @click="showFullDescription = !showFullDescription"
               >
-                {{ showFullDescription ? 'Show Less' : 'Read More' }}
+                {{ showFullDescription ? "Show Less" : "Read More" }}
               </button>
             </div>
 
             <!-- Tags -->
-            <div v-if="game.tags?.length" class="gd-section" style="margin-bottom: var(--section-gap);">
-              <h2 class="gd-section-title mb-4"><i class="bi bi-tags-fill me-2 text-primary"></i> Tags</h2>
+            <div
+              v-if="game.tags?.length"
+              class="gd-section"
+              style="margin-bottom: var(--section-gap)"
+            >
+              <h2 class="gd-section-title mb-4">
+                <i class="bi bi-tags-fill me-2 text-primary"></i> Tags
+              </h2>
               <div class="gd-tags d-flex flex-wrap gap-2">
                 <router-link
                   v-for="tag in game.tags.slice(0, 20)"
@@ -683,9 +797,13 @@ export default {
             <!-- System Requirements -->
             <div
               v-if="pcRequirements?.minimum || pcRequirements?.recommended"
-              class="gd-section" style="margin-bottom: var(--section-gap);"
+              class="gd-section"
+              style="margin-bottom: var(--section-gap)"
             >
-              <h2 class="gd-section-title mb-4"><i class="bi bi-pc-display me-2 text-primary"></i> System Requirements</h2>
+              <h2 class="gd-section-title mb-4">
+                <i class="bi bi-pc-display me-2 text-primary"></i> System
+                Requirements
+              </h2>
               <div class="gd-sysreq-grid">
                 <div v-if="pcRequirements.minimum" class="gd-sysreq-col">
                   <div class="gd-sysreq-label">Minimum</div>
@@ -700,9 +818,51 @@ export default {
               </div>
             </div>
 
+            <!-- Detailed Platforms -->
+            <div
+              v-if="Object.keys(groupedPlatforms).length"
+              class="gd-section"
+              style="margin-bottom: var(--section-gap)"
+            >
+              <h2 class="gd-section-title mb-4">
+                <i class="bi bi-hdd-network-fill me-2 text-primary"></i>
+                Available On
+              </h2>
+              <div class="d-flex flex-column gap-3">
+                <div
+                  v-for="(platforms, category) in groupedPlatforms"
+                  :key="category"
+                  class="d-flex flex-wrap align-items-baseline gap-3"
+                >
+                  <span
+                    class="text-muted-light fw-bold"
+                    style="min-width: 100px"
+                    >{{ category }}</span
+                  >
+                  <div class="gd-tags d-flex flex-wrap gap-2">
+                    <span
+                      v-for="platformName in platforms"
+                      :key="platformName"
+                      class="gd-tag text-decoration-none bg-dark text-white border-0 opacity-75 m-0"
+                      style="cursor: default"
+                    >
+                      {{ platformName }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Similar Games / Series -->
-            <div v-if="similarGames.length" class="gd-section" style="margin-bottom: var(--section-gap);">
-              <h2 class="gd-section-title mb-4"><i class="bi bi-collection-play-fill me-2 text-primary"></i> More in This Series</h2>
+            <div
+              v-if="similarGames.length"
+              class="gd-section"
+              style="margin-bottom: var(--section-gap)"
+            >
+              <h2 class="gd-section-title mb-4">
+                <i class="bi bi-collection-play-fill me-2 text-primary"></i>
+                More in This Series
+              </h2>
               <div class="gd-similar-grid">
                 <router-link
                   v-for="g in similarGames"
@@ -745,10 +905,16 @@ export default {
             </div>
 
             <!-- REVIEWS (Moved Above Discover) -->
-            <div class="gd-section gd-review-section-tint" style="margin-bottom: var(--section-gap);">
+            <div
+              class="gd-section gd-review-section-tint"
+              style="margin-bottom: var(--section-gap)"
+            >
               <div class="gd-review-header mb-4">
                 <div>
-                  <h2 class="gd-section-title"><i class="bi bi-chat-quote-fill me-2 text-primary"></i> Community Reviews</h2>
+                  <h2 class="gd-section-title">
+                    <i class="bi bi-chat-quote-fill me-2 text-primary"></i>
+                    Community Reviews
+                  </h2>
                   <p
                     class="gd-review-subtitle text-muted"
                     style="margin-top: -10px; margin-bottom: 20px"
@@ -761,8 +927,15 @@ export default {
             </div>
 
             <!-- Discover More -->
-            <div v-if="discoverMoreGames.length" class="gd-section" style="margin-bottom: var(--section-gap);">
-              <h2 class="gd-section-title mb-4"><i class="bi bi-compass-fill me-2 text-primary"></i> 🎯 Similar Games</h2>
+            <div
+              v-if="discoverMoreGames.length"
+              class="gd-section"
+              style="margin-bottom: var(--section-gap)"
+            >
+              <h2 class="gd-section-title mb-4">
+                <i class="bi bi-compass-fill me-2 text-primary"></i> Similar
+                Games
+              </h2>
               <div class="gd-similar-grid">
                 <router-link
                   v-for="g in discoverMoreGames"
@@ -805,8 +978,14 @@ export default {
             </div>
 
             <!-- Recent Releases -->
-            <div v-if="recentGames.length" class="gd-section" style="margin-bottom: var(--section-gap);">
-              <h2 class="gd-section-title mb-4"><i class="bi bi-fire me-2 text-primary"></i> 🔥 Trending This Week</h2>
+            <div
+              v-if="recentGames.length"
+              class="gd-section"
+              style="margin-bottom: var(--section-gap)"
+            >
+              <h2 class="gd-section-title mb-4">
+                <i class="bi bi-fire me-2 text-primary"></i> Trending This Week
+              </h2>
               <div class="gd-similar-grid">
                 <router-link
                   v-for="g in recentGames"
@@ -853,7 +1032,11 @@ export default {
           <div class="col-lg-4">
             <div class="gd-sidebar">
               <!-- Metacritic Score -->
-              <div v-if="game.metacritic" class="gd-mc-card mb-4 profile-glass-card p-4 rounded-4 d-flex align-items-center gap-3" style="background: var(--bg-surface);">
+              <div
+                v-if="game.metacritic"
+                class="gd-mc-card mb-4 profile-glass-card p-4 rounded-4 d-flex align-items-center gap-3"
+                style="background: var(--bg-surface)"
+              >
                 <div class="gd-mc-score" :class="metacriticClass">
                   {{ game.metacritic }}
                 </div>
@@ -871,52 +1054,69 @@ export default {
                 style="background: var(--bg-surface)"
               >
                 <!-- Price display Block -->
-                <div class="text-center p-4 border-bottom border-secondary border-opacity-25 bg-black bg-opacity-10">
+                <div
+                  class="text-center p-4 border-bottom border-secondary border-opacity-25 bg-black bg-opacity-10"
+                >
                   <template v-if="fakeDiscount > 0">
-                    <div class="d-inline-block px-3 py-1 bg-danger text-white fw-bold rounded-pill mb-2 shadow-sm">
+                    <div
+                      class="d-inline-block px-3 py-1 bg-danger text-white fw-bold rounded-pill mb-2 shadow-sm"
+                    >
                       SALE -{{ fakeDiscount }}%
                     </div>
-                    <div class="d-flex align-items-center justify-content-center gap-3">
-                      <span class="fs-1 fw-bold text-primary-var">${{ discountedPrice }}</span>
-                      <span class="fs-4 text-muted text-decoration-line-through">${{ fakePrice }}</span>
+                    <div
+                      class="d-flex align-items-center justify-content-center gap-3"
+                    >
+                      <span class="fs-1 fw-bold text-primary-var"
+                        >${{ discountedPrice }}</span
+                      >
+                      <span class="fs-4 text-muted text-decoration-line-through"
+                        >${{ fakePrice }}</span
+                      >
                     </div>
                   </template>
                   <template v-else>
-                    <span class="fs-1 fw-bold text-primary-var">${{ fakePrice }}</span>
+                    <span class="fs-1 fw-bold text-primary-var"
+                      >${{ fakePrice }}</span
+                    >
                   </template>
                 </div>
 
-                  <!-- Sidebar Buy Actions Block -->
-                  <div class="p-4 border-bottom border-secondary border-opacity-25">
-                    <button
-                      class="gd-buy-now-btn w-100 mb-3"
-                      @click="buyNow"
-                      aria-label="Buy Now"
-                    >
-                      <i class="bi bi-lightning-charge-fill me-2"></i>
-                      Buy Now — ${{ discountedPrice || fakePrice }}
-                    </button>
+                <!-- Sidebar Buy Actions Block -->
+                <div
+                  class="p-4 border-bottom border-secondary border-opacity-25"
+                >
+                  <button
+                    class="gd-buy-now-btn w-100 mb-3"
+                    @click="buyNow"
+                    aria-label="Buy Now"
+                  >
+                    <i class="bi bi-lightning-charge-fill me-2"></i>
+                    Buy Now — ${{ discountedPrice || fakePrice }}
+                  </button>
 
-                    <button
-                      class="gd-add-cart-btn w-100 mb-3"
-                      @click="addToCart"
-                      aria-label="Add to Cart"
-                    >
-                      <i class="bi bi-cart-plus me-2"></i> Add to Cart
-                    </button>
+                  <button
+                    class="gd-add-cart-btn w-100 mb-3"
+                    @click="addToCart"
+                    aria-label="Add to Cart"
+                  >
+                    <i class="bi bi-cart-plus me-2"></i> Add to Cart
+                  </button>
 
-                    <button
-                      v-if="hasTrailer"
-                      class="btn btn-outline-secondary w-100 py-2"
-                      @click="showTrailerModal = true"
-                      aria-label="Watch Trailer"
-                    >
-                      <i class="bi bi-play-circle me-2"></i> Watch Trailer
-                    </button>
-                  </div>
+                  <button
+                    v-if="hasTrailer"
+                    class="btn btn-outline-secondary w-100 py-2"
+                    @click="showTrailerModal = true"
+                    aria-label="Watch Trailer"
+                  >
+                    <i class="bi bi-play-circle me-2"></i> Watch Trailer
+                  </button>
+                </div>
 
                 <!-- Wishlist Block -->
-                <div class="p-3 text-center border-bottom border-secondary border-opacity-25" style="background: rgba(255, 255, 255, 0.02);">
+                <div
+                  class="p-3 text-center border-bottom border-secondary border-opacity-25"
+                  style="background: rgba(255, 255, 255, 0.02)"
+                >
                   <button
                     class="gd-wishlist-btn w-100 d-flex justify-content-between align-items-center"
                     @click="addToFavorites"
@@ -926,7 +1126,7 @@ export default {
                     <i class="bi bi-heart fs-5"></i>
                   </button>
                 </div>
-                
+
                 <!-- Status toast -->
                 <transition name="fav-fade">
                   <div
@@ -941,8 +1141,15 @@ export default {
                 </transition>
 
                 <!-- Store links -->
-                <div v-if="game.stores?.length" class="p-4 bg-black bg-opacity-10">
-                  <small class="text-muted d-block mb-3 fw-bold text-uppercase" style="letter-spacing: 0.08em;">Available On</small>
+                <div
+                  v-if="game.stores?.length"
+                  class="p-4 bg-black bg-opacity-10"
+                >
+                  <small
+                    class="text-muted d-block mb-3 fw-bold text-uppercase"
+                    style="letter-spacing: 0.08em"
+                    >Available On</small
+                  >
                   <div class="d-flex flex-column gap-2">
                     <a
                       v-for="s in game.stores"
@@ -951,18 +1158,34 @@ export default {
                       target="_blank"
                       rel="noopener noreferrer"
                       class="gd-store-link d-flex align-items-center justify-content-between p-3 rounded-3 text-decoration-none"
-                      style="background: var(--bg-glass); border: 1px solid var(--border-glass);"
+                      style="
+                        background: var(--bg-glass);
+                        border: 1px solid var(--border-glass);
+                      "
                     >
-                      <span class="fw-semibold" style="color: var(--text-primary); font-size: 0.88rem;">{{ s.store.name }}</span>
-                      <i class="bi bi-box-arrow-up-right" style="color: var(--text-muted); font-size: 0.8rem;"></i>
+                      <span
+                        class="fw-semibold"
+                        style="color: var(--text-primary); font-size: 0.88rem"
+                        >{{ s.store.name }}</span
+                      >
+                      <i
+                        class="bi bi-box-arrow-up-right"
+                        style="color: var(--text-muted); font-size: 0.8rem"
+                      ></i>
                     </a>
                   </div>
                 </div>
               </div>
 
               <!-- Details table -->
-              <div class="gd-details-card mb-4 profile-glass-card p-4 rounded-4" style="background: var(--bg-surface);">
-                <h5 class="gd-details-heading mb-4"><i class="bi bi-info-circle-fill text-primary me-2"></i> Game Info</h5>
+              <div
+                class="gd-details-card mb-4 profile-glass-card p-4 rounded-4"
+                style="background: var(--bg-surface)"
+              >
+                <h5 class="gd-details-heading mb-4">
+                  <i class="bi bi-info-circle-fill text-primary me-2"></i> Game
+                  Info
+                </h5>
 
                 <div class="gd-meta-list">
                   <div class="gd-meta-row" v-if="developerNames !== '—'">
@@ -975,7 +1198,9 @@ export default {
                   </div>
                   <div class="gd-meta-row" v-if="game.released">
                     <span class="gd-meta-label">Release Date</span>
-                    <span class="gd-meta-value">{{ formatDate(game.released) }}</span>
+                    <span class="gd-meta-value">{{
+                      formatDate(game.released)
+                    }}</span>
                   </div>
                   <div class="gd-meta-row" v-if="game.playtime">
                     <span class="gd-meta-label">Playtime</span>
@@ -983,40 +1208,99 @@ export default {
                   </div>
                   <div class="gd-meta-row" v-if="game.esrb_rating">
                     <span class="gd-meta-label">ESRB Rating</span>
-                    <span class="gd-meta-value">{{ game.esrb_rating.name }}</span>
+                    <span class="gd-meta-value">{{
+                      game.esrb_rating.name
+                    }}</span>
                   </div>
                   <div class="gd-meta-row" v-if="game.ratings_count">
                     <span class="gd-meta-label">Total Reviews</span>
-                    <span class="gd-meta-value">{{ game.ratings_count.toLocaleString() }}</span>
+                    <span class="gd-meta-value">{{
+                      game.ratings_count.toLocaleString()
+                    }}</span>
                   </div>
                 </div>
               </div>
 
               <!-- CheapShark Deals -->
-              <div class="gd-deals-card profile-glass-card p-4 rounded-4 mt-4" v-if="deals.length || dealsLoading">
-                <h5 class="gd-details-heading mb-4"><i class="bi bi-tags-fill text-primary me-2"></i> Compare Prices</h5>
-                <div v-if="dealsLoading" class="gd-deals-loading text-center py-4 text-muted">
-                  <div class="spinner-border spinner-border-sm me-2"></div> Searching stores…
+              <div
+                class="gd-deals-card profile-glass-card p-4 rounded-4 mt-4"
+                v-if="deals.length || dealsLoading"
+              >
+                <h5 class="gd-details-heading mb-4">
+                  <i class="bi bi-tags-fill text-primary me-2"></i> Compare
+                  Prices
+                </h5>
+                <div
+                  v-if="dealsLoading"
+                  class="gd-deals-loading text-center py-4 text-muted"
+                >
+                  <div class="spinner-border spinner-border-sm me-2"></div>
+                  Searching stores…
                 </div>
                 <div v-else>
-                  <table class="table table-borderless table-hover align-middle mb-0" style="color: var(--text-primary);">
+                  <table
+                    class="table table-borderless table-hover align-middle mb-0"
+                    style="color: var(--text-primary)"
+                  >
                     <thead>
-                      <tr class="border-bottom border-secondary border-opacity-25">
+                      <tr
+                        class="border-bottom border-secondary border-opacity-25"
+                      >
                         <th class="text-muted fw-normal pb-3 px-0">Store</th>
-                        <th class="text-muted fw-normal pb-3 text-end">Price</th>
+                        <th class="text-muted fw-normal pb-3 text-end">
+                          Price
+                        </th>
                         <th class="pb-3 px-0"></th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="deal in deals" :key="deal.dealID" :class="{ 'bg-success bg-opacity-10': cheapestDeal?.dealID === deal.dealID }">
-                        <td class="fw-bold py-3 px-2 rounded-start" :class="{ 'text-success': cheapestDeal?.dealID === deal.dealID }">
-                          <span v-if="cheapestDeal?.dealID === deal.dealID" class="badge bg-success me-2">Best Deal</span>
+                      <tr
+                        v-for="deal in deals"
+                        :key="deal.dealID"
+                        :class="{
+                          'bg-success bg-opacity-10':
+                            cheapestDeal?.dealID === deal.dealID,
+                        }"
+                      >
+                        <td
+                          class="fw-bold py-3 px-2 rounded-start"
+                          :class="{
+                            'text-success':
+                              cheapestDeal?.dealID === deal.dealID,
+                          }"
+                        >
+                          <span
+                            v-if="cheapestDeal?.dealID === deal.dealID"
+                            class="badge bg-success me-2"
+                            >Best Deal</span
+                          >
                           {{ storeName(deal.storeID) }}
                         </td>
-                        <td class="text-end py-3 fw-bold" :class="{ 'text-success': cheapestDeal?.dealID === deal.dealID }">${{ deal.salePrice }}</td>
+                        <td
+                          class="text-end py-3 fw-bold"
+                          :class="{
+                            'text-success':
+                              cheapestDeal?.dealID === deal.dealID,
+                          }"
+                        >
+                          ${{ deal.salePrice }}
+                        </td>
                         <td class="text-end py-3 px-2 rounded-end">
-                          <a :href="`https://www.cheapshark.com/redirect?dealID=${deal.dealID}`" target="_blank" class="btn btn-sm rounded-pill px-3" :class="cheapestDeal?.dealID === deal.dealID ? 'btn-success text-white' : 'btn-outline-secondary'">
-                            {{ cheapestDeal?.dealID === deal.dealID ? 'Buy' : 'View' }}
+                          <a
+                            :href="`https://www.cheapshark.com/redirect?dealID=${deal.dealID}`"
+                            target="_blank"
+                            class="btn btn-sm rounded-pill px-3"
+                            :class="
+                              cheapestDeal?.dealID === deal.dealID
+                                ? 'btn-success text-white'
+                                : 'btn-outline-secondary'
+                            "
+                          >
+                            {{
+                              cheapestDeal?.dealID === deal.dealID
+                                ? "Buy"
+                                : "View"
+                            }}
                           </a>
                         </td>
                       </tr>
@@ -1025,26 +1309,51 @@ export default {
                 </div>
               </div>
 
-              <div class="gd-stats-card profile-glass-card p-4 rounded-4 mt-4" style="background: var(--bg-surface);">
+              <div
+                class="gd-stats-card profile-glass-card p-4 rounded-4 mt-4"
+                style="background: var(--bg-surface)"
+              >
                 <h5 class="gd-details-heading mb-4">
-                  <i class="bi bi-people-fill text-primary me-2"></i> Community Stats
+                  <i class="bi bi-people-fill text-primary me-2"></i> Community
+                  Stats
                 </h5>
                 <div class="row g-4">
                   <div class="col-6">
-                    <span class="gh-meta-label"><i class="bi bi-star-fill text-warning me-1"></i> Average</span>
-                    <span class="fw-bold" style="color: var(--text-primary);">{{ game.rating ? game.rating.toFixed(1) : '4.6' }} / 5</span>
+                    <span class="gh-meta-label"
+                      ><i class="bi bi-star-fill text-warning me-1"></i>
+                      Average</span
+                    >
+                    <span class="fw-bold" style="color: var(--text-primary)"
+                      >{{ game.rating ? game.rating.toFixed(1) : "4.6" }} /
+                      5</span
+                    >
                   </div>
                   <div class="col-6">
-                    <span class="gh-meta-label"><i class="bi bi-chat-text-fill text-info me-1"></i> Reviews</span>
-                    <span class="fw-bold" style="color: var(--text-primary);">{{ (game.ratings_count || 1254).toLocaleString() }}</span>
+                    <span class="gh-meta-label"
+                      ><i class="bi bi-chat-text-fill text-info me-1"></i>
+                      Reviews</span
+                    >
+                    <span class="fw-bold" style="color: var(--text-primary)">{{
+                      (game.ratings_count || 1254).toLocaleString()
+                    }}</span>
                   </div>
                   <div class="col-6">
-                    <span class="gh-meta-label"><i class="bi bi-heart-fill text-danger me-1"></i> Wishlists</span>
-                    <span class="fw-bold" style="color: var(--text-primary);">{{ (game.added || 3912).toLocaleString() }}</span>
+                    <span class="gh-meta-label"
+                      ><i class="bi bi-heart-fill text-danger me-1"></i>
+                      Wishlists</span
+                    >
+                    <span class="fw-bold" style="color: var(--text-primary)">{{
+                      (game.added || 3912).toLocaleString()
+                    }}</span>
                   </div>
                   <div class="col-6">
-                    <span class="gh-meta-label"><i class="bi bi-collection-fill text-success me-1"></i> Libraries</span>
-                    <span class="fw-bold" style="color: var(--text-primary);">{{ (game.added_by_status?.owned || 1884).toLocaleString() }}</span>
+                    <span class="gh-meta-label"
+                      ><i class="bi bi-collection-fill text-success me-1"></i>
+                      Libraries</span
+                    >
+                    <span class="fw-bold" style="color: var(--text-primary)">{{
+                      (game.added_by_status?.owned || 1884).toLocaleString()
+                    }}</span>
                   </div>
                 </div>
               </div>
@@ -1102,7 +1411,7 @@ export default {
   </div>
 </template>
 
-<style scoped>
+<style>
 /* ── Loading ──────────────────────────────── */
 .gd-loader {
   min-height: 60vh;
@@ -1154,13 +1463,12 @@ export default {
 .gd-hero-overlay {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(
-      to top,
-      var(--bg-deep) 0%,
-      rgba(5, 7, 15, 0.4) 50%,
-      rgba(5, 7, 15, 0.1) 100%
-    );
+  background: linear-gradient(
+    to top,
+    var(--bg-deep) 0%,
+    rgba(5, 7, 15, 0.4) 50%,
+    rgba(5, 7, 15, 0.1) 100%
+  );
 }
 .gd-hero-content {
   position: relative;

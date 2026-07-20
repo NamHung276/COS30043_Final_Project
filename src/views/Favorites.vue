@@ -1,5 +1,6 @@
 <script>
 import { inject } from "vue";
+import { Heart } from "@lucide/vue";
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import {
@@ -13,7 +14,7 @@ import {
 import SkeletonCard from "../components/SkeletonCard.vue";
 
 export default {
-  components: { SkeletonCard },
+  components: { SkeletonCard, Heart },
   setup() {
     const toast = inject("toast");
     return { toast };
@@ -256,7 +257,8 @@ export default {
         </div>
         <h2 class="fav-empty-title">Your wishlist is empty</h2>
         <p class="fav-empty-desc">
-          Start exploring and hit the ⭐ on any game to save it here.<br />
+          Start exploring and hit the
+          <Heart class="d-inline text-danger mx-1" size="18" /> on any game to save it here.<br />
           Build your perfect gaming wishlist!
         </p>
         <div class="fav-empty-actions">

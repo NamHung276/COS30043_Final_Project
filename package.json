@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@lucide/vue": "^1.25.0",
     "axios": "^1.18.1",
     "bootstrap": "^5.3.8",
     "firebase": "^12.15.0",

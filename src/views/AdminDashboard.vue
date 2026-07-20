@@ -15,9 +15,16 @@ import {
   getCountFromServer,
   where
 } from "firebase/firestore";
+import { Star, Newspaper, Users, Database } from "@lucide/vue";
 
 export default {
   name: "AdminDashboard",
+  components: {
+    Star,
+    Newspaper,
+    Users,
+    Database,
+  },
 
   inject: ["toast"],
 
@@ -634,10 +641,10 @@ export default {
             </div>
             <div class="filter-pills">
               <button class="filter-pill" :class="{ active: filterReport === 'All' }" @click="filterReport = 'All'">All</button>
-              <button class="filter-pill" :class="{ active: filterReport === 'Review' }" @click="filterReport = 'Review'">⭐ Reviews</button>
-              <button class="filter-pill" :class="{ active: filterReport === 'Article' }" @click="filterReport = 'Article'">📰 Articles</button>
-              <button class="filter-pill" :class="{ active: filterReport === 'Player' }" @click="filterReport = 'Player'">👤 Players</button>
-              <button class="filter-pill" :class="{ active: filterReport === 'Metadata' }" @click="filterReport = 'Metadata'">🎮 Metadata</button>
+              <button class="filter-pill" :class="{ active: filterReport === 'Review' }" @click="filterReport = 'Review'"><Star size="16" class="me-1" style="vertical-align: text-top;"/> Reviews</button>
+              <button class="filter-pill" :class="{ active: filterReport === 'Article' }" @click="filterReport = 'Article'"><Newspaper size="16" class="me-1" style="vertical-align: text-top;"/> Articles</button>
+              <button class="filter-pill" :class="{ active: filterReport === 'Player' }" @click="filterReport = 'Player'"><Users size="16" class="me-1" style="vertical-align: text-top;"/> Players</button>
+              <button class="filter-pill" :class="{ active: filterReport === 'Metadata' }" @click="filterReport = 'Metadata'"><Database size="16" class="me-1" style="vertical-align: text-top;"/> Metadata</button>
             </div>
           </div>
 

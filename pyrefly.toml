@@ -1,0 +1,9 @@
+project-includes = [
+    "backend/**/*.py",
+]
+
+# Tell Pyrefly where to find first-party packages (app, config, etc.)
+python-interpreter = "backend/venv/Scripts/python.exe"
+
+# Use the venv's site-packages for third-party imports
+search-path = ["backend"]

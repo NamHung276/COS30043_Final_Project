@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { auth, db } from "../firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import Home from "../views/Home.vue";
 import About from "../views/About.vue";
@@ -85,6 +85,12 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: "/purchase-history",
+    name: "PurchaseHistory",
+    component: () => import("../views/PurchaseHistory.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
     path: "/login",
     name: "Login",
     component: () => import("../views/Login.vue"),
@@ -156,17 +162,24 @@ router.beforeEach(async (to, from) => {
       return "/login";
     }
 
-    // Extra check: admin-only routes
-    if (to.meta.requiresAdmin) {
-      try {
-        const snap = await getDoc(doc(db, "users", user.uid));
+    try {
+      const snap = await getDoc(doc(db, "users", user.uid));
+      
+      // Check if user is banned
+      if (snap.exists() && snap.data().status === "Banned") {
+        await signOut(auth);
+        return "/login?banned=true";
+      }
+
+      // Extra check: admin-only routes
+      if (to.meta.requiresAdmin) {
         const role = snap.exists() ? snap.data().role : "user";
         if (role !== "admin") {
           return "/"; // redirect non-admins to home
         }
-      } catch {
-        return "/";
       }
+    } catch {
+      return "/";
     }
   }
   return true;

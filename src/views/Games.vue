@@ -2,7 +2,7 @@
 import SkeletonCard from "../components/SkeletonCard.vue";
 import TrailerModal from "../components/TrailerModal.vue";
 import { inject } from "vue";
-import { rawgApi, freeToGameApi } from "../services/api";
+import { rawgApi, freeToGameApi, backendApi } from "../services/api";
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
@@ -85,6 +85,9 @@ export default {
       currentUser: null,
       // Wishlist set (gameId strings already wishlisted)
       wishlisted: new Set(),
+      // Recommendations
+      recommendedGames: [],
+      loadingRecommendations: false,
     };
   },
 
@@ -480,6 +483,26 @@ export default {
         this.loading = false;
       }
     },
+
+    async fetchRecommendations() {
+      if (!this.currentUser) return;
+      this.loadingRecommendations = true;
+      try {
+        const res = await backendApi.get(`/games/recommendations`, {
+          params: { user_id: this.currentUser.uid }
+        });
+        if (res.data && res.data.results) {
+          this.recommendedGames = res.data.results.map(g => ({
+            ...g,
+            itemType: "rawg",
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to load recommendations", error);
+      } finally {
+        this.loadingRecommendations = false;
+      }
+    },
   },
 
   beforeUnmount() {
@@ -491,7 +514,12 @@ export default {
   async mounted() {
     this.unsubscribe = onAuthStateChanged(auth, async (user) => {
       this.currentUser = user;
-      if (user) await this.loadWishlist();
+      if (user) {
+        await this.loadWishlist();
+        await this.fetchRecommendations();
+      } else {
+        this.recommendedGames = [];
+      }
     });
     await this.fetchGames();
   },
@@ -640,8 +668,124 @@ export default {
         <p>Try adjusting your search term, genre, or platform filter.</p>
       </div>
 
+      <template v-else>
+        <!-- Recommended for You -->
+        <div v-if="recommendedGames.length > 0 && !searchTerm && selectedGenre === 'All' && selectedPlatform === 'all'" class="mb-5">
+        <h2 class="gd-section-title mb-4">
+          <i class="bi bi-stars text-warning me-2"></i> Recommended for You
+        </h2>
+        <div class="games-grid">
+          <router-link
+            v-for="(game, index) in recommendedGames.slice(0, 6)"
+            :key="'rec-' + game.id"
+            :to="`/games/${game.id}`"
+            class="game-card stagger-item"
+            :style="{ animationDelay: `${(index % 6) * 0.04}s` }"
+            :aria-label="`View details for ${game.name}`"
+          >
+            <!-- Cover Image -->
+            <div class="game-card-img-wrap">
+              <img
+                v-if="game.background_image"
+                v-lazy-img="game.background_image"
+                class="game-card-img"
+                :alt="`${game.name} cover art`"
+              />
+              <div v-else class="game-card-img-placeholder">
+                <img
+                  src="/logo/gamepad.svg"
+                  width="36"
+                  height="36"
+                  alt=""
+                  aria-hidden="true"
+                  style="opacity: 0.4"
+                />
+              </div>
+              <div class="game-card-img-overlay" aria-hidden="true"></div>
+
+              <!-- Floating action buttons -->
+              <div class="card-float-actions">
+                <button
+                  v-if="hasTrailer(game)"
+                  class="card-float-btn trailer-btn"
+                  @click="openTrailer(game, $event)"
+                  title="Watch Trailer"
+                  aria-label="Watch trailer"
+                >
+                  ▶ Trailer
+                </button>
+                <button
+                  class="card-float-btn wishlist-btn"
+                  :class="{ wishlisted: wishlisted.has(String(game.id)) }"
+                  @click="addToWishlist(game, $event)"
+                  :title="wishlisted.has(String(game.id)) ? 'In Wishlist' : 'Add to Wishlist'"
+                  :aria-label="wishlisted.has(String(game.id)) ? 'In Wishlist' : 'Add to Wishlist'"
+                >
+                  {{ wishlisted.has(String(game.id)) ? "♥" : "♡" }}
+                </button>
+              </div>
+
+              <!-- Genre Ribbon -->
+              <div class="genre-ribbon" v-if="game.genres?.length">
+                {{ game.genres[0].name }}
+              </div>
+              
+              <!-- Metacritic badge -->
+              <span
+                v-if="game.metacritic"
+                class="mc-badge"
+                :class="metacriticClass(game.metacritic)"
+                :title="`Metacritic: ${game.metacritic}`"
+              >
+                {{ game.metacritic }}
+              </span>
+            </div>
+
+            <!-- Card Body -->
+            <div class="game-card-body">
+              <div class="game-card-header">
+                <h3 class="game-card-title">{{ game.name }}</h3>
+                <span class="game-type premium">PREMIUM</span>
+              </div>
+              <div class="game-card-genres" v-if="(game.genres || []).length">
+                <span
+                  v-for="genre in (game.genres || []).slice(0, 2)"
+                  :key="genre.id"
+                  class="game-genre-tag text-muted"
+                  style="background: transparent; border: 1px solid var(--border-glass);"
+                >
+                  {{ genre.name }}
+                </span>
+              </div>
+              <div class="game-card-stars" v-if="game.rating">
+                <span
+                  v-for="(star, si) in ratingStars(game.rating)"
+                  :key="si"
+                  class="star-icon"
+                  :class="star"
+                >
+                  {{ star === "full" ? "★" : star === "half" ? "⯨" : "☆" }}
+                </span>
+                <span class="rating-label">{{ ratingLabel(game.rating) }}</span>
+              </div>
+              <div class="game-card-price-row">
+                <template v-if="gameDiscount(game) > 0">
+                  <span class="price-discount-badge">-{{ gameDiscount(game) }}%</span>
+                  <span class="price-original">${{ gamePrice(game) }}</span>
+                  <span class="price-current">${{ discountedPrice(game) }}</span>
+                </template>
+                <template v-else>
+                  <span class="price-current">${{ gamePrice(game) }}</span>
+                </template>
+                <span class="game-source-pill">RECOMMENDED</span>
+              </div>
+            </div>
+          </router-link>
+        </div>
+      </div>
+
       <!-- ══ GRID VIEW ══ -->
-      <div v-else-if="viewMode === 'grid'" class="games-grid">
+      <div v-if="viewMode === 'grid'" class="games-grid">
         <router-link
           v-for="(game, index) in paginatedGames"
           :key="game.itemType + game.id"
@@ -935,6 +1079,7 @@ export default {
           </div>
         </router-link>
       </div>
+      </template>
 
       <!-- Pagination -->
       <nav

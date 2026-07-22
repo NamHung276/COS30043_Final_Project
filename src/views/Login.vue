@@ -1,6 +1,6 @@
 <script>
 import { auth, db } from "../firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
 export default {
@@ -12,6 +12,14 @@ export default {
       error: "",
       loading: false,
     };
+  },
+
+  mounted() {
+    if (this.$route.query.banned) {
+      this.error = "Your account has been suspended by an administrator.";
+      // Clean up the URL so it doesn't persist on reload
+      this.$router.replace('/login');
+    }
   },
 
   methods: {
@@ -29,6 +37,14 @@ export default {
         try {
           const userRef = doc(db, "users", user.uid);
           const snap = await getDoc(userRef);
+          
+          if (snap.exists() && snap.data().status === "Banned") {
+            await signOut(auth);
+            this.error = "Your account has been suspended by an administrator.";
+            this.loading = false;
+            return;
+          }
+          
           if (!snap.exists()) {
             await setDoc(userRef, {
               displayName: user.displayName || user.email.split("@")[0],

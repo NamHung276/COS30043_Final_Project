@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev:frontend": "vite",
+    "dev:backend": "cd backend && venv\\Scripts\\python.exe -m uvicorn main:app --reload --port 8000",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -19,6 +21,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.6",
+    "concurrently": "^10.0.3",
     "vite": "^8.0.12"
   }
 }

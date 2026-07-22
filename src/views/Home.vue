@@ -1,7 +1,11 @@
 <script>
 import { inject } from "vue";
-import { rawgApi, freeToGameApi, cheapSharkApi } from "../services/api";
+import { rawgApi, freeToGameApi, cheapSharkApi, backendApi } from "../services/api";
 import { Sparkles, CalendarDays, Flame } from "@lucide/vue";
+import CryptoMarket from "../components/CryptoMarket.vue";
+import { auth, db } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 
 const GENRES = [
   {
@@ -95,6 +99,7 @@ export default {
     Sparkles,
     CalendarDays,
     Flame,
+    CryptoMarket,
   },
   setup() {
     const toast = inject("toast");
@@ -140,6 +145,12 @@ export default {
 
       // Carousel autoplay paused by user (WCAG 2.2.2)
       isAutopaused: false,
+
+      // Auth and Recommendations
+      currentUser: null,
+      recommendedGames: [],
+      loadingRecommendations: false,
+      wishlisted: new Set(),
     };
   },
 
@@ -203,6 +214,16 @@ export default {
   },
 
   async mounted() {
+    this.unsubscribe = onAuthStateChanged(auth, async (user) => {
+      this.currentUser = user;
+      if (user) {
+        await this.loadWishlist();
+        await this.fetchRecommendations();
+      } else {
+        this.recommendedGames = [];
+      }
+    });
+
     // Load featured carousel + new releases in parallel
     await Promise.allSettled([
       this.loadFeatured(),
@@ -232,6 +253,7 @@ export default {
   beforeUnmount() {
     this.stopAutoplay();
     if (this.statsObserver) this.statsObserver.disconnect();
+    if (this.unsubscribe) this.unsubscribe();
   },
 
   methods: {
@@ -453,6 +475,80 @@ export default {
     setHoveredGame(game) {
       this.hoveredGame = game;
     },
+
+    async fetchRecommendations() {
+      if (!this.currentUser) return;
+      this.loadingRecommendations = true;
+      try {
+        const res = await backendApi.get(`/games/recommendations`, {
+          params: { user_id: this.currentUser.uid }
+        });
+        if (res.data && res.data.results) {
+          this.recommendedGames = res.data.results.map(g => ({
+            ...g,
+            itemType: "rawg",
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to load recommendations", error);
+      } finally {
+        this.loadingRecommendations = false;
+      }
+    },
+
+    async loadWishlist() {
+      if (!this.currentUser) return;
+      try {
+        const snap = await getDocs(
+          query(
+            collection(db, "favorites"),
+            where("userId", "==", this.currentUser.uid),
+          ),
+        );
+        snap.forEach((d) => this.wishlisted.add(String(d.data().gameId)));
+      } catch {
+        /* silent */
+      }
+    },
+
+    // Used for Recommended Games styling
+    gamePrice(game) {
+      if (game.itemType === "f2p") return 0;
+      const base = (game.id % 40) + 10;
+      return (base + 0.99).toFixed(2);
+    },
+    gameDiscount(game) {
+      if (game.itemType === "f2p") return 0;
+      const roll = game.id % 4;
+      if (roll === 0) return 40;
+      if (roll === 1) return 25;
+      return 0;
+    },
+    discountedPrice(game) {
+      const price = parseFloat(this.gamePrice(game));
+      const disc = this.gameDiscount(game);
+      if (!disc) return null;
+      return (price * (1 - disc / 100)).toFixed(2);
+    },
+    ratingStars(rating) {
+      const stars = [];
+      const r = rating || 0;
+      for (let i = 1; i <= 5; i++) {
+        if (r >= i) stars.push("full");
+        else if (r >= i - 0.5) stars.push("half");
+        else stars.push("empty");
+      }
+      return stars;
+    },
+    ratingLabel(rating) {
+      if (!rating) return "";
+      if (rating >= 4.5) return "Overwhelmingly Positive";
+      if (rating >= 4.0) return "Very Positive";
+      if (rating >= 3.5) return "Mostly Positive";
+      if (rating >= 3.0) return "Mixed";
+      if (rating >= 2.0) return "Mostly Negative";
+      return "Negative";
+    },
   },
 };
 </script>
@@ -564,6 +660,15 @@ export default {
                 <div class="steam-hero-overlay"></div>
               </router-link>
             </transition>
+
+            <!-- YouTube style progress line -->
+            <div class="steam-progress-line-container">
+              <div 
+                class="steam-progress-line" 
+                :class="{ 'paused': isAutopaused }"
+                :key="'progress-' + activeIndex"
+              ></div>
+            </div>
           </div>
 
           <transition
@@ -822,6 +927,74 @@ export default {
       </div>
     </section>
     <div class="container steam-main-container pb-5">
+      <!-- ══════════════════════════════════════
+           RECOMMENDED FOR YOU
+           ══════════════════════════════════════ -->
+      <div v-if="currentUser && recommendedGames.length > 0" class="mb-5">
+        <div class="section-header mb-4">
+          <span class="section-icon" style="background: linear-gradient(135deg, #7c3aed, #c026d3); box-shadow: 0 4px 16px rgba(192, 38, 211, 0.4);">
+            <i class="bi bi-stars text-white" style="font-size: 1.1rem"></i>
+          </span>
+          <h2 class="mb-0">Other games you might be interested in</h2>
+        </div>
+        <div class="h-scroll-strip" style="padding-bottom: 20px;">
+          <router-link
+            v-for="(game, index) in recommendedGames.slice(0, 8)"
+            :key="'rec-home-' + game.id"
+            :to="`/games/${game.id}`"
+            class="deal-scroll-card stagger-item"
+            :style="{ animationDelay: `${(index % 8) * 0.04}s`, width: '280px', flex: '0 0 280px' }"
+            :aria-label="`View details for ${game.name}`"
+          >
+            <!-- Cover Image -->
+            <div class="deal-scroll-img-wrap" style="height: 160px;">
+              <img
+                v-if="game.background_image"
+                :src="game.background_image"
+                :alt="`${game.name} cover art`"
+              />
+              <div v-else class="game-card-img-placeholder" style="width: 100%; height: 100%; background: var(--bg-glass); display: flex; align-items: center; justify-content: center;">
+                <img src="/logo/gamepad.svg" width="36" height="36" alt="" aria-hidden="true" style="opacity: 0.4; max-width: 100%; max-height: 100%; transform: none;" />
+              </div>
+              <div class="deal-scroll-overlay" aria-hidden="true"></div>
+              
+              <!-- Metacritic badge -->
+              <span
+                v-if="game.metacritic"
+                class="h-card-badges"
+                style="top: 8px; left: 8px;"
+              >
+                <span class="h-badge" :class="metacriticClass(game.metacritic)" style="font-size: 0.65rem;">
+                  {{ game.metacritic }}
+                </span>
+              </span>
+            </div>
+
+            <!-- Card Body -->
+            <div class="h-scroll-card-body">
+              <h3 class="h-scroll-card-title" style="font-size: 1rem; margin-bottom: 4px;">{{ game.name }}</h3>
+              <div class="game-card-stars mb-2" v-if="game.rating" style="display: flex; gap: 2px; color: #fbbf24; font-size: 0.8rem;">
+                <span v-for="(star, si) in ratingStars(game.rating)" :key="si" class="star-icon" :class="star">
+                  {{ star === "full" ? "★" : star === "half" ? "⯨" : "☆" }}
+                </span>
+              </div>
+              <div class="sso-price-row mt-2" style="display: flex; align-items: center; gap: 8px;">
+                <template v-if="gameDiscount(game) > 0">
+                  <span class="sso-discount">-{{ gameDiscount(game) }}%</span>
+                  <div class="sso-prices" style="display: flex; flex-direction: column; align-items: flex-end;">
+                    <span class="sso-orig" style="font-size: 0.7rem;">${{ gamePrice(game) }}</span>
+                    <span class="sso-sale" style="font-size: 0.9rem;">${{ discountedPrice(game) }}</span>
+                  </div>
+                </template>
+                <template v-else>
+                  <span class="sso-sale" style="font-size: 0.9rem; margin-left: auto;">${{ gamePrice(game) }}</span>
+                </template>
+              </div>
+            </div>
+          </router-link>
+        </div>
+      </div>
+
       <!-- ══════════════════════════════════════
            TABBED DISCOVERY
            ══════════════════════════════════════ -->
@@ -1137,6 +1310,11 @@ export default {
           </a>
         </div>
       </div>
+
+      <!-- ══════════════════════════════════════
+           GAMING CRYPTO MARKET
+           ══════════════════════════════════════ -->
+      <CryptoMarket />
 
       <!-- ══════════════════════════════════════
            STATS COUNTER

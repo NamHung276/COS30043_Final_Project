@@ -2,6 +2,7 @@
 import { inject } from "vue";
 import { auth, db } from "../firebase";
 import { rawgApi, cheapSharkApi } from "../services/api";
+import { trackUserActivity } from "../services/tracking";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 import ReviewSection from "../components/ReviewSection.vue";
@@ -474,6 +475,11 @@ export default {
 
         // Fetch CheapShark deals (non-blocking)
         this.fetchDeals(this.game.name);
+
+        // Track user path for recommendations
+        if (this.currentUser) {
+          trackUserActivity("view", this.game);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -504,6 +510,9 @@ export default {
   mounted() {
     this.unsubscribe = onAuthStateChanged(auth, (user) => {
       this.currentUser = user;
+      if (user && this.game) {
+        trackUserActivity("view", this.game);
+      }
     });
     document.addEventListener("keydown", this.onLightboxKey);
   },

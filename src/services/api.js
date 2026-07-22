@@ -41,11 +41,17 @@ export const rawgApi = axios.create({
   },
 });
 
+// ── Internal Backend API (via Vite proxy: /api → http://localhost:8000/api) ──
+export const backendApi = axios.create({
+  baseURL: "/api",
+  timeout: 15000,
+});
+
 const cache = new Map();
 const CACHE_TTL = 3 * 60 * 1000; // 3 minutes
 
 // ── Shared Interceptors & Caching ─────────────────────────
-[freeToGameApi, newsApi, newsDataApi, cheapSharkApi, rawgApi].forEach((instance) => {
+[freeToGameApi, newsApi, newsDataApi, cheapSharkApi, rawgApi, backendApi].forEach((instance) => {
   // Simple GET Cache to prevent duplicate API calls
   const originalGet = instance.get;
   instance.get = async function (url, config) {

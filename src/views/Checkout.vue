@@ -3,35 +3,25 @@ import { cartState } from "../services/cart";
 import { auth, db } from "../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+import PayPalCheckout from "../components/PayPalCheckout.vue";
 
 export default {
   name: "Checkout",
+  components: {
+    PayPalCheckout,
+  },
   inject: ["toast"],
 
   data() {
     return {
       currentUser: null,
       processing: false,
-      form: {
-        name: "",
-        cardNumber: "",
-        expiry: "",
-        cvv: "",
-      },
     };
   },
 
   computed: {
     cart() {
       return cartState;
-    },
-    isFormValid() {
-      return (
-        this.form.name.length > 2 &&
-        this.form.cardNumber.length >= 16 &&
-        this.form.expiry.length >= 4 &&
-        this.form.cvv.length >= 3
-      );
     },
   },
 
@@ -52,14 +42,9 @@ export default {
       cartState.remove(id);
     },
 
-    async processPayment() {
+    async handlePaymentSuccess(details) {
       if (!this.currentUser) {
         this.$router.push("/login");
-        return;
-      }
-
-      if (this.cart.items.length === 0) {
-        this.toast?.show("Your cart is empty", "error");
         return;
       }
 
@@ -70,33 +55,33 @@ export default {
         const batchPromises = this.cart.items.map((item) => {
           return addDoc(collection(db, "purchases"), {
             userId: this.currentUser.uid,
-            gameId: item.id,
-            gameName: item.name || item.title || "Unknown Game",
+            gameId: item.id.toString(),
+            title: item.name || item.title || "Unknown Game",
             thumbnail: item.thumbnail || item.background_image || "",
             price: parseFloat(item.price) || 0,
-            purchasedAt: serverTimestamp(),
+            currency: "USD",
+            transactionId: details.transactionId || "N/A",
+            payerName: details.payerName || "Anonymous",
+            createdAt: serverTimestamp(),
             status: "completed",
           });
         });
 
         await Promise.all(batchPromises);
 
-        // Simulate network delay for payment
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-
         this.toast?.show(
           "Payment Successful! Games added to your library.",
-          "success",
+          "success"
         );
         cartState.clear();
 
-        // Redirect to library
-        this.$router.push("/library");
+        // Redirect to purchase history or library
+        this.$router.push("/purchase-history");
       } catch (error) {
-        console.error("Payment failed:", error);
+        console.error("Payment save failed:", error);
         this.toast?.show(
-          "Payment processing failed. Please try again.",
-          "error",
+          "Payment succeeded, but failed to save to database.",
+          "error"
         );
       } finally {
         this.processing = false;
@@ -191,93 +176,14 @@ export default {
               >
             </div>
 
-            <!-- Payment Form -->
+            <!-- PayPal Component -->
             <div v-if="cart.items.length > 0">
-              <h5 class="text-primary-var mb-3 mt-2">Payment Details</h5>
-
-              <div class="mb-3">
-                <label
-                  class="form-label text-muted small text-uppercase fw-bold letter-spacing-1"
-                  >Name on Card</label
-                >
-                <input
-                  type="text"
-                  class="gd-checkout-input"
-                  v-model="form.name"
-                  placeholder="John Doe"
-                  :disabled="processing"
-                />
-              </div>
-
-              <div class="mb-3">
-                <label
-                  class="form-label text-muted small text-uppercase fw-bold letter-spacing-1"
-                  >Card Number</label
-                >
-                <div class="position-relative">
-                  <input
-                    type="text"
-                    class="gd-checkout-input pe-5"
-                    v-model="form.cardNumber"
-                    placeholder="XXXX XXXX XXXX XXXX"
-                    maxlength="19"
-                    :disabled="processing"
-                  />
-                  <i
-                    class="bi bi-credit-card position-absolute top-50 end-0 translate-middle-y me-3 text-primary-var-50"
-                  ></i>
-                </div>
-              </div>
-
-              <div class="row g-3 mb-4">
-                <div class="col-6">
-                  <label
-                    class="form-label text-muted small text-uppercase fw-bold letter-spacing-1"
-                    >Expiry</label
-                  >
-                  <input
-                    type="text"
-                    class="gd-checkout-input"
-                    v-model="form.expiry"
-                    placeholder="MM/YY"
-                    maxlength="5"
-                    :disabled="processing"
-                  />
-                </div>
-                <div class="col-6">
-                  <label
-                    class="form-label text-muted small text-uppercase fw-bold letter-spacing-1"
-                    >CVV</label
-                  >
-                  <input
-                    type="password"
-                    class="gd-checkout-input"
-                    v-model="form.cvv"
-                    placeholder="123"
-                    maxlength="4"
-                    :disabled="processing"
-                  />
-                </div>
-              </div>
-
-              <button
-                class="btn gd-btn-primary w-100 py-3 d-flex align-items-center justify-content-center gap-2"
-                :disabled="
-                  !isFormValid || processing || cart.items.length === 0
-                "
-                @click="processPayment"
-              >
-                <span
-                  v-if="processing"
-                  class="spinner-border spinner-border-sm"
-                ></span>
-                <i v-else class="bi bi-lock-fill"></i>
-                {{
-                  processing
-                    ? "Processing..."
-                    : `Pay $${cart.totalPrice.toFixed(2)}`
-                }}
-              </button>
+              <PayPalCheckout
+                gameId="cart"
+                title="GameHub Checkout"
+                :price="cart.totalPrice"
+                @payment-success="handlePaymentSuccess"
+              />
             </div>
 
             <div v-else class="text-center py-4">

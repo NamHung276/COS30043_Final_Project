@@ -7,7 +7,8 @@ Built as the final project for COS30043, this application leverages Vue 3 and Fi
 ## 🚀 Technologies Used
 
 *   **Frontend Core:** Vue 3 (Composition API), Vite, Vue Router
-*   **Backend & Database:** Firebase Authentication, Firestore
+*   **Backend & API:** Python, FastAPI, Uvicorn (Handles server-side caching, external API proxying, and custom recommendation logic)
+*   **Database & Auth:** Firebase Authentication, Firestore
 *   **Styling:** Vanilla CSS (Glassmorphism, CSS Variables, Custom Gradients), Bootstrap 5 (for grid layout and utility classes), Bootstrap Icons
 *   **Tooling:** npm, Git
 
@@ -32,6 +33,7 @@ GameHub aggregates data from multiple powerful gaming and news APIs to deliver a
 *   **[FreeToGame API](https://www.freetogame.com/api-doc):** Provides access to 500+ free-to-play games with detailed information, genres, screenshots, system requirements, and platform availability. Drives the Free-to-Play section.
 *   **[CheapShark Deals API](https://apidocs.cheapshark.com/):** Aggregates PC game deals and price comparisons from major stores like Steam, Epic, GOG, and more. Powers the Deals section to help gamers find the best prices on their favourite titles.
 *   **[NewsAPI](https://newsapi.org/):** Delivers real-time gaming news and industry updates from multiple major gaming news outlets. Powers the Live News section with continuously updated articles from top gaming publications.
+*   **[CoinGecko API](https://www.coingecko.com/en/api):** Provides live market data, prices, and 24-hour changes for top gaming and metaverse cryptocurrencies (e.g., FLOKI, Axie Infinity, Decentraland).
 
 ## 🚀 Future Roadmap
 
@@ -46,6 +48,7 @@ GameHub is continuously evolving. Planned enhancements include:
 
 ### Prerequisites
 *   [Node.js](https://nodejs.org/) (v16 or higher recommended)
+*   [Python](https://www.python.org/) (v3.9 or higher recommended)
 *   NPM or Yarn
 
 ### Installation
@@ -56,20 +59,36 @@ GameHub is continuously evolving. Planned enhancements include:
     cd COS30043_Final_Project
     ```
 
-2.  **Install dependencies:**
+2.  **Set up the Python Backend:**
+    ```bash
+    cd backend
+    python -m venv venv
+    
+    # Activate virtual environment (Windows)
+    venv\Scripts\activate
+    # Or on macOS/Linux:
+    # source venv/bin/activate
+    
+    pip install -r requirements.txt
+    cd ..
+    ```
+
+3.  **Install Frontend Dependencies:**
     ```bash
     npm install
     ```
 
-3.  **Configure Firebase:**
-    Ensure you have your Firebase configuration set up in `src/firebase.js` (or via environment variables).
+4.  **Configure Environment Variables:**
+    * Create a `.env` file in the root directory and add your API keys (RAWG, NewsAPI, Firebase config).
+    * Place your Firebase service account JSON file at `backend/firebase-credentials.json` for the FastAPI backend to access Firestore securely.
 
-4.  **Run the development server:**
+5.  **Run the development server (Frontend + Backend concurrently):**
     ```bash
     npm run dev
     ```
+    This single command uses `concurrently` to boot up both the Vite frontend (`localhost:5173`) and the FastAPI backend (`localhost:8000`) simultaneously.
 
-5.  **Build for production:**
+6.  **Build for production (Frontend only):**
     ```bash
     npm run build
     ```

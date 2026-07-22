@@ -56,6 +56,7 @@ export default {
       // Confirmation modals
       confirmDelete: null,
       confirmRole: null,
+      confirmBan: null,
 
       // Pagination
       lastUserDoc: null,
@@ -197,7 +198,7 @@ export default {
             ...data,
             mockArticles: articlesCountSnap.data().count,
             mockReviews: reviewsCountSnap.data().count,
-            mockStatus: "Active"
+            mockStatus: data.status || "Active"
           };
         }));
         
@@ -309,6 +310,42 @@ export default {
         this.toast.show("Failed to update role.", "error");
       } finally {
         this.confirmRole = null;
+      }
+    },
+
+    askBanUser(user) {
+      this.confirmBan = {
+        uid: user.uid,
+        displayName: user.displayName || user.email,
+        isBanned: user.mockStatus === 'Banned'
+      };
+    },
+
+    async confirmBanAction() {
+      if (!this.confirmBan) return;
+      try {
+        const newStatus = this.confirmBan.isBanned ? 'Active' : 'Banned';
+        await updateDoc(doc(db, "users", this.confirmBan.uid), {
+          status: newStatus
+        });
+        const u = this.users.find((u) => u.uid === this.confirmBan.uid);
+        if (u) u.mockStatus = newStatus;
+        
+        this.toast.show(`User account has been ${newStatus.toLowerCase()}.`, "success");
+        
+        this.recentActivity.unshift({
+          id: Date.now(),
+          action: `${newStatus === 'Banned' ? 'Banned' : 'Unbanned'} user: ${this.confirmBan.displayName}`,
+          time: "Just now",
+          type: newStatus === 'Banned' ? 'delete' : 'approve'
+        });
+        if(this.recentActivity.length > 5) this.recentActivity.pop();
+
+      } catch (e) {
+        console.error(e);
+        this.toast.show("Failed to update user status.", "error");
+      } finally {
+        this.confirmBan = null;
       }
     },
 
@@ -604,7 +641,7 @@ export default {
                     </td>
                     <td class="muted-col">{{ formatDate(post.createdAt) }}</td>
                     <td class="text-end">
-                      <button class="btn-gh-outline me-2" @click="$router.push(`/news/${post.id}`)">View</button>
+                      <button class="btn-gh-outline me-2" @click="$router.push(`/gamehub-news/${post.id}`)">View</button>
                       <button class="btn-gh-danger" @click="askDeletePost(post)">Delete</button>
                     </td>
                   </tr>
@@ -752,18 +789,33 @@ export default {
                         <i class="bi bi-shield-fill-check text-primary me-1"></i> 
                         <span class="text-primary fw-bold" style="font-size: 0.85rem;">Administrator</span>
                       </div>
-                      <button 
-                        v-else-if="u.role !== 'admin'" 
-                        class="btn-gh-outline" 
-                        @click="askChangeRole(u, 'admin')">
-                        Promote to Admin
-                      </button>
-                      <button 
-                        v-else 
-                        class="btn-gh-danger" 
-                        @click="askChangeRole(u, 'user')">
-                        Revoke Admin
-                      </button>
+                      <div v-else class="d-flex justify-content-end gap-2">
+                        <button 
+                          v-if="u.role !== 'admin'" 
+                          class="btn-gh-outline" 
+                          @click="askChangeRole(u, 'admin')">
+                          Promote
+                        </button>
+                        <button 
+                          v-else 
+                          class="btn-gh-outline text-warning border-warning" 
+                          @click="askChangeRole(u, 'user')">
+                          Revoke
+                        </button>
+                        
+                        <button 
+                          v-if="u.mockStatus === 'Banned'"
+                          class="btn-gh-outline text-success border-success" 
+                          @click="askBanUser(u)">
+                          Unban
+                        </button>
+                        <button 
+                          v-else
+                          class="btn-gh-danger" 
+                          @click="askBanUser(u)">
+                          Ban
+                        </button>
+                      </div>
                     </td>
                   </tr>
                   <tr v-if="filteredUsers.length === 0">
@@ -821,6 +873,28 @@ export default {
         <div class="modal-actions">
           <button class="btn-gh-text" @click="confirmRole = null">Cancel</button>
           <button :class="confirmRole.newRole === 'admin' ? 'btn-gh-solid' : 'btn-gh-danger-solid'" @click="confirmChangeRole">Confirm Change</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ban User Modal -->
+    <div class="gh-modal-overlay" v-if="confirmBan">
+      <div class="gh-modal">
+        <h3 :class="confirmBan.isBanned ? 'text-success' : 'text-danger'">
+          <i class="bi" :class="confirmBan.isBanned ? 'bi-person-check-fill' : 'bi-person-x-fill'"></i>
+          {{ confirmBan.isBanned ? 'Unban User' : 'Ban User' }}
+        </h3>
+        <p>
+          Are you sure you want to {{ confirmBan.isBanned ? 'unban' : 'ban' }} 
+          <strong>{{ confirmBan.displayName }}</strong>?
+        </p>
+        <p class="text-muted small" v-if="!confirmBan.isBanned">They will immediately lose access to their account and all GameHub features.</p>
+        <p class="text-muted small" v-else>They will regain full access to their account.</p>
+        <div class="modal-actions">
+          <button class="btn-gh-text" @click="confirmBan = null">Cancel</button>
+          <button :class="confirmBan.isBanned ? 'btn-gh-solid' : 'btn-gh-danger-solid'" @click="confirmBanAction">
+            {{ confirmBan.isBanned ? 'Confirm Unban' : 'Confirm Ban' }}
+          </button>
         </div>
       </div>
     </div>

@@ -1,25 +1,33 @@
 """
-services/ai_service.py — AI / Chatbot service stub.
-
-This module is intentionally empty. It is a placeholder for future
-AI integration (e.g., OpenAI GPT, Google Gemini).
-
-When implementing the chatbot feature:
-  1. Add your AI SDK to requirements.txt
-  2. Add API keys to .env and config.py
-  3. Implement the functions below
-  4. Wire up chatbot/router.py to call this service
-
-See also: chatbot/README.md for architecture notes.
+services/ai_service.py — AI / Chatbot service implementation using Google Gemini.
 """
 
 import logging
 from typing import Any, Dict, List, Optional
 
+from google import genai
+from google.genai import types
+
+from config import settings
+
 logger = logging.getLogger(__name__)
 
+# Configure Gemini API
+client = None
+if settings.gemini_api_key:
+    client = genai.Client(api_key=settings.gemini_api_key)
+else:
+    logger.warning("GEMINI_API_KEY is not set. Chatbot will not function correctly.")
 
-# ── Stub Functions ─────────────────────────────────────────────────────────────
+# System instructions to give the bot its persona
+SYSTEM_INSTRUCTION = (
+    "You are the GameHub AI Assistant, a helpful and knowledgeable gaming expert. "
+    "Your role is to help users discover new games, track deals, and stay updated on gaming news. "
+    "Do NOT use marketing fluff or hyperbolic claims like 'The Ultimate Gaming Platform' or "
+    "'World's #1 Gaming Hub'. Focus on providing factual, helpful, and objective information. "
+    "If a user asks about non-gaming topics, politely guide the conversation back to video games."
+)
+
 
 async def chat(
     message: str,
@@ -27,28 +35,51 @@ async def chat(
     user_context: Optional[Dict] = None,
 ) -> Dict[str, Any]:
     """
-    Process a chat message and return an AI response.
-
-    NOT IMPLEMENTED — returns a stub response.
-
-    Args:
-        message:              The user's chat message.
-        conversation_history: Prior messages for multi-turn context.
-        user_context:         Optional user data (favorites, genres, etc.)
-                              for personalised recommendations.
-
-    Returns:
-        Dict with keys: response (str), sources (list), intent (str)
+    Process a chat message and return an AI response using Google Gemini.
     """
-    logger.info("AI chat requested but not yet implemented.")
-    return {
-        "response": (
-            "The GameHub AI assistant is coming soon! "
-            "This feature is currently under development."
-        ),
-        "sources": [],
-        "intent": "not_implemented",
-    }
+    if not client:
+        return {
+            "response": "I'm sorry, my AI backend is not configured yet. (Missing GEMINI_API_KEY).",
+            "sources": [],
+            "intent": "error",
+        }
+
+    try:
+        # Convert our history format to Gemini's format
+        gemini_history: List[Any] = []
+        if conversation_history:
+            for msg in conversation_history:
+                # Map 'assistant' to 'model' for Gemini
+                role = "model" if msg.get("role") == "assistant" else "user"
+                gemini_history.append(
+                    types.Content(
+                        role=role,
+                        parts=[types.Part.from_text(text=msg.get("content", ""))]
+                    )
+                )
+
+        chat_session = client.chats.create(
+            model="gemini-flash-latest",
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_INSTRUCTION,
+            ),
+            history=gemini_history
+        )
+        
+        response = chat_session.send_message(message)
+
+        return {
+            "response": response.text,
+            "sources": [],
+            "intent": "general_chat",
+        }
+    except Exception as e:
+        logger.error(f"Error calling Gemini API: {e}", exc_info=True)
+        return {
+            "response": "I'm having trouble connecting to my brain right now. Please try again later.",
+            "sources": [],
+            "intent": "error",
+        }
 
 
 async def get_game_recommendations(
@@ -58,13 +89,7 @@ async def get_game_recommendations(
 ) -> List[Dict]:
     """
     Generate personalised game recommendations.
-
-    NOT IMPLEMENTED — returns empty list.
-
-    Future implementation will:
-      1. Analyse user's favorite game genres from Firestore
-      2. Call RAWG for games matching those genres
-      3. Optionally rank using an AI model
+    Currently returns an empty list, to be implemented in a future phase.
     """
     logger.info("Recommendations requested but not yet implemented.")
     return []

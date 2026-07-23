@@ -4,6 +4,7 @@ import Navbar from "./components/Navbar.vue";
 import Footer from "./components/Footer.vue";
 import ScrollToTop from "./components/ScrollToTop.vue";
 import ToastNotification from "./components/ToastNotification.vue";
+import ChatbotWidget from "./components/ChatbotWidget.vue";
 
 const toastRef = ref(null);
 
@@ -32,4 +33,5 @@ provide("toast", {
   <Footer />
   <ScrollToTop />
   <ToastNotification ref="toastRef" />
+  <ChatbotWidget />
 </template>

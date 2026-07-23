@@ -55,9 +55,8 @@ def _init_firebase() -> bool:
 
         if not os.path.isfile(sa_path):
             logger.warning(
-                "Firebase service account not found at '%s'. "
-                "Token verification is DISABLED. "
-                "Download from: Firebase Console → Project Settings → Service Accounts",
+                "Firebase service account not found at '%s'. Token verification is DISABLED. "
+                "Download from: Firebase Console -> Project Settings -> Service Accounts",
                 sa_path,
             )
             return False

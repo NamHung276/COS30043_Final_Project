@@ -1,10 +1,7 @@
 """
-routers/chatbot.py — AI chatbot endpoint stub.
+routers/chatbot.py — AI chatbot endpoints.
 
-This router is registered and documented in Swagger but all endpoints
-return HTTP 501 Not Implemented until the AI service is built.
-
-Future implementation: see chatbot/README.md and app/services/ai_service.py.
+This router provides endpoints to interact with the GameHub AI assistant.
 """
 
 import logging
@@ -45,11 +42,10 @@ class ChatResponse(BaseModel):
 @router.post(
     "/chatbot/chat",
     response_model=ChatResponse,
-    summary="Chat with GameHub AI (stub)",
+    summary="Chat with GameHub AI",
     description=(
-        "**Not yet implemented.** This endpoint is reserved for the GameHub AI assistant. "
-        "Currently returns a placeholder response. "
-        "See `chatbot/README.md` for the planned architecture."
+        "Interact with the GameHub AI assistant. "
+        "Provides gaming knowledge, game discovery, and general help."
     ),
 )
 async def chat(request: ChatRequest) -> ChatResponse:

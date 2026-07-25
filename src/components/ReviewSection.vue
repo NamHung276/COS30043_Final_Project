@@ -384,7 +384,7 @@ export default {
   <div class="review-section">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <div class="section-header mb-0">
-        <h3 class="mb-0 gd-title-sm text-white">Community Reviews</h3>
+        <h3 class="mb-0 gd-title-sm text-primary-var">Community Reviews</h3>
         <p class="text-muted mb-0 small mt-1">
           {{ reviews.length }} reviews from GameHub players
         </p>
@@ -475,7 +475,7 @@ export default {
       v-if="!currentUser"
       class="gd-glass-card p-5 text-center mb-4 login-prompt-box"
     >
-      <h4 class="text-white mb-3">Want to share your experience?</h4>
+      <h4 class="text-primary-var mb-3">Want to share your experience?</h4>
       <router-link to="/login" class="btn gd-btn-primary px-4 py-2"
         >Login to Review</router-link
       >
@@ -484,7 +484,7 @@ export default {
     <!-- Write a Review Form -->
     <div v-if="currentUser && !myReview" class="gd-glass-card mb-4">
       <div class="gd-review-card-body text-start">
-        <h5 class="mb-4 text-white">Write a Review</h5>
+        <h5 class="mb-4 text-primary-var">Write a Review</h5>
 
         <div v-if="formError" class="alert alert-danger py-2">
           {{ formError }}
@@ -690,7 +690,7 @@ export default {
               >
                 <div>
                   <div class="d-flex align-items-center gap-2 mb-1">
-                    <strong class="fs-5 text-white">{{
+                    <strong class="fs-5 text-primary-var">{{
                       review.userName
                     }}</strong>
                     <span class="gd-badge-reviewer"
@@ -741,7 +741,7 @@ export default {
               <hr class="gd-divider my-3" />
 
               <p
-                class="text-light"
+                class="text-secondary-var"
                 style="
                   line-height: 1.7;
                   white-space: pre-wrap;
@@ -924,7 +924,7 @@ export default {
   font-size: 1.5rem;
   flex-shrink: 0;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid var(--overlay-medium);
 }
 
 /* Badges */

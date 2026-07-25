@@ -451,12 +451,12 @@ export default {
 
     <!-- ── Main Content Area ── -->
     <main class="gh-main">
-      <div class="d-md-none d-flex align-items-center justify-content-between p-3 border-bottom border-secondary" style="background: var(--bg-dark); position: sticky; top: 0; z-index: 10;">
+      <div class="d-md-none d-flex align-items-center justify-content-between p-3 border-bottom border-secondary" style="background: var(--bg-surface-var); position: sticky; top: 0; z-index: 10;">
         <div class="gh-logo m-0" style="font-size: 1.2rem;">
           <i class="bi bi-controller"></i>
           <span>GameHub</span>
         </div>
-        <button class="btn btn-outline-secondary btn-sm border-0 text-white" @click="sidebarOpen = !sidebarOpen">
+        <button class="btn btn-outline-secondary btn-sm border-0 text-primary-var" @click="sidebarOpen = !sidebarOpen">
           <i class="bi bi-list fs-4"></i>
         </button>
       </div>
@@ -923,7 +923,7 @@ export default {
   background: rgba(10, 15, 25, 0.7);
   backdrop-filter: blur(25px);
   -webkit-backdrop-filter: blur(25px);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid var(--overlay-medium);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -934,7 +934,7 @@ export default {
 }
 .sidebar-header {
   padding: 30px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--overlay-light);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -942,7 +942,7 @@ export default {
 .gh-logo {
   font-size: 1.5rem;
   font-weight: 900;
-  color: #fff;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -967,7 +967,7 @@ export default {
   padding: 24px 24px 8px;
   font-size: 0.7rem;
   font-weight: 800;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--overlay-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -980,7 +980,7 @@ export default {
 .nav-btn {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--overlay-text);
   text-align: left;
   padding: 12px 16px;
   border-radius: 8px;
@@ -996,7 +996,7 @@ export default {
 .nav-btn span:first-of-type { flex: 1; }
 .nav-badge {
   background: #ef4444;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 0.7rem;
   font-weight: 800;
   padding: 2px 8px;
@@ -1005,13 +1005,13 @@ export default {
 }
 
 .nav-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
+  background: var(--overlay-light);
+  color: var(--text-primary);
   transform: translateX(4px);
 }
 .nav-btn.active {
   background: linear-gradient(90deg, rgba(0, 210, 255, 0.15) 0%, transparent 100%);
-  color: #fff;
+  color: var(--text-primary);
   border-left: 3px solid var(--primary);
   border-radius: 4px;
 }
@@ -1023,7 +1023,7 @@ export default {
   margin-top: auto;
   padding: 20px;
   background: rgba(0, 0, 0, 0.2);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--overlay-light);
 }
 .admin-profile {
   display: flex;
@@ -1039,12 +1039,12 @@ export default {
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
-  color: #fff;
+  color: var(--text-primary);
 }
 .admin-user {
   font-size: 0.85rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   margin: 0 0 2px;
   max-width: 150px;
   white-space: nowrap;
@@ -1053,8 +1053,8 @@ export default {
 }
 .admin-badge {
   font-size: 0.65rem;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255,255,255,0.7);
+  background: var(--overlay-medium);
+  color: var(--overlay-text);
   padding: 2px 6px;
   border-radius: 4px;
   font-weight: 800;
@@ -1077,7 +1077,7 @@ export default {
 .pane-title {
   font-size: 2.2rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--text-primary);
   margin: 0 0 8px;
   letter-spacing: -0.02em;
 }
@@ -1095,9 +1095,9 @@ export default {
   margin-bottom: 24px;
 }
 .stat-card {
-  background: rgba(255,255,255,0.02);
+  background: var(--overlay-light);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--overlay-medium);
   border-radius: 16px;
   padding: 24px;
   display: flex;
@@ -1108,13 +1108,13 @@ export default {
 }
 .stat-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(255,255,255,0.15);
+  border-color: var(--overlay-heavy);
 }
 .stat-icon {
   width: 50px;
   height: 50px;
   border-radius: 12px;
-  background: rgba(255,255,255,0.05);
+  background: var(--overlay-light);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1133,7 +1133,7 @@ export default {
 .stat-val {
   font-size: 1.8rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--text-primary);
   display: flex;
   align-items: baseline;
   gap: 8px;
@@ -1146,7 +1146,7 @@ export default {
   display: flex;
   align-items: center;
   background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid var(--overlay-medium);
   border-radius: 8px;
   padding: 10px 16px;
   width: 300px;
@@ -1160,7 +1160,7 @@ export default {
   background: transparent;
   border: none;
   outline: none;
-  color: #fff;
+  color: var(--text-primary);
   width: 100%;
 }
 .filter-pills {
@@ -1169,8 +1169,8 @@ export default {
   flex-wrap: wrap;
 }
 .filter-pill {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--overlay-light);
+  border: 1px solid var(--overlay-medium);
   color: var(--text-secondary);
   padding: 8px 16px;
   border-radius: 20px;
@@ -1182,7 +1182,7 @@ export default {
 .filter-pill:hover, .filter-pill.active {
   background: rgba(0, 210, 255, 0.15);
   border-color: var(--primary);
-  color: #fff;
+  color: var(--text-primary);
 }
 
 /* ── Widgets ── */
@@ -1203,9 +1203,9 @@ export default {
 }
 
 .gh-widget {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--overlay-light);
   backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--overlay-medium);
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 12px 40px rgba(0,0,0,0.3);
@@ -1213,7 +1213,7 @@ export default {
 }
 .widget-header {
   padding: 24px 32px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--overlay-light);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1222,7 +1222,7 @@ export default {
 .widget-header h3 {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   margin: 0;
   display: flex;
   align-items: center;
@@ -1256,15 +1256,15 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255,255,255,0.03);
+  background: var(--overlay-light);
   padding: 20px 24px;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid var(--overlay-light);
   transition: background 0.2s, border-color 0.2s;
 }
 .report-item:hover {
-  background: rgba(255,255,255,0.06);
-  border-color: rgba(255,255,255,0.15);
+  background: var(--overlay-medium);
+  border-color: var(--overlay-heavy);
 }
 .report-info { display: flex; flex-direction: column; gap: 6px; }
 .report-meta { display: flex; gap: 12px; align-items: center; }
@@ -1277,13 +1277,13 @@ export default {
   font-weight: 800; 
   font-size: 0.7rem; 
   text-transform: uppercase; 
-  background: rgba(255,255,255,0.1);
+  background: var(--overlay-medium);
   padding: 3px 8px;
   border-radius: 4px;
-  color: #fff;
+  color: var(--text-primary);
 }
 .rep-time { font-size: 0.8rem; color: var(--text-muted); }
-.report-text { font-size: 1.05rem; color: #fff; }
+.report-text { font-size: 1.05rem; color: var(--text-primary); }
 .report-user { font-size: 0.85rem; color: var(--text-secondary); }
 
 .report-actions-extended {
@@ -1295,9 +1295,9 @@ export default {
 
 /* Quick Actions */
 .qa-btn {
-  background: rgba(255,255,255,0.03);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.05);
+  background: var(--overlay-light);
+  color: var(--text-primary);
+  border: 1px solid var(--overlay-light);
   padding: 16px 20px;
   border-radius: 12px;
   text-align: left;
@@ -1326,9 +1326,9 @@ export default {
   align-items: center;
   gap: 16px;
   padding: 16px 20px;
-  background: rgba(255,255,255,0.02);
+  background: var(--overlay-light);
   border-radius: 12px;
-  border-left: 3px solid rgba(255,255,255,0.1);
+  border-left: 3px solid var(--overlay-medium);
 }
 .act-icon {
   width: 40px; height: 40px; border-radius: 50%;
@@ -1338,7 +1338,7 @@ export default {
 .act-type-approve { background: rgba(34,197,94,0.1); color: #22c55e; border: 1px solid rgba(34,197,94,0.2); }
 .act-type-promote { background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2); }
 .act-type-signup { background: rgba(56,189,248,0.1); color: #38bdf8; border: 1px solid rgba(56,189,248,0.2); }
-.act-content { font-size: 0.95rem; color: #fff; flex: 1; }
+.act-content { font-size: 0.95rem; color: var(--text-primary); flex: 1; }
 .act-time { font-size: 0.8rem; color: var(--text-muted); float: right; }
 
 /* ── Tables ── */
@@ -1356,21 +1356,21 @@ export default {
   font-weight: 800;
   text-transform: uppercase;
   color: var(--text-muted);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid var(--overlay-light);
   background: rgba(0,0,0,0.1);
 }
 .gh-table td {
   padding: 24px 32px;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--overlay-light);
   font-size: 0.95rem;
 }
 .gh-table tr:hover td {
-  background: rgba(255,255,255,0.03);
+  background: var(--overlay-light);
 }
 .row-highlight td {
   background: rgba(0, 210, 255, 0.04);
 }
-.primary-col { color: #fff; }
+.primary-col { color: var(--text-primary); }
 .muted-col { color: var(--text-secondary); }
 
 .user-cell {
@@ -1385,17 +1385,17 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 1.1rem;
 }
 .admin-av { background: linear-gradient(135deg, var(--primary) 0%, #3a00f5 100%); }
-.user-av { background: rgba(255,255,255,0.1); }
+.user-av { background: var(--overlay-medium); }
 
 .article-thumb {
   width: 48px;
   height: 48px;
   background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid var(--overlay-medium);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -1414,15 +1414,15 @@ export default {
   align-items: center;
 }
 .badge-primary { background: rgba(0, 210, 255, 0.15); color: var(--primary); border: 1px solid rgba(0,210,255,0.3); }
-.badge-neutral { background: rgba(255,255,255,0.1); color: var(--text-muted); }
+.badge-neutral { background: var(--overlay-medium); color: var(--text-muted); }
 .badge-danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
 .badge-success { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
 
 /* Buttons */
 .btn-gh-outline {
   background: transparent;
-  border: 1px solid rgba(255,255,255,0.2);
-  color: #fff;
+  border: 1px solid var(--overlay-heavy);
+  color: var(--text-primary);
   padding: 8px 16px;
   border-radius: 8px;
   font-size: 0.85rem;
@@ -1431,8 +1431,8 @@ export default {
   transition: all 0.2s;
 }
 .btn-gh-outline:hover:not(.disabled) {
-  background: rgba(255,255,255,0.1);
-  border-color: #fff;
+  background: var(--overlay-medium);
+  border-color: var(--text-primary);
 }
 
 .btn-gh-danger {
@@ -1480,11 +1480,11 @@ export default {
   padding: 10px 16px;
 }
 .btn-gh-text.small { padding: 4px 10px; font-size: 0.85rem; }
-.btn-gh-text:hover { color: #fff; }
+.btn-gh-text:hover { color: var(--text-primary); }
 
 .btn-gh-danger-solid {
   background: #ef4444;
-  color: #fff;
+  color: var(--text-primary);
   border: none;
   border-radius: 8px;
   font-weight: 700;
@@ -1508,7 +1508,7 @@ export default {
 }
 .gh-modal {
   background: var(--bg-surface);
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid var(--overlay-medium);
   padding: 40px;
   border-radius: 16px;
   width: 90%;

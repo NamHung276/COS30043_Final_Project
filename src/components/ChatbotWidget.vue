@@ -69,27 +69,28 @@ onMounted(() => {
       class="chatbot-toggle-btn" 
       @click="toggleChat" 
       :class="{ 'is-active': isOpen }"
-      aria-label="Toggle Chatbot"
+      :aria-label="isOpen ? 'Close AI chat' : 'Open AI chat'"
+      :aria-expanded="isOpen"
     >
-      <span v-if="!isOpen">💬</span>
-      <span v-else>✕</span>
+      <span v-if="!isOpen" aria-hidden="true">💬</span>
+      <span v-else aria-hidden="true">✕</span>
     </button>
 
     <!-- Chat Window -->
     <transition name="chat-slide">
-      <div v-if="isOpen" class="chatbot-window glass-panel">
+      <div v-if="isOpen" class="chatbot-window glass-panel" role="dialog" aria-modal="true" aria-labelledby="chatbot-title">
         <div class="chatbot-header">
           <div class="header-info">
-            <span class="bot-avatar">🤖</span>
+            <span class="bot-avatar" aria-hidden="true">🤖</span>
             <div class="header-text">
-              <h3>GameHub AI</h3>
+              <h3 id="chatbot-title">GameHub AI</h3>
               <span class="status">Online</span>
             </div>
           </div>
-          <button class="close-btn" @click="toggleChat" aria-label="Close Chat">✕</button>
+          <button class="close-btn" @click="toggleChat" aria-label="Close AI chat">✕</button>
         </div>
 
-        <div class="chatbot-messages" ref="messagesContainer">
+        <div class="chatbot-messages" ref="messagesContainer" role="log" aria-live="polite" aria-label="Chat messages">
           <div 
             v-for="(msg, index) in messages" 
             :key="index"
@@ -113,15 +114,23 @@ onMounted(() => {
         </div>
 
         <div class="chatbot-input">
+          <label for="chatbot-msg-input" class="visually-hidden">Message GameHub AI</label>
           <input 
+            id="chatbot-msg-input"
             v-model="newMessage" 
             @keyup.enter="sendMessage" 
             type="text" 
             placeholder="Type a message..." 
             :disabled="isTyping"
+            autocomplete="off"
           />
-          <button @click="sendMessage" :disabled="isTyping || !newMessage.trim()" class="send-btn">
-            ➤
+          <button 
+            @click="sendMessage" 
+            :disabled="isTyping || !newMessage.trim()" 
+            class="send-btn"
+            aria-label="Send message"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </div>
       </div>
@@ -138,6 +147,13 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+}
+
+@media (max-width: 480px) {
+  .chatbot-wrapper {
+    bottom: 5rem;
+    right: 1rem;
+  }
 }
 
 .chatbot-toggle-btn {
@@ -169,15 +185,15 @@ onMounted(() => {
 }
 
 .chatbot-window {
-  position: absolute;
-  bottom: 80px;
-  right: 0;
+  position: fixed;
+  bottom: calc(6rem + 72px);
+  right: 2rem;
   width: 350px;
   height: 500px;
-  background: rgba(30, 30, 35, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-surface);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--overlay-medium);
   border-radius: 20px;
   display: flex;
   flex-direction: column;
@@ -186,10 +202,20 @@ onMounted(() => {
   transform-origin: bottom right;
 }
 
+@media (max-width: 480px) {
+  .chatbot-window {
+    width: calc(100vw - 2rem);
+    right: 1rem;
+    bottom: calc(5rem + 72px);
+    height: 420px;
+    border-radius: 16px;
+  }
+}
+
 .chatbot-header {
   padding: 1rem;
-  background: rgba(0, 0, 0, 0.2);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--bg-glass);
+  border-bottom: 1px solid var(--overlay-light);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -253,7 +279,7 @@ onMounted(() => {
   flex-direction: column;
   gap: 12px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  scrollbar-color: var(--overlay-heavy) transparent;
 }
 
 .chatbot-messages::-webkit-scrollbar {
@@ -261,7 +287,7 @@ onMounted(() => {
 }
 
 .chatbot-messages::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--overlay-heavy);
   border-radius: 10px;
 }
 
@@ -294,10 +320,10 @@ onMounted(() => {
 }
 
 .message-assistant .message-bubble {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--overlay-medium);
   color: var(--color-text);
   border-bottom-left-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--overlay-light);
 }
 
 /* Markdown Styling */
@@ -327,16 +353,16 @@ onMounted(() => {
 
 .chatbot-input {
   padding: 1rem;
-  background: rgba(0, 0, 0, 0.2);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--bg-glass);
+  border-top: 1px solid var(--overlay-light);
   display: flex;
   gap: 8px;
 }
 
 .chatbot-input input {
   flex: 1;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--overlay-light);
+  border: 1px solid var(--overlay-medium);
   border-radius: 20px;
   padding: 10px 16px;
   color: var(--color-text);
@@ -346,7 +372,7 @@ onMounted(() => {
 }
 
 .chatbot-input input:focus {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--overlay-medium);
   border-color: var(--color-primary);
   box-shadow: 0 0 10px rgba(255, 51, 102, 0.2);
 }

@@ -697,7 +697,7 @@ export default {
   position: relative;
   height: 320px;
   background: #0f1016;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--overlay-light);
   overflow: hidden;
 }
 
@@ -883,7 +883,7 @@ export default {
 }
 
 .text-muted-light {
-  color: rgba(255, 255, 255, 0.75) !important;
+  color: var(--overlay-text) !important;
 }
 
 .review-comment {

@@ -392,7 +392,7 @@ export default {
                       :key="n"
                       class="flex-grow-1 rounded-pill"
                       :style="{
-                        background: n <= passwordStrength ? strengthColor : 'rgba(255,255,255,0.1)',
+                        background: n <= passwordStrength ? strengthColor : 'var(--overlay-medium)',
                         transition: 'background 0.3s',
                       }"
                     ></div>
@@ -455,7 +455,7 @@ export default {
                 v-for="purchase in purchases"
                 :key="purchase.id"
                 class="purchase-item p-4 mb-3 profile-glass-card"
-                style="background: rgba(255, 255, 255, 0.02); border-color: rgba(255, 255, 255, 0.05);"
+                style="background: var(--overlay-light); border-color: var(--overlay-light);"
               >
                 <div class="d-flex justify-content-between align-items-center">
                   <div class="d-flex align-items-center gap-3">
@@ -524,7 +524,7 @@ export default {
 }
 
 .text-muted-light {
-  color: rgba(255, 255, 255, 0.75) !important;
+  color: var(--overlay-text) !important;
 }
 
 .profile-glass-card {
@@ -561,7 +561,7 @@ export default {
 }
 
 .settings-nav-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--overlay-light);
 }
 
 .settings-nav-btn.active {
@@ -577,7 +577,7 @@ export default {
 
 .gd-input {
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--overlay-medium);
   color: var(--text-primary);
   border-radius: 10px;
   padding: 12px 16px;
@@ -592,7 +592,7 @@ export default {
 }
 
 .gd-input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--overlay-text-muted);
 }
 
 .gd-input.is-invalid {
@@ -611,7 +611,7 @@ export default {
 
 .purchase-item:hover {
   transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.04) !important;
+  background: var(--overlay-light) !important;
 }
 
 @media (max-width: 991.98px) {

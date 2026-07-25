@@ -591,7 +591,7 @@ export default {
                 >
               </div>
 
-              <h1 class="gd-title display-3 fw-bold mb-3 text-white">
+              <h1 class="gd-title display-3 fw-bold mb-3 text-primary-var">
                 {{ game.name }}
               </h1>
 
@@ -607,7 +607,7 @@ export default {
                     ></div>
                   </div>
                   <span
-                    class="gd-rating-text fs-5 text-white fw-bold m-0"
+                    class="gd-rating-text fs-5 text-primary-var fw-bold m-0"
                     style="opacity: 1"
                   >
                     {{ game.rating.toFixed(1) }}/5
@@ -630,7 +630,7 @@ export default {
                   >
                     {{ game.metacritic }}
                   </div>
-                  <span class="text-white fw-bold">Metacritic</span>
+                  <span class="text-primary-var fw-bold">Metacritic</span>
                 </div>
 
                 <!-- Platform chips -->
@@ -638,7 +638,7 @@ export default {
                   <span
                     v-for="p in platforms.slice(0, 5)"
                     :key="p.name"
-                    class="gd-platform-chip border-0 bg-dark bg-opacity-50 text-white shadow-sm"
+                    class="gd-platform-chip border-0 bg-surface-var bg-opacity-50 text-primary-var shadow-sm"
                     :title="`Available on ${p.name}`"
                   >
                     <img
@@ -653,7 +653,7 @@ export default {
               <!-- Quick Actions in Hero -->
               <div class="d-flex flex-wrap gap-3 mt-4">
                 <button
-                  class="gd-hero-btn-primary btn btn-primary btn-lg fw-bold px-5 shadow-sm text-white"
+                  class="gd-hero-btn-primary btn btn-primary btn-lg fw-bold px-5 shadow-sm text-primary-var"
                   @click="buyNow"
                   aria-label="Buy Now"
                 >
@@ -854,7 +854,7 @@ export default {
                     <span
                       v-for="platformName in platforms"
                       :key="platformName"
-                      class="gd-tag text-decoration-none bg-dark text-white border-0 opacity-75 m-0"
+                      class="gd-tag text-decoration-none bg-surface-var text-primary-var border-0 opacity-75 m-0"
                       style="cursor: default"
                     >
                       {{ platformName }}
@@ -1070,7 +1070,7 @@ export default {
                 >
                   <template v-if="fakeDiscount > 0">
                     <div
-                      class="d-inline-block px-3 py-1 bg-danger text-white fw-bold rounded-pill mb-2 shadow-sm"
+                      class="d-inline-block px-3 py-1 bg-danger text-primary-var fw-bold rounded-pill mb-2 shadow-sm"
                     >
                       SALE -{{ fakeDiscount }}%
                     </div>
@@ -1303,7 +1303,7 @@ export default {
                             class="btn btn-sm rounded-pill px-3"
                             :class="
                               cheapestDeal?.dealID === deal.dealID
-                                ? 'btn-success text-white'
+                                ? 'btn-success text-primary-var'
                                 : 'btn-outline-secondary'
                             "
                           >
@@ -1369,6 +1369,31 @@ export default {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+        <!-- You Might Also Like (Recommendations) -->
+        <div class="mt-5 pt-4 mb-3" v-if="discoverMoreGames && discoverMoreGames.length">
+          <h4 class="mb-4 fw-bold" style="color: var(--text-primary)">
+            You Might Also Like
+          </h4>
+          <div class="gd-recommendation-carousel pb-3">
+            <router-link
+              v-for="g in discoverMoreGames"
+              :key="g.id"
+              :to="`/games/${g.id}`"
+              class="gd-rec-card text-decoration-none"
+            >
+              <div class="gd-rec-img-wrapper">
+                <img :src="g.background_image" :alt="g.name" class="gd-rec-img" />
+              </div>
+              <div class="gd-rec-info p-3">
+                <h6 class="gd-rec-title fw-bold mb-1 text-truncate" :title="g.name">{{ g.name }}</h6>
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                  <span class="gd-rec-genre text-muted small text-truncate" style="max-width: 60%">{{ g.genres?.[0]?.name || 'Game' }}</span>
+                  <span class="gd-rec-price fw-bold text-success small">${{ ((g.id % 40) + 10 + 0.99).toFixed(2) }}</span>
+                </div>
+              </div>
+            </router-link>
           </div>
         </div>
       </div>

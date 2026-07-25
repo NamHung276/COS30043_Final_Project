@@ -85,7 +85,7 @@ export default {
 
       <div v-else class="gd-glass-card overflow-hidden">
         <div class="table-responsive">
-          <table class="table table-dark table-hover mb-0 align-middle gd-table">
+          <table class="table gd-table table-hover mb-0 align-middle gd-table">
             <thead>
               <tr>
                 <th scope="col" class="text-uppercase text-muted fw-bold small py-3 ps-4">Game</th>
@@ -99,10 +99,10 @@ export default {
                 <td class="ps-4 py-3">
                   <div class="d-flex align-items-center gap-3">
                     <img :src="purchase.thumbnail || '/placeholder.png'" class="game-thumbnail rounded" alt="Thumbnail" />
-                    <span class="fw-bold text-white">{{ purchase.title }}</span>
+                    <span class="fw-bold text-primary-var">{{ purchase.title }}</span>
                   </div>
                 </td>
-                <td class="py-3 text-light">{{ formatDate(purchase.createdAt) }}</td>
+                <td class="py-3 text-secondary-var">{{ formatDate(purchase.createdAt) }}</td>
                 <td class="py-3 text-muted font-monospace small">{{ purchase.transactionId || 'N/A' }}</td>
                 <td class="py-3 text-end pe-4 fw-bold text-warning">${{ parseFloat(purchase.price).toFixed(2) }}</td>
               </tr>
@@ -126,8 +126,8 @@ export default {
 .gd-table {
   background: transparent;
   --bs-table-bg: transparent;
-  --bs-table-hover-bg: rgba(255, 255, 255, 0.05);
-  --bs-table-border-color: rgba(255, 255, 255, 0.1);
+  --bs-table-hover-bg: var(--overlay-light);
+  --bs-table-border-color: var(--overlay-medium);
 }
 
 .game-thumbnail {

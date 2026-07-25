@@ -796,7 +796,7 @@ export default {
   padding: 11px 24px;
   background: var(--gradient-primary);
   border-radius: 12px;
-  color: #fff;
+  color: var(--text-primary);
   font-weight: 600;
   font-size: 0.9rem;
   text-decoration: none;
@@ -808,7 +808,7 @@ export default {
 .btn-fav-primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 30px rgba(124, 58, 237, 0.45);
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .btn-fav-outline {
@@ -996,7 +996,7 @@ export default {
 .fav-card-btn:hover {
   background: rgba(124, 58, 237, 0.28);
   border-color: var(--primary);
-  color: #fff;
+  color: var(--text-primary);
 }
 
 /* ===== List View ===== */

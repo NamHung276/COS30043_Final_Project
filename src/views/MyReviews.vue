@@ -416,7 +416,7 @@ export default {
   border-radius: 50%;
 }
 .fav-search-clear:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--overlay-medium);
   color: var(--text-primary);
 }
 .fav-toolbar-right {

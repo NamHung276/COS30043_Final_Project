@@ -63,7 +63,7 @@ export default {
             transactionId: details.transactionId || "N/A",
             payerName: details.payerName || "Anonymous",
             createdAt: serverTimestamp(),
-            status: "completed",
+            status: "not_installed",
           });
         });
 

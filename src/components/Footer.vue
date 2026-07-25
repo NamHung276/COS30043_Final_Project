@@ -3,10 +3,9 @@
     <div class="gd-footer-top">
       <div class="container">
         <div class="gd-footer-grid">
-          <!-- Brand Column -->
           <div class="gd-footer-brand-col">
             <div class="gd-footer-logo">
-              <img src="/logo/gamepad.svg" width="22" height="22" alt="" aria-hidden="true" />
+              <img src="/logo/gamepad.svg" width="24" height="24" alt="GameHub Logo" class="logo-img me-2" style="filter: brightness(1.3)" />
               <span>GameHub</span>
             </div>
             <p class="gd-footer-tagline">
@@ -25,6 +24,23 @@
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                 Live News API
               </span>
+            </div>
+            <!-- Mobile App Store Links -->
+            <div class="gd-footer-app-badges">
+              <a href="https://apps.apple.com" target="_blank" rel="noopener noreferrer" class="gd-app-badge" aria-label="Download on the App Store">
+                <svg class="gd-app-badge-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98l-.09.06c-.22.15-2.18 1.27-2.16 3.79.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.84M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                <span class="gd-app-badge-text">
+                  <small>Download on the</small>
+                  <strong>App Store</strong>
+                </span>
+              </a>
+              <a href="https://play.google.com" target="_blank" rel="noopener noreferrer" class="gd-app-badge" aria-label="Get it on Google Play">
+                <svg class="gd-app-badge-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.18 23.76c.3.17.64.24.98.24.44 0 .87-.12 1.24-.36l13.2-7.6-2.88-2.88-12.54 10.6zM.44 1.06C.17 1.41 0 1.88 0 2.46v19.08c0 .58.17 1.05.44 1.4l.07.07L11.1 12l-10.59-10.01-.07.07zM21.37 10.14l-2.75-1.59-3.18 3.18 3.18 3.18 2.77-1.6c.79-.46.79-1.71-.02-2.17zM4.16.6L17.36 8.2l-2.88 2.88L1.94.48c.37-.24.8-.36 1.24-.36.35 0 .69.08.98.24l.07.07-.07-.03z"/></svg>
+                <span class="gd-app-badge-text">
+                  <small>Get it on</small>
+                  <strong>Google Play</strong>
+                </span>
+              </a>
             </div>
           </div>
 
@@ -85,8 +101,8 @@
 
 <style scoped>
 .gd-footer {
-  background: #0a0c12;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-deep);
+  border-top: 1px solid var(--overlay-medium);
   margin-top: auto;
 }
 
@@ -154,8 +170,8 @@
   font-size: 0.72rem;
   font-weight: 600;
   color: var(--text-secondary);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--overlay-light);
+  border: 1px solid var(--overlay-medium);
   border-radius: 999px;
   padding: 4px 10px;
 }
@@ -198,7 +214,7 @@
 }
 
 .gd-footer-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--overlay-light);
   padding: 18px 0;
 }
 
@@ -228,5 +244,61 @@
 
 .gd-footer-apis a:hover {
   color: var(--primary-light);
+}
+
+/* ── Mobile App Badges ── */
+.gd-footer-app-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.gd-app-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--overlay-medium);
+  border: 1px solid var(--overlay-heavy);
+  border-radius: 10px;
+  padding: 8px 14px;
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+  min-width: 140px;
+}
+
+.gd-app-badge:hover {
+  background: var(--overlay-heavy);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
+  color: var(--text-primary);
+}
+
+.gd-app-badge-icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  color: var(--text-primary);
+}
+
+.gd-app-badge-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.gd-app-badge-text small {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.gd-app-badge-text strong {
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: var(--font-display);
+  color: var(--text-primary);
 }
 </style>

@@ -407,7 +407,7 @@ export default {
   background: linear-gradient(135deg, var(--primary), #8b5cf6);
   border: none;
   border-radius: 10px;
-  color: #fff;
+  color: var(--text-primary);
   font-family: var(--font-display);
   font-size: 0.95rem;
   font-weight: 700;
@@ -436,8 +436,8 @@ export default {
 .auth-spinner {
   width: 18px;
   height: 18px;
-  border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: #fff;
+  border: 2px solid var(--overlay-heavy);
+  border-top-color: var(--text-primary);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }

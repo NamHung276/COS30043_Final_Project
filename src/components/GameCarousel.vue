@@ -102,7 +102,7 @@ const imageLoaded = (event) => {
   background: linear-gradient(
     180deg,
     var(--overlay-light),
-    rgba(255, 255, 255, 0.01)
+    var(--overlay-light)
   );
   border: 1px solid var(--border-subtle);
   border-radius: 24px;

@@ -30,7 +30,7 @@
   display: flex;
   flex-direction: column;
   background: rgba(15, 23, 42, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--overlay-medium);
   border-radius: 14px;
   overflow: hidden;
   backdrop-filter: blur(12px);

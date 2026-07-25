@@ -925,7 +925,7 @@ export default {
   flex-shrink: 0;
   margin-top: 2px;
   background: linear-gradient(135deg, #4c1d95, #7c3aed);
-  color: #fff;
+  color: var(--text-primary);
   box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
 }
 .ghn-title {
@@ -951,7 +951,7 @@ export default {
   border-radius: 10px;
   border: none;
   background: var(--gradient-primary);
-  color: #fff !important;
+  color: var(--text-primary) !important;
   font-size: 0.88rem;
   font-weight: 700;
   font-family: var(--font-family);
@@ -966,7 +966,7 @@ export default {
 .ghn-post-btn:hover {
   opacity: 0.88;
   transform: translateY(-1px);
-  color: #fff !important;
+  color: var(--text-primary) !important;
 }
 
 /* Filter panel */
@@ -1128,7 +1128,7 @@ export default {
   align-items: center;
   gap: 5px;
   background: var(--gradient-primary);
-  color: #fff !important;
+  color: #ffffff !important;
   font-size: 0.72rem;
   font-weight: 700;
   padding: 4px 12px;
@@ -1158,7 +1158,7 @@ export default {
 .ghn-featured-title {
   font-size: 1.85rem;
   font-weight: 800;
-  color: #fff !important;
+  color: #ffffff !important;
   margin: 0 0 12px;
   line-height: 1.25;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
@@ -1169,7 +1169,7 @@ export default {
 }
 .ghn-featured-excerpt {
   font-size: 0.88rem;
-  color: rgba(255, 255, 255, 0.65) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
   line-height: 1.6;
   margin: 0 0 16px;
   max-width: 680px;
@@ -1186,7 +1186,7 @@ export default {
 }
 .ghn-featured-date {
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.45) !important;
+  color: rgba(255, 255, 255, 0.6) !important;
 }
 .ghn-read-cta {
   display: inline-flex;
@@ -1194,7 +1194,7 @@ export default {
   gap: 6px;
   font-size: 0.85rem;
   font-weight: 700;
-  color: #fff !important;
+  color: #ffffff !important;
   padding: 8px 20px;
   border-radius: 30px;
   background: var(--gradient-primary);
@@ -1614,7 +1614,7 @@ export default {
 .ghn-page-num.active {
   background: var(--gradient-primary);
   border-color: transparent;
-  color: #fff !important;
+  color: var(--text-primary) !important;
   box-shadow: 0 2px 12px rgba(124, 58, 237, 0.4);
 }
 .ghn-page-info {
@@ -1670,7 +1670,7 @@ export default {
   border-radius: 4px;
 }
 .ghn-cat-tab {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--overlay-light);
   border: 1px solid var(--border-glass);
   color: var(--text-secondary);
   padding: 6px 14px;
@@ -1682,13 +1682,13 @@ export default {
   transition: all 0.2s ease;
 }
 .ghn-cat-tab:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--overlay-medium);
+  color: var(--text-primary);
 }
 .ghn-cat-tab.active {
   background: var(--primary);
   border-color: var(--primary-light);
-  color: #fff;
+  color: var(--text-primary);
   box-shadow: 0 0 10px rgba(124, 58, 237, 0.3);
 }
 

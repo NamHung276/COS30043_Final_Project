@@ -154,7 +154,7 @@ export default {
             <div class="d-flex align-items-center mb-3">
               <img :src="coin.image" :alt="coin.name" class="crypto-logo me-3" />
               <div>
-                <h5 class="mb-0 text-white fw-bold">{{ coin.name }}</h5>
+                <h5 class="mb-0 text-primary-var fw-bold">{{ coin.name }}</h5>
                 <span class="text-muted text-uppercase small">{{ coin.symbol }}</span>
               </div>
             </div>
@@ -162,7 +162,7 @@ export default {
             <div class="d-flex justify-content-between align-items-end mt-4">
               <div>
                 <div class="text-muted small mb-1">Price</div>
-                <h4 class="mb-0 text-white fw-bold">{{ formatPrice(coin.current_price) }}</h4>
+                <h4 class="mb-0 text-primary-var fw-bold">{{ formatPrice(coin.current_price) }}</h4>
               </div>
               <div class="text-end">
                 <div class="text-muted small mb-1">24h Change</div>
@@ -178,7 +178,7 @@ export default {
 
             <div class="mt-3 pt-3 border-top border-secondary border-opacity-50 d-flex justify-content-between small">
               <span class="text-muted">Market Cap</span>
-              <span class="text-light">{{ formatCap(coin.market_cap) }}</span>
+              <span class="text-secondary-var">{{ formatCap(coin.market_cap) }}</span>
             </div>
           </div>
         </div>
@@ -195,7 +195,7 @@ export default {
 
 .gd-glass-card {
   background: rgba(20, 20, 25, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--overlay-medium);
   border-radius: 16px;
   backdrop-filter: blur(12px);
   transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
@@ -220,7 +220,7 @@ export default {
   right: 16px;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--overlay-text-muted);
   font-size: 1.2rem;
   transition: all 0.2s ease;
   z-index: 2;
@@ -236,7 +236,7 @@ export default {
 }
 
 .skeleton-card {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--overlay-light);
   border-radius: 16px;
   padding: 24px;
   min-height: 180px;

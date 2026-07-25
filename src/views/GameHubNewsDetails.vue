@@ -363,8 +363,8 @@ export default {
   text-decoration: none;
   padding: 7px 14px;
   border-radius: 8px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--overlay-light);
+  border: 1px solid var(--overlay-medium);
   transition: all 0.2s ease;
   margin-bottom: 28px;
 }
@@ -441,8 +441,8 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--overlay-light);
+  border: 1px solid var(--overlay-medium);
   border-radius: 8px;
   color: var(--text-secondary);
   font-size: 0.83rem;
@@ -453,7 +453,7 @@ export default {
 }
 
 .news-share-btn:hover {
-  background: rgba(255,255,255,0.09);
+  background: var(--overlay-medium);
   color: var(--text-primary);
 }
 

@@ -112,10 +112,18 @@ export default {
         );
         const snap = await getDocs(q);
 
-        const results = snap.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        const results = snap.docs.map((doc) => {
+          const data = doc.data();
+          let currentStatus = data.status;
+          if (currentStatus === 'completed') currentStatus = 'not_installed';
+          
+          return {
+            id: doc.id,
+            ...data,
+            status: currentStatus || 'not_installed',
+            gameName: data.gameName || data.title || "Unknown Game",
+          };
+        });
 
         this.purchases = results.sort((a, b) => {
           const tA = a.purchasedAt?.seconds || 0;
@@ -443,7 +451,7 @@ export default {
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px; margin-right:4px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                           Install
                         </button>
-                        <div v-else class="progress mt-1" style="height: 31px; border-radius: 15.5px; background: rgba(255,255,255,0.1);">
+                        <div v-else class="progress mt-1" style="height: 31px; border-radius: 15.5px; background: var(--overlay-medium);">
                           <div class="progress-bar progress-bar-striped progress-bar-animated bg-info text-dark fw-bold" role="progressbar" :style="{ width: game.installProgress + '%' }">
                             Installing {{ Math.floor(game.installProgress) }}%
                           </div>
@@ -457,7 +465,7 @@ export default {
                           Play
                         </button>
                         <div class="dropdown">
-                          <button class="btn btn-outline-secondary btn-sm rounded-circle dropdown-toggle no-caret d-flex align-items-center justify-content-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width:31px; height:31px;">
+                          <button class="btn btn-outline-secondary btn-sm rounded-circle dropdown-toggle no-caret d-flex align-items-center justify-content-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width:31px; height:31px;" aria-label="Game options">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
                           </button>
                           <ul class="dropdown-menu dropdown-menu-end shadow border-secondary">
@@ -561,7 +569,7 @@ export default {
   position: absolute;
   inset: 0;
   background: linear-gradient(135deg, rgba(14,165,233,0.08) 0%, rgba(139,92,246,0.06) 50%, transparent 100%);
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid var(--overlay-medium);
 }
 
 .lib-hero-inner {
@@ -590,8 +598,8 @@ export default {
   display: flex;
   align-items: center;
   gap: 24px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
+  background: var(--overlay-light);
+  border: 1px solid var(--overlay-medium);
   border-radius: 14px;
   padding: 16px 24px;
 }
@@ -635,7 +643,7 @@ export default {
 .lib-stat-divider {
   width: 1px;
   height: 36px;
-  background: rgba(255,255,255,0.08);
+  background: var(--overlay-medium);
 }
 
 .lib-stat-playing-dot {
@@ -787,7 +795,7 @@ export default {
   top: 6px;
   left: 6px;
   background: rgba(16,185,129,0.9);
-  color: #fff;
+  color: var(--text-primary);
   font-size: 0.68rem;
   font-weight: 700;
   padding: 2px 8px;
@@ -836,8 +844,8 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.09);
+  background: var(--overlay-light);
+  border: 1px solid var(--overlay-medium);
   border-radius: 8px;
   padding: 6px 12px;
   color: var(--text-muted);
@@ -845,7 +853,7 @@ export default {
 
 .lib-search:focus-within {
   border-color: var(--primary);
-  background: rgba(255,255,255,0.08);
+  background: var(--overlay-medium);
 }
 
 .lib-search-input {
@@ -863,8 +871,8 @@ export default {
 }
 
 .lib-sort-select {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.09);
+  background: var(--overlay-light);
+  border: 1px solid var(--overlay-medium);
   border-radius: 8px;
   color: var(--text-primary);
   font-size: 0.83rem;
@@ -881,8 +889,8 @@ export default {
 
 .lib-view-toggle {
   display: flex;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--overlay-light);
+  border: 1px solid var(--overlay-medium);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -905,7 +913,7 @@ export default {
 }
 
 .lib-view-btn:hover:not(.active) {
-  background: rgba(255,255,255,0.06);
+  background: var(--overlay-medium);
   color: var(--text-primary);
 }
 
@@ -991,7 +999,7 @@ export default {
 .btn-play-huge:hover {
   background: white;
   color: #10b981;
-  box-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 30px var(--overlay-text);
 }
 
 .playing-badge {
@@ -999,7 +1007,7 @@ export default {
   top: 8px;
   left: 8px;
   background: rgba(16,185,129,0.9);
-  color: #fff;
+  color: var(--text-primary);
   font-size: 0.68rem;
   font-weight: 700;
   padding: 3px 10px;
@@ -1128,9 +1136,9 @@ export default {
 }
 
 .lib-status-chip.not-installed {
-  background: rgba(255,255,255,0.05);
+  background: var(--overlay-light);
   color: var(--text-muted);
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid var(--overlay-medium);
 }
 
 .lib-list-actions {
@@ -1144,7 +1152,7 @@ export default {
 }
 
 .lib-empty-icon {
-  color: rgba(255,255,255,0.1);
+  color: var(--overlay-medium);
   margin-bottom: 24px;
 }
 
@@ -1196,7 +1204,7 @@ export default {
 .playing-pulse {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+  background: linear-gradient(90deg, var(--overlay-light) 0%, var(--overlay-heavy) 50%, var(--overlay-light) 100%);
   animation: pulse-slide 1.5s infinite linear;
   background-size: 200% 100%;
 }

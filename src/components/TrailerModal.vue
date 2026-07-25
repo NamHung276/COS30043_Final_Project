@@ -140,7 +140,7 @@ export default {
   background: #0d1117;
   border-radius: 16px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--overlay-medium);
   box-shadow: 0 40px 120px rgba(0, 0, 0, 0.9);
 }
 
@@ -149,8 +149,8 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  background: rgba(255, 255, 255, 0.04);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--overlay-light);
+  border-bottom: 1px solid var(--overlay-medium);
 }
 
 .tm-title-row {
@@ -175,7 +175,7 @@ export default {
 .tm-title {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   letter-spacing: 0.02em;
 }
 
@@ -183,8 +183,8 @@ export default {
   width: 32px;
   height: 32px;
   border: none;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.7);
+  background: var(--overlay-medium);
+  color: var(--overlay-text);
   border-radius: 8px;
   cursor: pointer;
   font-size: 0.85rem;
@@ -195,7 +195,7 @@ export default {
 }
 .tm-close:hover {
   background: rgba(239, 68, 68, 0.3);
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .tm-video-wrap {
@@ -217,7 +217,7 @@ export default {
 .tm-no-trailer {
   padding: 60px 20px;
   text-align: center;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--overlay-text-muted);
 }
 .tm-no-trailer span {
   font-size: 3rem;

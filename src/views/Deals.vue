@@ -787,7 +787,7 @@ export default {
   height: 54px;
   border-radius: 16px;
   background: linear-gradient(135deg, #b45309, #f59e0b);
-  color: #fff;
+  color: var(--text-primary);
   flex-shrink: 0;
   box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
 }
@@ -979,7 +979,7 @@ export default {
   padding: 3px 12px;
   border-radius: 20px;
   background: linear-gradient(135deg, #b45309, #f59e0b);
-  color: #fff !important;
+  color: var(--text-primary) !important;
 }
 
 /* ── Content ──────────────────────────────── */
@@ -1082,7 +1082,7 @@ export default {
 }
 .game-card:hover .hover-action {
   transform: translateY(0);
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .genre-ribbon {
@@ -1097,7 +1097,7 @@ export default {
   font-size: 0.72rem;
   font-weight: 700;
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--overlay-medium);
 }
 
 /* Metacritic */
@@ -1160,7 +1160,7 @@ export default {
 }
 .game-card:hover .platform-icon {
   background: var(--primary);
-  color: #fff;
+  color: var(--text-primary);
 }
 
 /* Card body */
@@ -1225,7 +1225,7 @@ export default {
 }
 .game-card:hover .game-genre-tag {
   background: rgba(14, 165, 233, 0.3);
-  color: #fff;
+  color: var(--text-primary);
 }
 
 /* Float action buttons on card image */
@@ -1263,8 +1263,8 @@ export default {
 }
 .wishlist-btn {
   background: rgba(0, 0, 0, 0.6);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border: 1px solid var(--overlay-medium);
 }
 .wishlist-btn.wishlisted {
   background: rgba(239, 68, 68, 0.8);
@@ -1293,7 +1293,7 @@ export default {
   opacity: 0.7;
 }
 .star-icon.empty {
-  color: rgba(255, 255, 255, 0.15);
+  color: var(--overlay-heavy);
 }
 .rating-label {
   font-size: 0.68rem;
@@ -1308,12 +1308,12 @@ export default {
   gap: 8px;
   margin-top: auto;
   padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--overlay-light);
 }
 .price-discount-badge {
   font-size: 0.72rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--text-primary);
   background: #22c55e;
   padding: 2px 7px;
   border-radius: 5px;
@@ -1467,7 +1467,7 @@ export default {
 .price-discount-badge {
   font-size: 0.72rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--text-primary);
   background: #22c55e;
   padding: 2px 7px;
   border-radius: 5px;

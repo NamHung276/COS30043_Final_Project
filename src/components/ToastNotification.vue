@@ -268,12 +268,12 @@ export default {
   -webkit-backdrop-filter: blur(12px);
   border-radius: 12px;
   padding: 16px 20px;
-  color: #fff;
+  color: var(--text-primary);
   min-width: 300px;
   max-width: 420px;
   box-shadow:
     0 12px 32px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    inset 0 1px 0 var(--overlay-medium);
   pointer-events: auto;
   overflow: hidden; /* for progress bar */
   font-size: 0.95rem;
@@ -318,7 +318,7 @@ export default {
 .toast-close {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--overlay-text-muted);
   cursor: pointer;
   padding: 0;
   font-size: 1.25rem;
@@ -328,13 +328,13 @@ export default {
 }
 
 .toast-close:hover {
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .toast-action-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
+  background: var(--overlay-medium);
+  border: 1px solid var(--overlay-heavy);
+  color: var(--text-primary);
   border-radius: 6px;
   padding: 4px 12px;
   font-size: 0.8rem;
@@ -345,7 +345,7 @@ export default {
 }
 
 .toast-action-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--overlay-heavy);
 }
 
 /* Progress bar */
@@ -355,12 +355,12 @@ export default {
   left: 0;
   width: 100%;
   height: 4px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--overlay-light);
 }
 
 .toast-progress-bar {
   height: 100%;
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--overlay-heavy);
 }
 
 .toast-success .toast-progress-bar {

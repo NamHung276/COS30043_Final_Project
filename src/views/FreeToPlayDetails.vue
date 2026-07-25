@@ -330,14 +330,14 @@ export default {
                 </span>
               </div>
               
-              <h1 class="gd-title display-3 fw-bold mb-3 text-white">{{ game.title }}</h1>
+              <h1 class="gd-title display-3 fw-bold mb-3 text-primary-var">{{ game.title }}</h1>
 
               <!-- Platform chips -->
               <div class="d-flex flex-wrap gap-2 mb-4">
                 <span
                   v-for="p in platforms"
                   :key="p.name"
-                  class="gd-platform-chip border-0 bg-dark bg-opacity-50 text-white shadow-sm"
+                  class="gd-platform-chip border-0 bg-surface-var bg-opacity-50 text-primary-var shadow-sm"
                   :title="`Available on ${p.name}`"
                 >
                   <img
@@ -366,7 +366,7 @@ export default {
                   :href="game.game_url"
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="gd-hero-btn-primary btn btn-primary btn-lg fw-bold px-5 shadow-sm text-white text-decoration-none"
+                  class="gd-hero-btn-primary btn btn-primary btn-lg fw-bold px-5 shadow-sm text-primary-var text-decoration-none"
                   aria-label="Play Now"
                 >
                   <i class="bi bi-controller me-2"></i> Play Now (FreeToGame)
@@ -438,7 +438,7 @@ export default {
             <div v-if="game.genre" class="gd-section" style="margin-bottom: var(--section-gap);">
               <h2 class="gd-section-title mb-4"><i class="bi bi-tags-fill me-2 text-primary"></i> Tags</h2>
               <div class="gd-tags d-flex flex-wrap gap-2">
-                <span class="gd-tag text-decoration-none bg-dark text-white border-0 opacity-75" style="cursor: default;">{{ game.genre }}</span>
+                <span class="gd-tag text-decoration-none bg-surface-var text-primary-var border-0 opacity-75" style="cursor: default;">{{ game.genre }}</span>
               </div>
             </div>
 

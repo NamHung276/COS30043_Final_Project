@@ -224,8 +224,8 @@ export default {
                   <!-- URL Mode -->
                   <div v-else class="url-zone">
                     <div class="input-group">
-                      <span class="input-group-text bg-dark border-secondary"><i class="bi bi-link-45deg text-muted"></i></span>
-                      <input v-model="image" type="text" class="form-control bg-dark border-secondary text-light" placeholder="Paste image URL..." />
+                      <span class="input-group-text bg-surface-var border-secondary"><i class="bi bi-link-45deg text-muted"></i></span>
+                      <input v-model="image" type="text" class="form-control bg-surface-var border-secondary text-secondary-var" placeholder="Paste image URL..." />
                     </div>
                   </div>
                 </div>
@@ -235,7 +235,7 @@ export default {
                 <div class="row g-3">
                   <div class="col-12">
                     <label class="form-label text-muted small fw-bold text-uppercase tracking-wider">Category</label>
-                    <select v-model="category" class="form-select bg-dark border-secondary text-light">
+                    <select v-model="category" class="form-select bg-surface-var border-secondary text-secondary-var">
                       <option value="" disabled>Choose Category ▼</option>
                       <option>General</option>
                       <option>FPS</option>
@@ -250,7 +250,7 @@ export default {
                   </div>
                   <div class="col-12">
                     <label class="form-label text-muted small fw-bold text-uppercase tracking-wider">Tags</label>
-                    <div class="tags-container border border-secondary rounded p-2 bg-dark d-flex flex-wrap gap-2 align-items-center">
+                    <div class="tags-container border border-secondary rounded p-2 bg-surface-var d-flex flex-wrap gap-2 align-items-center">
                       <span v-for="(tag, index) in tags" :key="index" class="badge bg-primary rounded-pill d-flex align-items-center gap-1 py-2 px-3">
                         {{ tag }}
                         <i class="bi bi-x cursor-pointer ms-1 fs-6 lh-1" @click="removeTag(index)"></i>
@@ -317,14 +317,14 @@ export default {
           </div>
 
           <!-- Title -->
-          <h1 class="preview-title text-light fw-bold mb-2">{{ title || 'Untitled Article' }}</h1>
+          <h1 class="preview-title text-secondary-var fw-bold mb-2">{{ title || 'Untitled Article' }}</h1>
           
           <!-- Subtitle -->
           <h2 v-if="subtitle" class="preview-subtitle text-muted fw-normal fs-5 mb-3">{{ subtitle }}</h2>
 
           <!-- Tags -->
           <div v-if="tags.length" class="mb-4 d-flex gap-2 flex-wrap">
-            <span v-for="tag in tags" :key="tag" class="badge bg-secondary bg-opacity-25 text-light rounded-pill px-3 py-2 fw-normal border border-secondary border-opacity-50">#{{ tag }}</span>
+            <span v-for="tag in tags" :key="tag" class="badge bg-secondary bg-opacity-25 text-secondary-var rounded-pill px-3 py-2 fw-normal border border-secondary border-opacity-50">#{{ tag }}</span>
           </div>
 
           <hr class="border-secondary opacity-25 mb-4" />
@@ -367,7 +367,7 @@ export default {
   border-left: 1px solid var(--border-subtle);
 }
 .bg-preview {
-  background-color: #141922;
+  background-color: var(--bg-surface);
 }
 
 .newsroom-headline-input {
@@ -400,9 +400,9 @@ export default {
 
 .tracking-wider { letter-spacing: 0.05em; }
 .cursor-pointer { cursor: pointer; }
-.border-dashed { border-style: dashed !important; border-color: rgba(255,255,255,0.2) !important; }
+.border-dashed { border-style: dashed !important; border-color: var(--overlay-heavy) !important; }
 .upload-zone-hover { transition: background 0.2s, border-color 0.2s; }
-.upload-zone-hover:hover { background: rgba(255,255,255,0.02); border-color: var(--primary) !important; }
+.upload-zone-hover:hover { background: var(--overlay-light); border-color: var(--primary) !important; }
 .image-mode-toggle { display: flex; gap: 4px; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 8px; width: fit-content; }
 .toggle-btn { background: transparent; border: none; color: var(--text-muted); padding: 6px 14px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; transition: 0.2s; }
 .toggle-btn.active { background: var(--bg-surface); color: var(--text-main); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
@@ -437,19 +437,19 @@ export default {
   background: rgba(0,0,0,0.1);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.1);
+  background: var(--overlay-medium);
   border-radius: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,0.2);
+  background: var(--overlay-heavy);
 }
 
 /* Custom Preview Styles exactly matching GameHubNewsDetails */
 .preview-hero-placeholder {
   width: 100%;
   aspect-ratio: 16/9;
-  background: rgba(255,255,255,0.02);
-  border: 1px dashed rgba(255,255,255,0.1);
+  background: var(--overlay-light);
+  border: 1px dashed var(--overlay-medium);
   border-radius: 12px;
 }
 .preview-title {

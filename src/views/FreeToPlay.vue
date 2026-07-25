@@ -406,7 +406,7 @@ export default {
         </div>
 
         <!-- Multi-tag cloud -->
-        <div v-if="tagMode" class="mt-3 mb-4 p-3 bg-dark bg-opacity-25 rounded-3 border border-secondary border-opacity-25">
+        <div v-if="tagMode" class="mt-3 mb-4 p-3 bg-surface-var bg-opacity-25 rounded-3 border border-secondary border-opacity-25">
           <span class="d-block text-muted small mb-2"><i class="bi bi-tags-fill me-1"></i> Select multiple tags:</span>
           <div class="d-flex flex-wrap gap-2">
             <button
@@ -414,7 +414,7 @@ export default {
               :key="tag"
               type="button"
               class="btn btn-sm rounded-pill transition-all"
-              :class="selectedTags.includes(tag) ? 'btn-primary shadow-sm' : 'btn-outline-secondary bg-dark bg-opacity-50 text-white border-0'"
+              :class="selectedTags.includes(tag) ? 'btn-primary shadow-sm' : 'btn-outline-secondary bg-surface-var bg-opacity-50 text-primary-var border-0'"
               @click="toggleTag(tag); fetchGames();"
             >
               {{ tag }}
@@ -434,6 +434,36 @@ export default {
 
     <!-- ══ Content Area ══ -->
     <div class="container pb-5">
+      <!-- ══════════════════════════════════════
+           FEATURED GAMES (RECOMMENDATIONS)
+           ══════════════════════════════════════ -->
+      <div v-if="!searchTerm && currentPage === 1 && games.length" class="mb-5">
+        <div class="d-flex align-items-center mb-4">
+          <span class="section-icon me-3" style="background: linear-gradient(135deg, #10b981, #047857); box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4); border-radius: 12px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+            <i class="bi bi-star-fill" style="color: white; font-size: 1.1rem"></i>
+          </span>
+          <h2 class="mb-0 fw-bold" style="color: var(--text-primary)">Featured Games</h2>
+        </div>
+        <div class="gd-recommendation-carousel pb-3">
+          <router-link
+            v-for="g in games.slice(0, 8)"
+            :key="g.id"
+            :to="`/free-to-play/${g.id}`"
+            class="gd-rec-card text-decoration-none"
+          >
+            <div class="gd-rec-img-wrapper">
+              <img :src="g.thumbnail" :alt="g.title" class="gd-rec-img" />
+            </div>
+            <div class="gd-rec-info p-3">
+              <h6 class="gd-rec-title fw-bold mb-1 text-truncate" :title="g.title">{{ g.title }}</h6>
+              <div class="d-flex justify-content-between align-items-center mt-2">
+                <span class="gd-rec-genre text-muted small text-truncate" style="max-width: 60%">{{ g.genre || 'Game' }}</span>
+                <span class="gd-rec-price fw-bold text-success small">Free</span>
+              </div>
+            </div>
+          </router-link>
+        </div>
+      </div>
       <!-- Skeleton Loading -->
       <div v-if="loading" class="games-grid">
         <SkeletonCard v-for="n in 12" :key="n" />

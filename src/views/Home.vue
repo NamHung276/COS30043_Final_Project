@@ -933,7 +933,7 @@ export default {
       <div v-if="currentUser && recommendedGames.length > 0" class="mb-5">
         <div class="section-header mb-4">
           <span class="section-icon" style="background: linear-gradient(135deg, #7c3aed, #c026d3); box-shadow: 0 4px 16px rgba(192, 38, 211, 0.4);">
-            <i class="bi bi-stars text-white" style="font-size: 1.1rem"></i>
+            <i class="bi bi-stars text-primary-var" style="font-size: 1.1rem"></i>
           </span>
           <h2 class="mb-0">Other games you might be interested in</h2>
         </div>
@@ -982,12 +982,12 @@ export default {
                 <template v-if="gameDiscount(game) > 0">
                   <span class="sso-discount">-{{ gameDiscount(game) }}%</span>
                   <div class="sso-prices" style="display: flex; flex-direction: column; align-items: flex-end;">
-                    <span class="sso-orig" style="font-size: 0.7rem;">${{ gamePrice(game) }}</span>
-                    <span class="sso-sale" style="font-size: 0.9rem;">${{ discountedPrice(game) }}</span>
+                    <span class="sso-orig" style="font-size: 0.7rem;">Est. ${{ gamePrice(game) }}</span>
+                    <span class="sso-sale" style="font-size: 0.9rem;">Est. ${{ discountedPrice(game) }}</span>
                   </div>
                 </template>
                 <template v-else>
-                  <span class="sso-sale" style="font-size: 0.9rem; margin-left: auto;">${{ gamePrice(game) }}</span>
+                  <span class="sso-sale" style="font-size: 0.9rem; margin-left: auto;">Est. ${{ gamePrice(game) }}</span>
                 </template>
               </div>
             </div>
@@ -1090,6 +1090,7 @@ export default {
                   "
                   class="steam-tab-item"
                   @mouseenter="setHoveredGame(game)"
+                  @focus="setHoveredGame(game)"
                 >
                   <div class="steam-tab-item-img">
                     <img :src="game.background_image" :alt="game.name" />
@@ -1172,7 +1173,7 @@ export default {
                     class="bi bi-controller"
                     style="font-size: 2rem; display: block; margin-bottom: 10px"
                   ></i>
-                  <span>Hover over a game for details</span>
+                  <span>Select a game for details</span>
                 </div>
               </div>
             </div>
@@ -1220,6 +1221,37 @@ export default {
               <span class="sgc-label">{{ g.label }}</span>
             </div>
             <img :src="g.icon" :alt="g.label" class="sgc-icon" />
+          </router-link>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════
+           RECOMMENDED FOR YOU
+           ══════════════════════════════════════ -->
+      <div v-if="recommendedGames && recommendedGames.length" style="margin-bottom: var(--section-gap)">
+        <div class="section-header mb-4">
+          <span class="section-icon" style="background: linear-gradient(135deg, #10b981, #047857); box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);">
+            <i class="bi bi-star-fill" style="color: white; font-size: 1.1rem"></i>
+          </span>
+          <h2 class="mb-0">Recommended For You</h2>
+        </div>
+        <div class="gd-recommendation-carousel pb-3">
+          <router-link
+            v-for="g in recommendedGames"
+            :key="g.id"
+            :to="`/games/${g.id}`"
+            class="gd-rec-card text-decoration-none"
+          >
+            <div class="gd-rec-img-wrapper">
+              <img :src="g.background_image || g.thumbnail" :alt="g.name || g.title" class="gd-rec-img" />
+            </div>
+            <div class="gd-rec-info p-3">
+              <h6 class="gd-rec-title fw-bold mb-1 text-truncate" :title="g.name || g.title">{{ g.name || g.title }}</h6>
+              <div class="d-flex justify-content-between align-items-center mt-2">
+                <span class="gd-rec-genre text-muted small text-truncate" style="max-width: 60%">{{ (g.genres?.[0]?.name || g.genre) || 'Game' }}</span>
+                <span class="gd-rec-price fw-bold text-success small">${{ gamePrice(g) }}</span>
+              </div>
+            </div>
           </router-link>
         </div>
       </div>
@@ -1482,15 +1514,15 @@ export default {
 <style scoped>
 .mc-green {
   background: #15803d !important;
-  color: #fff !important;
+  color: var(--text-primary) !important;
 }
 .mc-yellow {
   background: #a16207 !important;
-  color: #fff !important;
+  color: var(--text-primary) !important;
 }
 .mc-red {
   background: #b91c1c !important;
-  color: #fff !important;
+  color: var(--text-primary) !important;
 }
 .mc-grey {
   background: var(--bg-glass) !important;
@@ -1505,9 +1537,9 @@ export default {
   z-index: 10;
   width: 32px;
   height: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--overlay-heavy);
   background: rgba(0, 0, 0, 0.55);
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--overlay-text);
   border-radius: 50%;
   cursor: pointer;
   display: flex;
@@ -1522,7 +1554,7 @@ export default {
 .steam-carousel-pause-btn:hover {
   background: rgba(14, 165, 233, 0.4);
   border-color: rgba(14, 165, 233, 0.6);
-  color: #fff;
+  color: var(--text-primary);
 }
 .steam-carousel-pause-btn:focus-visible {
   outline: 3px solid var(--primary-light);
@@ -1577,7 +1609,7 @@ export default {
   font-size: 0.72rem;
   padding: 6px 8px;
   border-radius: 999px;
-  color: #fff;
+  color: var(--text-primary);
   font-weight: 700;
   backdrop-filter: blur(6px);
 }
@@ -1663,7 +1695,7 @@ export default {
   top: 8px;
   right: 8px;
   background: linear-gradient(135deg, #15803d, #4ade80);
-  color: #fff;
+  color: var(--text-primary);
   font-weight: 800;
   font-size: 0.68rem;
   padding: 3px 8px;
@@ -1737,7 +1769,7 @@ export default {
 .summer-sale-title {
   font-size: 5.5rem;
   font-weight: 900;
-  color: #fff;
+  color: var(--text-primary);
   text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   margin: 0;
   line-height: 1.1;
@@ -2020,7 +2052,7 @@ export default {
   border-radius: 8px;
   overflow: hidden;
   text-decoration: none;
-  color: #fff;
+  color: #ffffff;
   transition:
     transform 0.2s,
     box-shadow 0.2s;

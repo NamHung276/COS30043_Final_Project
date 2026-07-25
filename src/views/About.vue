@@ -191,10 +191,10 @@ export default {
                   GameHub was built as a full-stack university project focused on creating a modern gaming platform with authentication, cloud storage, community features, and live game information.
                 </p>
                 <div class="d-flex gap-2 flex-wrap">
-                  <span class="badge bg-secondary bg-opacity-25 text-light px-3 py-2 rounded-pill">Vue 3</span>
-                  <span class="badge bg-secondary bg-opacity-25 text-light px-3 py-2 rounded-pill">Firebase</span>
-                  <span class="badge bg-secondary bg-opacity-25 text-light px-3 py-2 rounded-pill">REST APIs</span>
-                  <span class="badge bg-secondary bg-opacity-25 text-light px-3 py-2 rounded-pill">UI/UX Design</span>
+                  <span class="badge bg-secondary bg-opacity-25 text-secondary-var px-3 py-2 rounded-pill">Vue 3</span>
+                  <span class="badge bg-secondary bg-opacity-25 text-secondary-var px-3 py-2 rounded-pill">Firebase</span>
+                  <span class="badge bg-secondary bg-opacity-25 text-secondary-var px-3 py-2 rounded-pill">REST APIs</span>
+                  <span class="badge bg-secondary bg-opacity-25 text-secondary-var px-3 py-2 rounded-pill">UI/UX Design</span>
                 </div>
               </div>
             </div>
@@ -371,7 +371,7 @@ export default {
             <!-- University Footer Note -->
             <div class="text-center mt-3 opacity-75">
               <small class="text-muted d-block mb-1 text-uppercase fw-bold" style="letter-spacing: 1px; font-size: 0.7rem;">Academic Project</small>
-              <div class="badge bg-secondary bg-opacity-25 text-light px-3 py-2 rounded-pill mt-2 mb-2">
+              <div class="badge bg-secondary bg-opacity-25 text-secondary-var px-3 py-2 rounded-pill mt-2 mb-2">
                 <i class="bi bi-mortarboard-fill me-2"></i>COS30043 Full Stack Development
               </div>
               <small class="text-muted d-block mt-1">Swinburne University &copy; 2026</small>
@@ -572,7 +572,7 @@ export default {
 }
 
 .about-visual-img-wrap img {
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--overlay-light);
   height: 100%;
   object-fit: cover;
   transition: transform 0.5s ease;
@@ -636,7 +636,7 @@ export default {
 }
 
 .about-input {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--overlay-light);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   padding: 0.6rem 1rem;
@@ -685,7 +685,7 @@ export default {
 
 .about-scene-btn {
   flex: 1;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--overlay-light);
   border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
   padding: 0.6rem;
@@ -696,7 +696,7 @@ export default {
 }
 
 .about-scene-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--overlay-medium);
   color: var(--text-primary);
 }
 

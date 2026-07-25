@@ -11,6 +11,7 @@
           height="20"
           alt=""
           aria-hidden="true"
+          class="logo-img"
           style="
             margin-right: 7px;
             filter: brightness(1.3);
@@ -227,22 +228,24 @@
           </div>
           <!-- ── /Search Bar ─────────────────────────── -->
 
-          <!-- Notification Bell (Placeholder) -->
-          <a
+          <!-- Notification Bell (Coming Soon) -->
+          <button
             class="nav-link position-relative me-2 d-none d-lg-flex"
-            href="#"
-            @click.prevent
-            aria-label="Notifications"
-            title="Notifications"
+            disabled
+            aria-disabled="true"
+            aria-label="Notifications (coming soon)"
+            title="Notifications — coming soon"
+            style="cursor: default; opacity: 0.5;"
           >
             <i class="bi bi-bell fs-5" aria-hidden="true"></i>
-          </a>
+          </button>
 
           <!-- Cart Link -->
           <router-link
             class="nav-link d-flex align-items-center position-relative me-3"
             to="/checkout"
             @click="closeMenu"
+            aria-label="Shopping Cart"
           >
             <i class="bi bi-cart3 fs-5"></i>
             <span
@@ -258,15 +261,16 @@
             <span class="ms-2 d-lg-none">Cart</span>
           </router-link>
 
-          <!-- Theme Toggle (Only show in navbar if logged out) -->
+          <!-- Theme Toggle (Always visible when logged out, inside dropdown when logged in) -->
           <button
             v-if="!currentUser"
             class="btn btn-link nav-link theme-toggle-btn me-2"
             @click="toggleTheme"
+            :aria-label="theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
             :title="theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
           >
-            <svg v-if="theme === 'dark'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></svg>
-            <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+            <svg v-if="theme === 'dark'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></svg>
+            <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
           </button>
 
           <template v-if="!currentUser && authReady">
@@ -347,20 +351,12 @@
                 </li>
                 <li><hr class="dropdown-divider border-secondary opacity-25"></li>
                 <li>
-                  <a href="#" class="dropdown-item nav-dd-item" @click.prevent.stop="toggleTheme">
-                    <span class="nav-dd-icon" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);">
+                  <a href="#" class="dropdown-item nav-dd-item" @click.prevent.stop="toggleTheme" :aria-label="theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+                    <span class="nav-dd-icon" style="background: var(--overlay-medium); border: 1px solid var(--overlay-heavy);">
                       <i :class="theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill'" style="font-size: 0.85rem; color: var(--warning);"></i>
                     </span>
                     {{ theme === 'dark' ? 'Light Mode' : 'Dark Mode' }}
                   </a>
-                </li>
-                <li>
-                  <router-link class="dropdown-item nav-dd-item" to="/profile#settings" @click="closeMenu">
-                    <span class="nav-dd-icon" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);">
-                      <i class="bi bi-gear-fill" style="font-size: 0.85rem; color: var(--text-muted);"></i>
-                    </span>
-                    Settings
-                  </router-link>
                 </li>
                 <template v-if="isAdmin">
                   <li><hr class="dropdown-divider border-secondary opacity-25"></li>
@@ -613,8 +609,8 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: var(--overlay-medium);
+  border: 1px solid var(--overlay-medium);
   border-radius: 10px;
   padding: 6px 12px;
   width: 200px;
@@ -625,7 +621,7 @@ export default {
 .nav-search-container.active,
 .nav-search-container:focus-within {
   width: 280px;
-  background: rgba(255, 255, 255, 0.09);
+  background: var(--overlay-medium);
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12);
 }
@@ -682,7 +678,7 @@ export default {
   background: var(--bg-surface);
   border: 1px solid var(--border-glass);
   border-radius: 14px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--overlay-light);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   overflow: hidden;
@@ -796,7 +792,7 @@ export default {
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 3px;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .mc-green { background: #15803d; }
@@ -850,7 +846,7 @@ export default {
 
 /* Skeleton animation */
 .skeleton {
-  background: linear-gradient(90deg, var(--bg-glass) 25%, rgba(255,255,255,0.06) 50%, var(--bg-glass) 75%);
+  background: linear-gradient(90deg, var(--bg-glass) 25%, var(--overlay-medium) 50%, var(--bg-glass) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s infinite;
 }
@@ -885,12 +881,10 @@ export default {
 /* User Dropdown styling */
 .user-dropdown-menu {
   min-width: 240px;
-  background: rgba(10, 14, 26, 0.97);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border-glass) !important;
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--overlay-border) !important;
   border-radius: var(--radius-md) !important;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.04) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3) !important;
   padding: 8px !important;
 }
 
@@ -915,7 +909,7 @@ export default {
 .nav-dd-item:hover,
 .nav-dd-item:focus {
   color: var(--text-primary) !important;
-  background: rgba(255, 255, 255, 0.06) !important;
+  background: var(--overlay-medium) !important;
   transform: translateX(2px);
 }
 

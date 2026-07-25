@@ -335,6 +335,36 @@ export default {
     </div>
 
     <div class="container pb-5">
+      <!-- ══════════════════════════════════════
+           FEATURED GAMES (RECOMMENDATIONS)
+           ══════════════════════════════════════ -->
+      <div v-if="!searchTerm && currentPage === 1 && games.length" class="mb-5">
+        <div class="d-flex align-items-center mb-4">
+          <span class="section-icon me-3" style="background: linear-gradient(135deg, #10b981, #047857); box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4); border-radius: 12px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+            <i class="bi bi-star-fill" style="color: white; font-size: 1.1rem"></i>
+          </span>
+          <h2 class="mb-0 fw-bold" style="color: var(--text-primary)">Featured Games</h2>
+        </div>
+        <div class="gd-recommendation-carousel pb-3">
+          <router-link
+            v-for="g in games.slice(0, 8)"
+            :key="g.id"
+            :to="`/games/${g.id}`"
+            class="gd-rec-card text-decoration-none"
+          >
+            <div class="gd-rec-img-wrapper">
+              <img :src="g.background_image" :alt="g.name" class="gd-rec-img" />
+            </div>
+            <div class="gd-rec-info p-3">
+              <h6 class="gd-rec-title fw-bold mb-1 text-truncate" :title="g.name">{{ g.name }}</h6>
+              <div class="d-flex justify-content-between align-items-center mt-2">
+                <span class="gd-rec-genre text-muted small text-truncate" style="max-width: 60%">{{ g.genres?.[0]?.name || 'Game' }}</span>
+                <span class="gd-rec-price fw-bold text-success small">${{ gamePrice(g) }}</span>
+              </div>
+            </div>
+          </router-link>
+        </div>
+      </div>
       <div v-if="loading" class="games-grid">
         <SkeletonCard v-for="n in 12" :key="n" />
       </div>
@@ -856,7 +886,7 @@ export default {
 .platform-tab.active {
   background: var(--gradient-primary);
   border-color: transparent;
-  color: #fff !important;
+  color: var(--text-primary) !important;
   box-shadow: 0 2px 16px rgba(124, 58, 237, 0.45);
 }
 .platform-tab-icon {
@@ -966,7 +996,7 @@ export default {
 }
 .game-card:hover .hover-action {
   transform: translateY(0);
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .genre-ribbon {
@@ -981,7 +1011,7 @@ export default {
   font-size: 0.72rem;
   font-weight: 700;
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--overlay-medium);
 }
 
 /* Metacritic */
@@ -1044,7 +1074,7 @@ export default {
 }
 .game-card:hover .platform-icon {
   background: var(--primary);
-  color: #fff;
+  color: var(--text-primary);
 }
 
 /* Card body */
@@ -1109,7 +1139,7 @@ export default {
 }
 .game-card:hover .game-genre-tag {
   background: rgba(14, 165, 233, 0.3);
-  color: #fff;
+  color: var(--text-primary);
 }
 
 /* Float action buttons on card image */
@@ -1147,15 +1177,15 @@ export default {
 }
 .trailer-btn {
   background: rgba(124, 58, 237, 0.7);
-  color: #fff;
+  color: var(--text-primary);
 }
 .trailer-btn:hover {
   background: #7c3aed;
 }
 .wishlist-btn {
   background: rgba(0, 0, 0, 0.6);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  border: 1px solid var(--overlay-medium);
 }
 .wishlist-btn.wishlisted {
   background: rgba(239, 68, 68, 0.8);
@@ -1200,12 +1230,12 @@ export default {
   gap: 8px;
   margin-top: 2px;
   padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--overlay-light);
 }
 .price-discount-badge {
   font-size: 0.72rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--text-primary);
   background: #22c55e;
   padding: 2px 7px;
   border-radius: 5px;
@@ -1472,7 +1502,7 @@ export default {
 }
 .glr-btn.trailer:hover {
   background: #7c3aed;
-  color: #fff;
+  color: var(--text-primary);
 }
 .glr-btn.wishlist {
   background: var(--bg-surface);

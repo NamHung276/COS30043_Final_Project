@@ -433,7 +433,7 @@ export default {
 /* ── Header ── */
 .journal-header {
   background: var(--bg-surface);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--overlay-medium);
   padding: 40px 0 0;
 }
 .jh-top {
@@ -483,7 +483,7 @@ export default {
   display: flex;
   align-items: center;
   background: var(--bg-base);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--overlay-medium);
   border-radius: 6px;
   padding: 10px 16px;
   width: 300px;
@@ -515,7 +515,7 @@ export default {
   gap: 24px;
   overflow-x: auto;
   scrollbar-width: none;
-  border-top: 1px solid rgba(255,255,255,0.05);
+  border-top: 1px solid var(--overlay-light);
 }
 .jh-nav::-webkit-scrollbar { display: none; }
 .jh-nav-item {
@@ -567,7 +567,7 @@ export default {
 .ed-cat { color: var(--primary); }
 .ed-source { color: var(--text-secondary); }
 .ed-time { color: var(--text-muted); }
-.ed-dot { color: rgba(255,255,255,0.2); }
+.ed-dot { color: var(--overlay-heavy); }
 
 /* ── Editorial Hero Section ── */
 .ed-hero-section {
@@ -587,7 +587,7 @@ export default {
   display: flex;
   flex-direction: column;
   background: var(--bg-surface);
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid var(--overlay-medium);
   border-radius: 12px;
   overflow: hidden;
   text-decoration: none;
@@ -597,7 +597,7 @@ export default {
 .ed-featured-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 30px rgba(0,0,0,0.3);
-  border-color: rgba(255,255,255,0.15);
+  border-color: var(--overlay-heavy);
 }
 .ed-feat-img-wrap {
   width: 100%;
@@ -672,7 +672,7 @@ export default {
   color: var(--text-primary);
   margin: 0 0 20px;
   padding-bottom: 12px;
-  border-bottom: 2px solid rgba(255,255,255,0.1);
+  border-bottom: 2px solid var(--overlay-medium);
 }
 .ed-sidebar-list {
   display: flex;
@@ -684,7 +684,7 @@ export default {
   flex-direction: column;
   text-decoration: none;
   padding-bottom: 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid var(--overlay-light);
   transition: opacity 0.2s;
 }
 .ed-sidebar-item:hover {
@@ -711,7 +711,7 @@ export default {
 .ed-grid-header {
   margin-bottom: 24px;
   padding-bottom: 12px;
-  border-bottom: 2px solid rgba(255,255,255,0.1);
+  border-bottom: 2px solid var(--overlay-medium);
 }
 .ed-grid-title {
   font-size: 1.3rem;
@@ -731,7 +731,7 @@ export default {
   display: flex;
   flex-direction: column;
   background: var(--bg-surface);
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid var(--overlay-light);
   border-radius: 8px;
   overflow: hidden;
   text-decoration: none;
@@ -740,7 +740,7 @@ export default {
 .ed-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-  border-color: rgba(255,255,255,0.1);
+  border-color: var(--overlay-medium);
 }
 .ed-card-img-wrap {
   width: 100%;
@@ -802,7 +802,7 @@ export default {
 }
 .ed-page-btn, .ed-page-num {
   background: transparent;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid var(--overlay-medium);
   color: var(--text-primary);
   padding: 8px 16px;
   border-radius: 4px;
@@ -819,12 +819,12 @@ export default {
   padding: 8px 12px;
 }
 .ed-page-btn:hover:not(:disabled), .ed-page-num:hover:not(.active) {
-  background: rgba(255,255,255,0.05);
+  background: var(--overlay-light);
 }
 .ed-page-num.active {
   background: var(--primary);
   border-color: var(--primary);
-  color: #fff;
+  color: var(--text-primary);
 }
 .ed-page-btn:disabled {
   opacity: 0.4;
@@ -845,7 +845,7 @@ export default {
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(255,255,255,0.1);
+  border: 3px solid var(--overlay-medium);
   border-top-color: var(--primary);
   border-radius: 50%;
   margin: 0 auto 20px;

@@ -138,14 +138,55 @@
   --overlay-text: rgba(0, 0, 0, 0.75);
   --overlay-text-muted: rgba(0, 0, 0, 0.55);
 
-  --hero-overlay-dark: rgba(255, 255, 255, 0.58);
-  --hero-overlay-medium: rgba(255, 255, 255, 0.35);
-  --hero-overlay-side: rgba(255, 255, 255, 0.65);
+  --hero-overlay-dark: rgba(255, 255, 255, 0.88);
+  --hero-overlay-medium: rgba(255, 255, 255, 0.75);
+  --hero-overlay-side: rgba(255, 255, 255, 0.92);
   --image-hover-brightness: 0.96;
   --accent-surface: rgba(99, 102, 241, 0.08);
   --success-text: #15803d;
   --warning-text: #a16207;
   --danger-text: #b91c1c;
+}
+
+[data-theme="light"] .logo-img {
+  filter: invert(1) brightness(0.8) !important;
+}
+
+/* Light theme: hero text is always legible on any background */
+[data-theme="light"] .hero-subtitle {
+  color: var(--text-secondary) !important;
+}
+
+/* Light theme: form controls need a proper light background */
+[data-theme="light"] .form-control,
+[data-theme="light"] .form-select {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text-primary);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .form-control:focus,
+[data-theme="light"] .form-select:focus {
+  background: #ffffff;
+  color: var(--text-primary);
+  border-color: var(--primary);
+}
+
+[data-theme="light"] .form-control::placeholder {
+  color: var(--text-muted);
+}
+
+/* Light theme: hero shortcut cards need proper contrast */
+[data-theme="light"] .hero-shortcut-card {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Light theme: steam carousel info panel */
+[data-theme="light"] .steam-info-panel {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(0, 0, 0, 0.08);
 }
 
 /* ---- Global Reset & Base ---- */
@@ -157,6 +198,26 @@ html {
 .text-primary-var {
   color: var(--text-primary) !important;
 }
+
+.text-secondary-var {
+  color: var(--text-secondary) !important;
+}
+
+.bg-surface-var {
+  background-color: var(--bg-surface) !important;
+}
+
+.gd-table {
+  background: transparent;
+  --bs-table-bg: transparent;
+  --bs-table-hover-bg: var(--overlay-medium);
+  --bs-table-border-color: var(--overlay-border);
+  color: var(--text-primary);
+}
+.gd-table th, .gd-table td {
+  color: var(--text-primary);
+}
+
 
 body {
   background: var(--bg-deep);
@@ -187,7 +248,7 @@ body {
   z-index: 99999;
   padding: 10px 18px;
   background: var(--primary);
-  color: #fff;
+  color: var(--text-primary);
   font-weight: 700;
   font-size: 0.9rem;
   border-radius: 0 0 8px 8px;
@@ -349,7 +410,7 @@ a:hover {
   white-space: nowrap;
 }
 .nav-btn-login:hover {
-  color: #fff !important;
+  color: var(--text-primary) !important;
   background: var(--primary);
 }
 
@@ -361,7 +422,7 @@ a:hover {
   border-radius: 999px;
   font-size: 0.9rem;
   font-weight: 700;
-  color: #fff !important;
+  color: var(--text-primary) !important;
   background: var(--primary);
   border: none;
   text-decoration: none;
@@ -388,12 +449,11 @@ a:hover {
 
 /* Dropdown */
 .dropdown-menu {
-  background: var(--bg-glass) !important;
-  backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--border-glass);
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--overlay-border);
   border-radius: var(--radius-md);
   padding: 8px;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3) !important;
   animation: ddFade 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -420,7 +480,7 @@ a:hover {
   height: 26px;
   border-radius: 7px;
   flex-shrink: 0;
-  color: #fff;
+  color: var(--text-primary);
 }
 .nav-dd-icon-purple {
   background: linear-gradient(135deg, #5b21b6, #7c3aed);
@@ -916,7 +976,7 @@ a:hover {
   font-size: clamp(2.8rem, 7vw, 5rem);
   font-weight: 900;
   line-height: 1.08;
-  color: #fff;
+  color: var(--text-primary);
   margin-bottom: 24px;
   letter-spacing: -0.03em;
 }
@@ -977,8 +1037,62 @@ a:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 24px;
+  padding: 0 10px;
 }
+
+/* Recommendation Carousel (Global) */
+.gd-recommendation-carousel {
+  display: flex;
+  overflow-x: auto;
+  gap: 1.25rem;
+  padding-bottom: 1rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.gd-recommendation-carousel::-webkit-scrollbar {
+  height: 6px;
+}
+.gd-recommendation-carousel::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+  border-radius: 4px;
+}
+.gd-recommendation-carousel::-webkit-scrollbar-thumb {
+  background: var(--overlay-medium);
+  border-radius: 4px;
+}
+.gd-rec-card {
+  flex: 0 0 auto;
+  width: 240px;
+  background: var(--bg-surface);
+  border: 1px solid var(--overlay-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  scroll-snap-align: start;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.gd-rec-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  border-color: var(--overlay-heavy);
+}
+.gd-rec-img-wrapper {
+  width: 100%;
+  height: 135px;
+  overflow: hidden;
+}
+.gd-rec-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+.gd-rec-card:hover .gd-rec-img {
+  transform: scale(1.05);
+}
+.gd-rec-title {
+  color: var(--text-primary);
+}
+
 .hero-stat-num {
   font-size: 1.4rem;
   font-weight: 800;
@@ -1585,7 +1699,7 @@ a:hover {
   box-shadow:
     0 0 0 1.5px rgba(139, 92, 246, 0.7),
     0 6px 24px rgba(139, 92, 246, 0.28);
-  color: #ffffff;
+  color: var(--text-primary);
   transform: translateY(-3px) scale(1.04);
 }
 
@@ -2360,6 +2474,7 @@ a:hover {
   padding: 0;
   cursor: pointer;
   transition: all 0.3s ease;
+  outline: none;
 }
 .steam-dot.active {
   background: white;
@@ -2368,6 +2483,11 @@ a:hover {
 }
 .steam-dot:hover {
   background: rgba(255, 255, 255, 0.65);
+}
+.steam-dot:focus-visible {
+  outline: 2px solid #60a5fa;
+  outline-offset: 3px;
+  border-radius: 50%;
 }
 
 /* ---- YouTube-Style AutoPlay Progress Line ---- */
@@ -3393,13 +3513,13 @@ a:hover {
   font-size: 3.4rem;
   font-weight: 800;
   line-height: 1.1;
-  color: #fff;
+  color: var(--text-primary);
   margin-bottom: 1rem;
 }
 
 .hero-subtitle {
   font-size: 1.1rem;
-  color: #d1d5db;
+  color: var(--text-secondary);
   line-height: 1.7;
   max-width: 650px;
 }
@@ -3764,7 +3884,7 @@ a:hover {
   font-size: 3.4rem;
   font-weight: 800;
   line-height: 1.1;
-  color: #fff;
+  color: var(--text-primary);
   margin-bottom: 1rem;
 }
 
@@ -3807,12 +3927,12 @@ a:hover {
 }
 
 .hero-shortcut-card {
-  background: rgba(23, 29, 37, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: var(--overlay-medium);
+  border: 1px solid var(--overlay-border);
   border-radius: 14px;
   padding: 18px 20px;
   text-decoration: none;
-  color: white;
+  color: var(--text-primary);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
@@ -3825,8 +3945,8 @@ a:hover {
   transform: translateY(-5px);
   border-color: var(--primary);
   box-shadow: 0 12px 30px rgba(14, 165, 233, 0.18);
-  color: white;
-  background: rgba(14, 165, 233, 0.07);
+  color: var(--text-primary);
+  background: var(--accent-surface);
 }
 
 .shortcut-icon {
@@ -4283,7 +4403,7 @@ a:focus-visible,
   box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
 }
 .games-genre-select option {
-  background: #0f172a;
+  background: var(--bg-surface);
   color: var(--text-primary);
 }
 
@@ -4328,7 +4448,7 @@ a:focus-visible,
 .platform-tab.active {
   background: var(--gradient-primary);
   border-color: transparent;
-  color: #fff !important;
+  color: var(--text-primary) !important;
   box-shadow: 0 2px 16px rgba(124, 58, 237, 0.45);
 }
 .platform-tab-icon {
@@ -4554,7 +4674,7 @@ a:focus-visible,
 }
 .game-card:hover .platform-icon {
   background: var(--primary);
-  color: #fff;
+  color: var(--text-primary);
 }
 
 /* Card body */
@@ -4622,7 +4742,7 @@ a:focus-visible,
 }
 .game-card:hover .game-genre-tag {
   background: rgba(14, 165, 233, 0.3);
-  color: #fff;
+  color: var(--text-primary);
 }
 
 /* Float action buttons on card image */
@@ -4660,7 +4780,7 @@ a:focus-visible,
 }
 .trailer-btn {
   background: rgba(124, 58, 237, 0.85);
-  color: #fff;
+  color: var(--text-primary);
 }
 .trailer-btn:hover {
   background: #7c3aed;
@@ -4730,7 +4850,7 @@ a:focus-visible,
 .price-discount-badge {
   font-size: 0.72rem;
   font-weight: 800;
-  color: #fff;
+  color: var(--text-primary);
   background: #22c55e;
   padding: 2px 7px;
   border-radius: 5px;
@@ -4870,7 +4990,7 @@ a:focus-visible,
 }
 .glr-btn.trailer:hover {
   background: #7c3aed;
-  color: #fff;
+  color: var(--text-primary);
 }
 .glr-btn.wishlist {
   background: var(--bg-surface);
@@ -5088,7 +5208,7 @@ a:focus-visible,
   backdrop-filter: blur(8px);
 }
 .gd-back-btn:hover {
-  color: #fff;
+  color: var(--text-primary);
   background: rgba(255, 255, 255, 0.14);
   border-color: rgba(255, 255, 255, 0.25);
 }
@@ -5122,7 +5242,7 @@ a:focus-visible,
 .gd-title {
   font-size: clamp(1.6rem, 4vw, 2.8rem);
   font-weight: 900;
-  color: #fff;
+  color: var(--text-primary);
   margin-bottom: 12px;
   letter-spacing: -0.02em;
   text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
@@ -5208,15 +5328,15 @@ a:focus-visible,
 }
 .mc-green {
   background: #15803d;
-  color: #fff;
+  color: var(--text-primary);
 }
 .mc-yellow {
   background: #a16207;
-  color: #fff;
+  color: var(--text-primary);
 }
 .mc-red {
   background: #b91c1c;
-  color: #fff;
+  color: var(--text-primary);
 }
 .mc-grey {
   background: #374151;
@@ -5901,7 +6021,7 @@ a:focus-visible,
   align-items: center;
   justify-content: center;
   gap: 12px;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -5930,7 +6050,7 @@ a:focus-visible,
 .gd-discount-badge {
   display: inline-block;
   background: #22c55e;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 0.75rem;
   font-weight: 800;
   padding: 3px 8px;
@@ -6017,7 +6137,7 @@ a:focus-visible,
   font-size: 0.58rem;
   font-weight: 800;
   background: #22c55e;
-  color: #fff;
+  color: var(--text-primary);
   padding: 2px 6px;
   border-radius: 4px;
   letter-spacing: 0.06em;
@@ -6041,7 +6161,7 @@ a:focus-visible,
   font-size: 0.65rem;
   font-weight: 800;
   background: #22c55e;
-  color: #fff;
+  color: var(--text-primary);
   padding: 1px 5px;
   border-radius: 4px;
 }

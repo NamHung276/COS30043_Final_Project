@@ -41,9 +41,15 @@ export const rawgApi = axios.create({
   },
 });
 
-// ── Internal Backend API (via Vite proxy: /api → http://localhost:8000/api) ──
+// ── Internal Backend API ──────────────────────────────────────────────────────
+// Dev: uses Vite proxy (/api → http://localhost:8000/api)
+// Prod: calls Render backend directly
+const BACKEND_BASE_URL = import.meta.env.PROD
+  ? `${import.meta.env.VITE_API_BASE_URL || "https://gamehub-api-er30.onrender.com"}/api`
+  : "/api";
+
 export const backendApi = axios.create({
-  baseURL: import.meta.env.PROD ? "/backend/api" : "/api",
+  baseURL: BACKEND_BASE_URL,
   timeout: 15000,
 });
 

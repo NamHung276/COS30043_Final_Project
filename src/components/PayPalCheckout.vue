@@ -47,7 +47,9 @@ export default {
       window.paypal.Buttons({
         createOrder: async () => {
           try {
-            const baseUrl = import.meta.env.PROD ? "/backend/api" : "http://localhost:8000/api";
+            const baseUrl = import.meta.env.PROD
+              ? `${import.meta.env.VITE_API_BASE_URL || "https://gamehub-api-er30.onrender.com"}/api`
+              : "http://localhost:8000/api";
             const response = await fetch(`${baseUrl}/paypal/create-order`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -70,7 +72,9 @@ export default {
         },
         onApprove: async (data) => {
           try {
-            const baseUrl = import.meta.env.PROD ? "/backend/api" : "http://localhost:8000/api";
+            const baseUrl = import.meta.env.PROD
+              ? `${import.meta.env.VITE_API_BASE_URL || "https://gamehub-api-er30.onrender.com"}/api`
+              : "http://localhost:8000/api";
             const response = await fetch(`${baseUrl}/paypal/capture-order`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },

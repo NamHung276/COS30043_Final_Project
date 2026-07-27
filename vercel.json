@@ -1,17 +1,7 @@
 {
-  "services": {
-    "frontend": {
-      "root": ".",
-      "framework": "vite"
-    },
-    "backend": {
-      "root": "backend",
-      "framework": "fastapi"
-    }
-  },
   "rewrites": [
     { "source": "/newsapi/(.*)", "destination": "https://newsapi.org/$1" },
     { "source": "/cheapshark/(.*)", "destination": "https://www.cheapshark.com/$1" },
-    { "source": "/(?!backend|newsapi|cheapshark).*", "destination": "/index.html" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

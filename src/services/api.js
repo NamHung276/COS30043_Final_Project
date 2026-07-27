@@ -43,7 +43,7 @@ export const rawgApi = axios.create({
 
 // ── Internal Backend API (via Vite proxy: /api → http://localhost:8000/api) ──
 export const backendApi = axios.create({
-  baseURL: "/api",
+  baseURL: import.meta.env.PROD ? "/backend/api" : "/api",
   timeout: 15000,
 });
 

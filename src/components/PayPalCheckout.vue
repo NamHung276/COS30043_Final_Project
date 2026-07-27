@@ -47,7 +47,8 @@ export default {
       window.paypal.Buttons({
         createOrder: async () => {
           try {
-            const response = await fetch("http://localhost:8000/api/paypal/create-order", {
+            const baseUrl = import.meta.env.PROD ? "/backend/api" : "http://localhost:8000/api";
+            const response = await fetch(`${baseUrl}/paypal/create-order`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -69,7 +70,8 @@ export default {
         },
         onApprove: async (data) => {
           try {
-            const response = await fetch("http://localhost:8000/api/paypal/capture-order", {
+            const baseUrl = import.meta.env.PROD ? "/backend/api" : "http://localhost:8000/api";
+            const response = await fetch(`${baseUrl}/paypal/capture-order`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({

@@ -13,7 +13,7 @@ google-api-core
 google-api-python-client
 google-auth
 google-auth-httplib2
-google-generativeai
+google-genai
 google-cloud-core
 google-cloud-firestore
 google-cloud-storage

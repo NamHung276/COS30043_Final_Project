@@ -1,6 +1,6 @@
 <script>
 import { auth, db } from "../firebase";
-import { signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
 export default {
@@ -11,6 +11,11 @@ export default {
       showPassword: false,
       error: "",
       loading: false,
+      showForgotPassword: false,
+      forgotEmail: "",
+      forgotLoading: false,
+      forgotSent: false,
+      forgotError: "",
     };
   },
 
@@ -78,6 +83,25 @@ export default {
         console.error(error);
       } finally {
         this.loading = false;
+      }
+    },
+
+    async sendPasswordReset() {
+      this.forgotError = "";
+      this.forgotLoading = true;
+      try {
+        await sendPasswordResetEmail(auth, this.forgotEmail);
+        this.forgotSent = true;
+      } catch (err) {
+        if (err.code === 'auth/user-not-found') {
+          this.forgotError = "No account found with that email address.";
+        } else if (err.code === 'auth/invalid-email') {
+          this.forgotError = "Invalid email address.";
+        } else {
+          this.forgotError = "Something went wrong. Please try again.";
+        }
+      } finally {
+        this.forgotLoading = false;
       }
     },
   },
@@ -175,6 +199,42 @@ export default {
           New to GameHub?
           <router-link to="/register">Create a free account →</router-link>
         </p>
+        <p class="auth-switch" style="margin-top: 8px;">
+          <a href="#" @click.prevent="showForgotPassword = !showForgotPassword; forgotSent = false; forgotError = ''"
+             style="font-size: 0.85rem; color: var(--text-muted); text-decoration: none;">
+            Forgot your password?
+          </a>
+        </p>
+
+        <!-- Forgot Password Panel -->
+        <div v-if="showForgotPassword" class="auth-forgot-panel mt-3 p-3 rounded-3" style="background: rgba(14,165,233,0.08); border: 1px solid rgba(14,165,233,0.25);">
+          <p class="text-muted mb-2" style="font-size: 0.85rem;">Enter your email and we'll send a reset link.</p>
+          <div v-if="forgotSent" class="text-success" style="font-size: 0.9rem;">
+            <i class="bi bi-check-circle-fill me-1"></i> Reset email sent! Check your inbox.
+          </div>
+          <div v-else>
+            <div v-if="forgotError" class="auth-error mb-2" style="font-size: 0.85rem;">{{ forgotError }}</div>
+            <div class="d-flex gap-2">
+              <input
+                v-model="forgotEmail"
+                type="email"
+                class="auth-input flex-grow-1"
+                placeholder="your@email.com"
+                autocomplete="email"
+              />
+              <button
+                type="button"
+                class="btn btn-primary btn-sm px-3"
+                @click="sendPasswordReset"
+                :disabled="forgotLoading || !forgotEmail"
+                style="white-space: nowrap; border-radius: 10px;"
+              >
+                <span v-if="forgotLoading" class="auth-spinner" style="width:14px;height:14px;"></span>
+                <span v-else>Send Link</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

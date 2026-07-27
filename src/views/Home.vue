@@ -952,6 +952,7 @@ export default {
                 v-if="game.background_image"
                 :src="game.background_image"
                 :alt="`${game.name} cover art`"
+                loading="lazy"
               />
               <div v-else class="game-card-img-placeholder" style="width: 100%; height: 100%; background: var(--bg-glass); display: flex; align-items: center; justify-content: center;">
                 <img src="/logo/gamepad.svg" width="36" height="36" alt="" aria-hidden="true" style="opacity: 0.4; max-width: 100%; max-height: 100%; transform: none;" />

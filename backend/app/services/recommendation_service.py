@@ -6,11 +6,14 @@ from app.services.rawg_service import get_games
 
 logger = logging.getLogger(__name__)
 
+
 class RecommendationService:
     async def get_recommendations(self, user_id: str):
         db = get_firestore()
         if not db:
-            logger.warning("Firestore not initialized. Returning generic recommendations.")
+            logger.warning(
+                "Firestore not initialized. Returning generic recommendations."
+            )
             return await self._get_generic_recommendations()
 
         try:
@@ -19,7 +22,9 @@ class RecommendationService:
             seen_game_ids = set()
 
             # 1. Purchases (Weight: 3)
-            purchases_ref = db.collection("purchases").where("userId", "==", user_id).stream()
+            purchases_ref = (
+                db.collection("purchases").where("userId", "==", user_id).stream()
+            )
             for doc in purchases_ref:
                 data = doc.to_dict()
                 seen_game_ids.add(data.get("gameId"))
@@ -32,7 +37,9 @@ class RecommendationService:
                     tag_scores[t.lower()] += 3
 
             # 2. Favorites (Weight: 2)
-            favorites_ref = db.collection("favorites").where("userId", "==", user_id).stream()
+            favorites_ref = (
+                db.collection("favorites").where("userId", "==", user_id).stream()
+            )
             for doc in favorites_ref:
                 data = doc.to_dict()
                 seen_game_ids.add(data.get("gameId"))
@@ -44,7 +51,9 @@ class RecommendationService:
                     tag_scores[t.lower()] += 2
 
             # 3. User Activity (Weight: 1)
-            activity_ref = db.collection("user_activity").where("userId", "==", user_id).stream()
+            activity_ref = (
+                db.collection("user_activity").where("userId", "==", user_id).stream()
+            )
             for doc in activity_ref:
                 data = doc.to_dict()
                 seen_game_ids.add(data.get("gameId"))
@@ -67,12 +76,18 @@ class RecommendationService:
             # 4. Multi-Pool Fetching
             tasks = []
             if g1:
-                tasks.append(get_games(page=1, page_size=20, ordering="-rating", genres=g1))
+                tasks.append(
+                    get_games(page=1, page_size=20, ordering="-rating", genres=g1)
+                )
             if g2:
-                tasks.append(get_games(page=1, page_size=20, ordering="-added", genres=g2))
+                tasks.append(
+                    get_games(page=1, page_size=20, ordering="-added", genres=g2)
+                )
             if t1:
-                tasks.append(get_games(page=1, page_size=20, ordering="-metacritic", tags=t1))
-            
+                tasks.append(
+                    get_games(page=1, page_size=20, ordering="-metacritic", tags=t1)
+                )
+
             # Fallback if no tasks
             if not tasks:
                 tasks.append(get_games(page=1, page_size=30, ordering="-rating"))
@@ -86,7 +101,7 @@ class RecommendationService:
                     gid = game.get("id")
                     if gid in seen_game_ids or gid in candidates:
                         continue
-                    
+
                     # Calculate match score
                     score = 0
                     for g in game.get("genres", []):
@@ -95,16 +110,18 @@ class RecommendationService:
                     for t in game.get("tags", []):
                         t_slug = t.get("slug", "").lower()
                         score += tag_scores.get(t_slug, 0)
-                    
+
                     # Add rating weight
-                    score += (game.get("rating", 0) * 5)
-                    
+                    score += game.get("rating", 0) * 5
+
                     # Store score alongside game
                     game["_match_score"] = score
                     candidates[gid] = game
 
             # Sort by match score descending
-            ranked_games = sorted(candidates.values(), key=lambda x: x["_match_score"], reverse=True)
+            ranked_games = sorted(
+                candidates.values(), key=lambda x: x["_match_score"], reverse=True
+            )
 
             return {"results": ranked_games[:10]}
 
@@ -114,5 +131,6 @@ class RecommendationService:
 
     async def _get_generic_recommendations(self):
         return await get_games(page=1, page_size=10, ordering="-added")
+
 
 recommendation_service = RecommendationService()

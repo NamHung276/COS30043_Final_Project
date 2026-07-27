@@ -8,6 +8,7 @@ import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 import ReviewSection from "../components/ReviewSection.vue";
 import TrailerModal from "../components/TrailerModal.vue";
 import { cartState } from "../services/cart";
+import { getGameState } from "../services/gameState";
 
 const STORE_NAMES = {
   1: "Steam",
@@ -61,16 +62,6 @@ export default {
       // CheapShark deals
       deals: [],
       dealsLoading: false,
-      STORE_NAMES: {
-        1: "Steam",
-        7: "GOG",
-        11: "Humble Store",
-        15: "Fanatical",
-        25: "Epic Games",
-        3: "GreenManGaming",
-        8: "Origin",
-        13: "Uplay",
-      },
     };
   },
 
@@ -86,10 +77,11 @@ export default {
     metacriticLabel() {
       const s = this.game?.metacritic;
       if (!s) return null;
-      if (s >= 75) return "Overwhelmingly Positive";
-      if (s >= 60) return "Mostly Positive";
-      if (s >= 40) return "Mixed";
-      return "Mostly Negative";
+      if (s >= 90) return "Universal Acclaim";
+      if (s >= 75) return "Generally Favorable";
+      if (s >= 50) return "Mixed or Average";
+      if (s >= 40) return "Generally Unfavorable";
+      return "Overwhelming Dislike";
     },
 
     ratingPercent() {
@@ -131,14 +123,17 @@ export default {
       return this.game?.background_image;
     },
 
-    fakePrice() {
-      if (!this.game) return 0;
-      const base = (this.game.id % 40) + 10;
-      return (base + 0.99).toFixed(2);
+    gameStateInfo() {
+      return getGameState(this.game);
     },
 
-    fakeDiscount() {
+    displayPrice() {
       if (!this.game) return 0;
+      return this.gameStateInfo.formattedPrice;
+    },
+
+    displayDiscount() {
+      if (!this.game || this.gameStateInfo.isFree || !this.gameStateInfo.isReleased) return 0;
       const roll = this.game.id % 4;
       if (roll === 0) return 40;
       if (roll === 1) return 25;
@@ -146,9 +141,9 @@ export default {
     },
 
     discountedPrice() {
-      const price = parseFloat(this.fakePrice);
-      const disc = this.fakeDiscount;
-      if (!disc) return null;
+      const price = parseFloat(this.displayPrice);
+      const disc = this.displayDiscount;
+      if (!disc || isNaN(price)) return null;
       return (price * (1 - disc / 100)).toFixed(2);
     },
 
@@ -406,12 +401,12 @@ export default {
     },
 
     addToCart() {
-      const finalPrice = this.discountedPrice || this.fakePrice;
+      const finalPrice = this.discountedPrice || this.displayPrice;
       cartState.add({
         id: this.game.id,
         name: this.game.name,
         price: finalPrice,
-        originalPrice: this.fakePrice,
+        originalPrice: this.displayPrice,
         thumbnail: this.game.background_image,
       });
       this.toast?.show(`${this.game.name} added to cart`, "success");
@@ -473,8 +468,10 @@ export default {
         window.scrollTo({ top: 0, behavior: "smooth" });
         this.startCarousel();
 
-        // Fetch CheapShark deals (non-blocking)
-        this.fetchDeals(this.game.name);
+        // Fetch CheapShark deals (non-blocking) if game is released and paid
+        if (this.gameStateInfo.isReleased && !this.gameStateInfo.isFree) {
+          this.fetchDeals(this.game.name);
+        }
 
         // Track user path for recommendations
         if (this.currentUser) {
@@ -599,39 +596,48 @@ export default {
               <div
                 class="gd-rating-row d-flex align-items-center flex-wrap gap-4 mb-4"
               >
-                <div v-if="game.rating" class="d-flex align-items-center gap-2">
-                  <div class="gd-stars">
-                    <div
-                      class="gd-stars-fill"
-                      :style="{ width: ratingPercent + '%' }"
-                    ></div>
+                <template v-if="gameStateInfo.isReleased">
+                  <div v-if="game.rating" class="d-flex align-items-center gap-2">
+                    <div class="gd-stars">
+                      <div
+                        class="gd-stars-fill"
+                        :style="{ width: ratingPercent + '%' }"
+                      ></div>
+                    </div>
+                    <span
+                      class="gd-rating-text fs-5 text-primary-var fw-bold m-0"
+                      style="opacity: 1"
+                    >
+                      {{ game.rating.toFixed(1) }}/5
+                    </span>
                   </div>
-                  <span
-                    class="gd-rating-text fs-5 text-primary-var fw-bold m-0"
-                    style="opacity: 1"
-                  >
-                    {{ game.rating.toFixed(1) }}/5
-                  </span>
-                </div>
 
-                <div
-                  v-if="game.metacritic"
-                  class="d-flex align-items-center gap-2"
-                >
                   <div
-                    class="gd-metacritic fs-5 d-flex align-items-center justify-content-center"
-                    :class="metacriticClass"
-                    style="
-                      width: 44px;
-                      height: 44px;
-                      border-radius: 50%;
-                      box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-                    "
+                    v-if="game.metacritic"
+                    class="d-flex align-items-center gap-2"
                   >
-                    {{ game.metacritic }}
+                    <div
+                      class="gd-metacritic fs-5 d-flex align-items-center justify-content-center"
+                      :class="metacriticClass"
+                      style="
+                        width: 44px;
+                        height: 44px;
+                        border-radius: 50%;
+                        box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+                      "
+                    >
+                      {{ game.metacritic }}
+                    </div>
+                    <span class="text-primary-var fw-bold">Metacritic</span>
                   </div>
-                  <span class="text-primary-var fw-bold">Metacritic</span>
-                </div>
+                </template>
+                <template v-else>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-secondary bg-opacity-50 text-white fs-6 py-2 px-3 border border-secondary border-opacity-25 rounded-pill">
+                      Not Yet Rated
+                    </span>
+                  </div>
+                </template>
 
                 <!-- Platform chips -->
                 <div class="d-flex flex-wrap gap-2">
@@ -651,26 +657,69 @@ export default {
               </div>
 
               <!-- Quick Actions in Hero -->
-              <div class="d-flex flex-wrap gap-3 mt-4">
-                <button
-                  class="gd-hero-btn-primary btn btn-primary btn-lg fw-bold px-5 shadow-sm text-primary-var"
-                  @click="buyNow"
-                  aria-label="Buy Now"
-                >
-                  <i class="bi bi-lightning-charge-fill me-2"></i> Buy Now — ${{
-                    discountedPrice || fakePrice
-                  }}
-                </button>
+              <div v-if="gameStateInfo.state !== 'UNKNOWN'" class="d-flex flex-wrap gap-3 mt-4">
+                <!-- RELEASED -->
+                <template v-if="gameStateInfo.isReleased">
+                  <button
+                    class="gd-hero-btn-primary btn btn-primary btn-lg fw-bold px-5 shadow-sm text-primary-var"
+                    @click="buyNow"
+                    aria-label="Buy Now"
+                  >
+                    <i class="bi bi-lightning-charge-fill me-2"></i> Buy Now — ${{
+                      discountedPrice || displayPrice
+                    }}
+                  </button>
+
+                  <button
+                    class="gd-hero-btn-secondary btn btn-lg fw-bold px-4 shadow-sm"
+                    @click="addToCart"
+                    aria-label="Add to Cart"
+                  >
+                    <i class="bi bi-cart-plus-fill me-2"></i> Add to Cart
+                  </button>
+                </template>
+
+                <!-- FREE -->
+                <template v-else-if="gameStateInfo.isFree">
+                  <button
+                    class="gd-hero-btn-primary btn btn-success btn-lg fw-bold px-5 shadow-sm text-primary-var"
+                    aria-label="Play Free"
+                  >
+                    <i class="bi bi-play-circle-fill me-2"></i> Play Free
+                  </button>
+                  <button
+                    class="gd-hero-btn-secondary btn btn-lg fw-bold px-4 shadow-sm"
+                    aria-label="Download"
+                  >
+                    <i class="bi bi-download me-2"></i> Download
+                  </button>
+                </template>
+
+                <!-- COMING SOON / TBA -->
+                <template v-else>
+                  <button
+                    class="gd-hero-btn-primary btn btn-primary btn-lg fw-bold px-5 shadow-sm text-primary-var"
+                    @click="addToFavorites"
+                    aria-label="Add to wishlist"
+                  >
+                    <i class="bi bi-heart-fill me-2"></i> Wishlist
+                  </button>
+                  <button
+                    v-if="gameStateInfo.isComingSoon"
+                    class="gd-hero-btn-secondary btn btn-lg fw-bold px-4 shadow-sm"
+                  >
+                    <i class="bi bi-bell-fill me-2"></i> Notify Me
+                  </button>
+                  <button
+                    v-else
+                    class="gd-hero-btn-secondary btn btn-lg fw-bold px-4 shadow-sm"
+                  >
+                    <i class="bi bi-bookmark-plus-fill me-2"></i> Follow
+                  </button>
+                </template>
 
                 <button
-                  class="gd-hero-btn-secondary btn btn-lg fw-bold px-4 shadow-sm"
-                  @click="addToCart"
-                  aria-label="Add to Cart"
-                >
-                  <i class="bi bi-cart-plus-fill me-2"></i> Add to Cart
-                </button>
-
-                <button
+                  v-if="gameStateInfo.isReleased || gameStateInfo.isFree"
                   class="gd-hero-btn-tertiary btn btn-lg px-4"
                   @click="addToFavorites"
                   aria-label="Add to wishlist"
@@ -927,14 +976,27 @@ export default {
                     Community Reviews
                   </h2>
                   <p
+                    v-if="gameStateInfo.isReleased"
                     class="gd-review-subtitle text-muted"
                     style="margin-top: -10px; margin-bottom: 20px"
                   >
                     Share your thoughts and help other players decide.
                   </p>
+                  <p v-else class="gd-review-subtitle text-muted" style="margin-top: -10px; margin-bottom: 20px">
+                    Reviews will open after release.
+                  </p>
                 </div>
               </div>
-              <ReviewSection :game-id="game.id" :game-title="game.name" />
+              <ReviewSection v-if="gameStateInfo.isReleased" :game-id="game.id" :game-title="game.name" />
+              <div v-else class="text-center p-5 bg-black bg-opacity-25 rounded-4 border border-secondary border-opacity-25">
+                <i class="bi bi-lock-fill text-muted fs-1 mb-3"></i>
+                <h4 class="text-primary-var fw-bold">Coming after release</h4>
+                <p class="text-muted mb-4">You'll be able to rate and review this game once it launches.</p>
+                <div class="d-flex justify-content-center gap-3">
+                  <button class="btn btn-primary fw-bold px-4" @click="addToFavorites"><i class="bi bi-heart-fill me-2"></i>Wishlist</button>
+                  <button v-if="gameStateInfo.isComingSoon" class="btn btn-outline-secondary fw-bold px-4"><i class="bi bi-bell-fill me-2"></i>Notify Me</button>
+                </div>
+              </div>
             </div>
 
             <!-- Discover More -->
@@ -995,7 +1057,7 @@ export default {
               style="margin-bottom: var(--section-gap)"
             >
               <h2 class="gd-section-title mb-4">
-                <i class="bi bi-fire me-2 text-primary"></i> Trending This Week
+                <i class="bi bi-fire me-2 text-primary"></i> {{ gameStateInfo.isReleased ? 'Trending This Week' : 'Most Wishlisted' }}
               </h2>
               <div class="gd-similar-grid">
                 <router-link
@@ -1044,7 +1106,7 @@ export default {
             <div class="gd-sidebar">
               <!-- Metacritic Score -->
               <div
-                v-if="game.metacritic"
+                v-if="game.metacritic && gameStateInfo.isReleased"
                 class="gd-mc-card mb-4 profile-glass-card p-4 rounded-4 d-flex align-items-center gap-3"
                 style="background: var(--bg-surface)"
               >
@@ -1061,6 +1123,7 @@ export default {
 
               <!-- Actions -->
               <div
+                v-if="gameStateInfo.state !== 'UNKNOWN'"
                 class="gd-actions mb-4 p-0 profile-glass-card rounded-4 border border-secondary border-opacity-25 overflow-hidden"
                 style="background: var(--bg-surface)"
               >
@@ -1068,27 +1131,45 @@ export default {
                 <div
                   class="text-center p-4 border-bottom border-secondary border-opacity-25 bg-black bg-opacity-10"
                 >
-                  <template v-if="fakeDiscount > 0">
-                    <div
-                      class="d-inline-block px-3 py-1 bg-danger text-primary-var fw-bold rounded-pill mb-2 shadow-sm"
-                    >
-                      SALE -{{ fakeDiscount }}%
-                    </div>
-                    <div
-                      class="d-flex align-items-center justify-content-center gap-3"
-                    >
+                  <template v-if="gameStateInfo.isReleased">
+                    <template v-if="displayDiscount > 0">
+                      <div
+                        class="d-inline-block px-3 py-1 bg-danger text-primary-var fw-bold rounded-pill mb-2 shadow-sm"
+                      >
+                        SALE -{{ displayDiscount }}%
+                      </div>
+                      <div
+                        class="d-flex align-items-center justify-content-center gap-3"
+                      >
+                        <span class="fs-1 fw-bold text-primary-var"
+                          >${{ discountedPrice }}</span
+                        >
+                        <span class="fs-4 text-muted text-decoration-line-through"
+                          >${{ displayPrice }}</span
+                        >
+                      </div>
+                    </template>
+                    <template v-else>
                       <span class="fs-1 fw-bold text-primary-var"
-                        >${{ discountedPrice }}</span
+                        >${{ displayPrice }}</span
                       >
-                      <span class="fs-4 text-muted text-decoration-line-through"
-                        >${{ fakePrice }}</span
-                      >
-                    </div>
+                    </template>
                   </template>
-                  <template v-else>
-                    <span class="fs-1 fw-bold text-primary-var"
-                      >${{ fakePrice }}</span
-                    >
+                  
+                  <template v-else-if="gameStateInfo.isFree">
+                    <span class="fs-1 fw-bold text-success">Free to Play</span>
+                  </template>
+                  
+                  <template v-else-if="gameStateInfo.isComingSoon">
+                    <span class="fs-2 fw-bold text-primary-var">Coming Soon</span>
+                    <small class="d-block text-muted mt-1" v-if="gameStateInfo.releaseDate">Release: {{ formatDate(gameStateInfo.releaseDate) }}</small>
+                    <small class="d-block text-info fw-bold mt-2" v-if="gameStateInfo.countdownDays > 0">Releases in {{ gameStateInfo.countdownDays }} days</small>
+                    <small class="d-block text-info fw-bold mt-2" v-else-if="gameStateInfo.countdownDays === 0">Releases today!</small>
+                  </template>
+                  
+                  <template v-else-if="gameStateInfo.isTba">
+                    <span class="fs-2 fw-bold text-primary-var">Coming Soon</span>
+                    <small class="d-block text-muted mt-1">Release Date: To Be Announced</small>
                   </template>
                 </div>
 
@@ -1096,22 +1177,42 @@ export default {
                 <div
                   class="p-4 border-bottom border-secondary border-opacity-25"
                 >
-                  <button
-                    class="gd-buy-now-btn w-100 mb-3"
-                    @click="buyNow"
-                    aria-label="Buy Now"
-                  >
-                    <i class="bi bi-lightning-charge-fill me-2"></i>
-                    Buy Now — ${{ discountedPrice || fakePrice }}
-                  </button>
+                  <template v-if="gameStateInfo.isReleased">
+                    <button
+                      class="gd-buy-now-btn w-100 mb-3"
+                      @click="buyNow"
+                      aria-label="Buy Now"
+                    >
+                      <i class="bi bi-lightning-charge-fill me-2"></i>
+                      Buy Now — ${{ discountedPrice || displayPrice }}
+                    </button>
 
-                  <button
-                    class="gd-add-cart-btn w-100 mb-3"
-                    @click="addToCart"
-                    aria-label="Add to Cart"
-                  >
-                    <i class="bi bi-cart-plus me-2"></i> Add to Cart
-                  </button>
+                    <button
+                      class="gd-add-cart-btn w-100 mb-3"
+                      @click="addToCart"
+                      aria-label="Add to Cart"
+                    >
+                      <i class="bi bi-cart-plus me-2"></i> Add to Cart
+                    </button>
+                  </template>
+
+                  <template v-else-if="gameStateInfo.isFree">
+                    <button
+                      class="btn btn-success w-100 py-2 mb-3 fw-bold"
+                      aria-label="Play Free"
+                    >
+                      <i class="bi bi-play-circle-fill me-2"></i> Play Free
+                    </button>
+                  </template>
+
+                  <template v-else-if="gameStateInfo.isComingSoon">
+                    <button
+                      class="btn btn-outline-primary w-100 py-2 mb-3 fw-bold"
+                      aria-label="Notify Me"
+                    >
+                      <i class="bi bi-bell-fill me-2"></i> Notify Me
+                    </button>
+                  </template>
 
                   <button
                     v-if="hasTrailer"
@@ -1159,7 +1260,7 @@ export default {
                   <small
                     class="text-muted d-block mb-3 fw-bold text-uppercase"
                     style="letter-spacing: 0.08em"
-                    >Available On</small
+                    >{{ gameStateInfo.isReleased ? 'Available On' : 'Available at launch on' }}</small
                   >
                   <div class="d-flex flex-column gap-2">
                     <a
@@ -1213,7 +1314,7 @@ export default {
                       formatDate(game.released)
                     }}</span>
                   </div>
-                  <div class="gd-meta-row" v-if="game.playtime">
+                  <div class="gd-meta-row" v-if="game.playtime && gameStateInfo.isReleased">
                     <span class="gd-meta-label">Playtime</span>
                     <span class="gd-meta-value">~{{ game.playtime }} hrs</span>
                   </div>
@@ -1223,7 +1324,7 @@ export default {
                       game.esrb_rating.name
                     }}</span>
                   </div>
-                  <div class="gd-meta-row" v-if="game.ratings_count">
+                  <div class="gd-meta-row" v-if="game.ratings_count && gameStateInfo.isReleased">
                     <span class="gd-meta-label">Total Reviews</span>
                     <span class="gd-meta-value">{{
                       game.ratings_count.toLocaleString()
@@ -1235,7 +1336,7 @@ export default {
               <!-- CheapShark Deals -->
               <div
                 class="gd-deals-card profile-glass-card p-4 rounded-4 mt-4"
-                v-if="deals.length || dealsLoading"
+                v-if="gameStateInfo.isReleased && !gameStateInfo.isFree && (deals.length || dealsLoading)"
               >
                 <h5 class="gd-details-heading mb-4">
                   <i class="bi bi-tags-fill text-primary me-2"></i> Compare
@@ -1329,7 +1430,7 @@ export default {
                   Stats
                 </h5>
                 <div class="row g-4">
-                  <div class="col-6">
+                  <div class="col-6" v-if="gameStateInfo.isReleased">
                     <span class="gh-meta-label"
                       ><i class="bi bi-star-fill text-warning me-1"></i>
                       Average</span
@@ -1339,7 +1440,7 @@ export default {
                       5</span
                     >
                   </div>
-                  <div class="col-6">
+                  <div class="col-6" v-if="gameStateInfo.isReleased">
                     <span class="gh-meta-label"
                       ><i class="bi bi-chat-text-fill text-info me-1"></i>
                       Reviews</span

@@ -20,6 +20,7 @@ export default {
       viewMode: "grid",   // 'grid' | 'list'
       sortBy: "recent",   // 'recent' | 'playtime' | 'az' | 'status'
       searchQuery: "",
+      wishlistCount: 0,
     };
   },
 
@@ -38,7 +39,16 @@ export default {
     },
 
     installedCount() {
-      return this.purchases.filter(g => g.status === 'installed' || g.status === 'playing').length;
+      return this.purchases.filter(g => g.status === 'installed' || g.status === 'playing' || g.status === 'completed' || g.status === 'backlog').length;
+    },
+    completedCount() {
+      return this.purchases.filter(g => g.status === 'completed').length;
+    },
+    backlogCount() {
+      return this.purchases.filter(g => g.status === 'backlog').length;
+    },
+    playingCount() {
+      return this.purchases.filter(g => g.status === 'playing').length;
     },
 
     currentlyPlaying() {
@@ -68,7 +78,7 @@ export default {
 
       // Sort
       if (this.sortBy === 'recent') {
-        list.sort((a, b) => (b.purchasedAt?.seconds || 0) - (a.purchasedAt?.seconds || 0));
+        list.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
       } else if (this.sortBy === 'playtime') {
         list.sort((a, b) => (b.playtime || 0) - (a.playtime || 0));
       } else if (this.sortBy === 'az') {
@@ -87,6 +97,7 @@ export default {
       this.currentUser = user;
       if (user) {
         this.fetchLibrary();
+        this.fetchWishlistCount();
       }
     });
 
@@ -101,6 +112,14 @@ export default {
   },
 
   methods: {
+    async fetchWishlistCount() {
+      try {
+        const snap = await getDocs(query(collection(db, "favorites"), where("userId", "==", this.currentUser.uid)));
+        this.wishlistCount = snap.size;
+      } catch (e) {
+        console.error("Failed to load wishlist count", e);
+      }
+    },
     async fetchLibrary() {
       this.loading = true;
       this.error = null;
@@ -115,7 +134,6 @@ export default {
         const results = snap.docs.map((doc) => {
           const data = doc.data();
           let currentStatus = data.status;
-          if (currentStatus === 'completed') currentStatus = 'not_installed';
           
           return {
             id: doc.id,
@@ -126,8 +144,8 @@ export default {
         });
 
         this.purchases = results.sort((a, b) => {
-          const tA = a.purchasedAt?.seconds || 0;
-          const tB = b.purchasedAt?.seconds || 0;
+          const tA = a.createdAt?.seconds || 0;
+          const tB = b.createdAt?.seconds || 0;
           return tB - tA;
         });
 
@@ -205,13 +223,23 @@ export default {
       const elapsedSeconds = Math.floor((Date.now() - game.sessionStart) / 1000);
       const newPlaytime = (game.playtime || 0) + elapsedSeconds;
 
+      const newSession = {
+        startTime: game.sessionStart,
+        duration: elapsedSeconds
+      };
+      
+      const sessions = game.sessions || [];
+      sessions.unshift(newSession);
+
       game.status = 'installed';
       game.playtime = newPlaytime;
       game.sessionStart = null;
+      game.sessions = sessions;
 
       await updateDoc(doc(db, "purchases", game.id), {
         status: 'installed',
-        playtime: newPlaytime
+        playtime: newPlaytime,
+        sessions: sessions
       });
     },
 
@@ -255,6 +283,25 @@ export default {
           <div class="lib-stat">
             <span class="lib-stat-value">{{ installedCount }}</span>
             <span class="lib-stat-label">Installed</span>
+          </div>
+          <div class="lib-stat">
+            <span class="lib-stat-value">{{ wishlistCount }}</span>
+            <span class="lib-stat-label">Wishlist</span>
+          </div>
+          <div class="lib-stat-divider"></div>
+          <div class="lib-stat">
+            <span class="lib-stat-value">{{ completedCount }}</span>
+            <span class="lib-stat-label">Completed</span>
+          </div>
+          <div class="lib-stat-divider"></div>
+          <div class="lib-stat">
+            <span class="lib-stat-value">{{ playingCount }}</span>
+            <span class="lib-stat-label">Playing</span>
+          </div>
+          <div class="lib-stat-divider"></div>
+          <div class="lib-stat">
+            <span class="lib-stat-value">{{ backlogCount }}</span>
+            <span class="lib-stat-label">Backlog</span>
           </div>
           <div class="lib-stat-divider"></div>
           <div class="lib-stat">
@@ -411,11 +458,13 @@ export default {
               >
                 <div class="library-card h-100 position-relative" :class="{'is-playing': game.status === 'playing'}">
                   <div class="library-card-img-wrapper">
-                    <img
-                      :src="game.thumbnail || '/placeholder.png'"
-                      class="library-card-img"
-                      alt="Game thumbnail"
-                    />
+                    <router-link :to="`/library/${game.id}`" class="d-block w-100 h-100">
+                      <img
+                        :src="game.thumbnail || '/placeholder.png'"
+                        class="library-card-img"
+                        alt="Game thumbnail"
+                      />
+                    </router-link>
                     <!-- Play Overlay (Only show if installed and not playing) -->
                     <div v-if="game.status === 'installed'" class="play-overlay" @click="playGame(game)">
                       <button class="btn-play-huge">
@@ -430,7 +479,7 @@ export default {
 
                   <div class="library-card-body p-3 d-flex flex-column" style="flex: 1;">
                     <h5 class="text-truncate mb-1" style="color: var(--text-primary)" :title="game.gameName">
-                      {{ game.gameName }}
+                      <router-link :to="`/library/${game.id}`" class="text-decoration-none text-reset">{{ game.gameName }}</router-link>
                     </h5>
                     <p class="text-muted small mb-3 d-flex justify-content-between align-items-center">
                       <span>
@@ -508,13 +557,17 @@ export default {
                 :style="{ animationDelay: index * 0.03 + 's' }"
               >
                 <div class="lib-list-img">
-                  <img :src="game.thumbnail || '/placeholder.png'" :alt="game.gameName" />
+                  <router-link :to="`/library/${game.id}`" class="d-block w-100 h-100">
+                    <img :src="game.thumbnail || '/placeholder.png'" :alt="game.gameName" />
+                  </router-link>
                   <div class="playing-badge-sm" v-if="game.status === 'playing'">
                     <span class="playing-dot"></span>
                   </div>
                 </div>
                 <div class="lib-list-info">
-                  <span class="lib-list-name" :title="game.gameName">{{ game.gameName }}</span>
+                  <span class="lib-list-name" :title="game.gameName">
+                    <router-link :to="`/library/${game.id}`" class="text-decoration-none text-reset">{{ game.gameName }}</router-link>
+                  </span>
                   <span class="lib-list-playtime">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px; margin-right:3px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     {{ formatPlaytime(game.playtime || 0) }}

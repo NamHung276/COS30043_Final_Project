@@ -131,10 +131,27 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: "/library/:id",
+    name: "LibraryDetails",
+    component: () => import("../views/LibraryDetails.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
     path: "/admin",
     name: "AdminDashboard",
     component: () => import("../views/AdminDashboard.vue"),
     meta: { requiresAuth: true, requiresAdmin: true },
+  },
+  {
+    path: "/checkout/success",
+    name: "CheckoutSuccess",
+    component: () => import("../views/CheckoutSuccess.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/:pathMatch(.*)*",
+    name: "NotFound",
+    component: () => import("../views/NotFound.vue"),
   },
 ];
 

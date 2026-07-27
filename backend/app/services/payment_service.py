@@ -9,6 +9,7 @@ from config import settings
 
 logger = logging.getLogger(__name__)
 
+
 class PaymentService:
     def __init__(self):
         self.client_id = settings.paypal_client_id
@@ -42,7 +43,7 @@ class PaymentService:
                     f"{self.base_url}/v1/oauth2/token",
                     headers=headers,
                     data=data,
-                    timeout=10.0
+                    timeout=10.0,
                 )
                 response.raise_for_status()
                 token_data = response.json()
@@ -52,7 +53,12 @@ class PaymentService:
                 logger.error(f"Failed to authenticate with PayPal: {e}")
                 raise Exception("PayPal authentication failed") from e
 
-    async def create_order(self, amount: float, currency: str = "USD", description: str = "GameHub Purchase") -> dict:
+    async def create_order(
+        self,
+        amount: float,
+        currency: str = "USD",
+        description: str = "GameHub Purchase",
+    ) -> dict:
         """Create a new PayPal order."""
         token = await self._get_access_token()
 
@@ -80,7 +86,7 @@ class PaymentService:
                     f"{self.base_url}/v2/checkout/orders",
                     headers=headers,
                     json=payload,
-                    timeout=10.0
+                    timeout=10.0,
                 )
                 response.raise_for_status()
                 return response.json()
@@ -102,12 +108,13 @@ class PaymentService:
                 response = await client.post(
                     f"{self.base_url}/v2/checkout/orders/{order_id}/capture",
                     headers=headers,
-                    timeout=10.0
+                    timeout=10.0,
                 )
                 response.raise_for_status()
                 return response.json()
             except httpx.HTTPError as e:
                 logger.error(f"Failed to capture PayPal order: {e}")
                 raise Exception("Failed to capture PayPal order") from e
+
 
 payment_service = PaymentService()

@@ -19,7 +19,9 @@ from app.services import news_service
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-_DEFAULT_QUERY = "gaming OR video games OR esports OR PC games OR PlayStation OR Xbox OR Nintendo"
+_DEFAULT_QUERY = (
+    "gaming OR video games OR esports OR PC games OR PlayStation OR Xbox OR Nintendo"
+)
 
 
 @router.get(

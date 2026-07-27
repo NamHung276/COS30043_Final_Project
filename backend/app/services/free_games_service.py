@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 FREETOGAME_BASE_URL = "https://www.freetogame.com/api"
 
 # ── Cache TTLs ────────────────────────────────────────────────────────────────
-TTL_LIST   = 30 * 60  # 30 minutes (free game catalogue changes slowly)
+TTL_LIST = 30 * 60  # 30 minutes (free game catalogue changes slowly)
 TTL_DETAIL = 30 * 60
 
 
@@ -31,6 +31,7 @@ async def _get(path: str, params: Optional[Dict[str, Any]] = None) -> Any:
 
 
 # ── Public Service Functions ───────────────────────────────────────────────────
+
 
 async def get_free_games(
     platform: Optional[str] = None,
@@ -48,8 +49,12 @@ async def get_free_games(
         tag:     filter by tag
     """
     cache_key = build_cache_key(
-        "freetogame", "list",
-        platform or "all", category or "", sort_by or "", tag or "",
+        "freetogame",
+        "list",
+        platform or "all",
+        category or "",
+        sort_by or "",
+        tag or "",
     )
 
     async def _fetch():

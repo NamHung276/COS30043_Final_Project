@@ -18,17 +18,17 @@ logger = logging.getLogger(__name__)
 CHEAPSHARK_BASE_URL = "https://www.cheapshark.com/api/1.0"
 
 # ── Cache TTLs ────────────────────────────────────────────────────────────────
-TTL_DEALS       = 15 * 60   # 15 minutes (deals change often but not by the second)
-TTL_STORES      = 60 * 60   # 1 hour (store list is stable)
-TTL_GAME_LOOKUP = 10 * 60   # 10 minutes
+TTL_DEALS = 15 * 60  # 15 minutes (deals change often but not by the second)
+TTL_STORES = 60 * 60  # 1 hour (store list is stable)
+TTL_GAME_LOOKUP = 10 * 60  # 10 minutes
 
 # Human-readable store names (mirrors what Vue currently hardcodes)
 STORE_NAMES: Dict[str, str] = {
-    "1":  "Steam",
-    "2":  "GamersGate",
-    "3":  "GreenManGaming",
-    "7":  "GOG",
-    "8":  "Origin",
+    "1": "Steam",
+    "2": "GamersGate",
+    "3": "GreenManGaming",
+    "7": "GOG",
+    "8": "Origin",
     "11": "Humble Store",
     "13": "Uplay",
     "15": "Fanatical",
@@ -64,6 +64,7 @@ def _enrich_deal(deal: Dict) -> Dict:
 
 # ── Public Service Functions ───────────────────────────────────────────────────
 
+
 async def get_deals(
     page_number: int = 0,
     page_size: int = 60,
@@ -80,10 +81,16 @@ async def get_deals(
     Returns a list of deal dicts, each enriched with a store_name field.
     """
     cache_key = build_cache_key(
-        "cheapshark", "deals",
-        page_number, page_size, sort_by,
-        upper_price or "", lower_price or "",
-        min_savings or "", store_id or "", aaa or "",
+        "cheapshark",
+        "deals",
+        page_number,
+        page_size,
+        sort_by,
+        upper_price or "",
+        lower_price or "",
+        min_savings or "",
+        store_id or "",
+        aaa or "",
     )
 
     async def _fetch():

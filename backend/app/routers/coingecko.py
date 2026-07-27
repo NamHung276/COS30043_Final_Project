@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+
 @router.get("/trending")
 async def get_trending_crypto():
     """
@@ -23,8 +24,9 @@ async def get_trending_crypto():
         logger.error(f"Error fetching trending crypto: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to fetch trending crypto"
+            detail="Failed to fetch trending crypto",
         )
+
 
 @router.get("/gaming")
 async def get_gaming_coins():
@@ -34,14 +36,22 @@ async def get_gaming_coins():
     try:
         data = await coingecko_service.get_gaming_coins()
         # Just return a summary list as requested
-        summary = [{"id": coin.get("id"), "name": coin.get("name"), "symbol": coin.get("symbol")} for coin in data]
+        summary = [
+            {
+                "id": coin.get("id"),
+                "name": coin.get("name"),
+                "symbol": coin.get("symbol"),
+            }
+            for coin in data
+        ]
         return {"coins": summary}
     except Exception as e:
         logger.error(f"Error fetching gaming crypto: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to fetch gaming crypto"
+            detail="Failed to fetch gaming crypto",
         )
+
 
 @router.get("/market")
 async def get_gaming_market():
@@ -55,5 +65,5 @@ async def get_gaming_market():
         logger.error(f"Error fetching gaming crypto market data: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to fetch gaming crypto market data"
+            detail="Failed to fetch gaming crypto market data",
         )

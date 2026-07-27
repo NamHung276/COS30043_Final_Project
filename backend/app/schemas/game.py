@@ -6,7 +6,7 @@ consistent shapes that Vue components can rely on.
 """
 
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field
 
 
 class Platform(BaseModel):

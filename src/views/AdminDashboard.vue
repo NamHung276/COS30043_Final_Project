@@ -77,8 +77,8 @@ export default {
     badgeCounts() {
       return {
         reports: this.reportedItems.length,
-        news: this.posts.filter(p => p.createdAt?.seconds > (Date.now()/1000 - 86400)).length || 1, // "New" articles in last 24h
-        users: this.users.filter(u => u.createdAt?.seconds > (Date.now()/1000 - 86400)).length || 3 // "New" users in last 24h
+        news: this.posts.filter(p => p.createdAt?.seconds > (Date.now()/1000 - 86400)).length,
+        users: this.users.filter(u => u.createdAt?.seconds > (Date.now()/1000 - 86400)).length
       };
     },
 

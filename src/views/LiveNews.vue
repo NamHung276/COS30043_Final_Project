@@ -1,6 +1,6 @@
 <script>
 import SkeletonCard from "../components/SkeletonCard.vue";
-import { newsApi, newsDataApi } from "../services/api";
+import { newsApi, newsDataApi, rawgApi, cheapSharkApi } from "../services/api";
 
 export default {
   components: { SkeletonCard },
@@ -15,6 +15,12 @@ export default {
       itemsPerPage: 12,
       lastUpdated: "",
       activeTab: "Latest",
+
+      // Market Widget Data
+      trendingGames: [],
+      steamDeals: [],
+      upcomingReleases: [],
+      marketLoading: true,
     };
   },
 
@@ -29,16 +35,24 @@ export default {
     },
 
     filteredArticles() {
+      const blacklist = ["casino", "slots", "betting", "gambling", "poker", "roulette", "blackjack", "lottery"];
+      const baseArticles = this.tabFilteredArticles.filter(article => {
+        const title = (article.title || "").toLowerCase();
+        const desc = (article.description || "").toLowerCase();
+        return !blacklist.some(word => title.includes(word) || desc.includes(word));
+      });
+
       const term = this.searchTerm.toLowerCase();
-      if (!term) return this.tabFilteredArticles;
-      return this.tabFilteredArticles.filter((article) => {
-        const title = article.title || "";
-        const description = article.description || "";
-        const source = article.source?.name || "";
+      if (!term) return baseArticles;
+      
+      return baseArticles.filter((article) => {
+        const title = (article.title || "").toLowerCase();
+        const description = (article.description || "").toLowerCase();
+        const source = (article.source?.name || "").toLowerCase();
         return (
-          title.toLowerCase().includes(term) ||
-          description.toLowerCase().includes(term) ||
-          source.toLowerCase().includes(term)
+          title.includes(term) ||
+          description.includes(term) ||
+          source.includes(term)
         );
       });
     },
@@ -59,9 +73,17 @@ export default {
     },
 
     // Grid Articles: Everything else, ready for pagination
-    editorialGridArticles() {
+    editorsPicks() {
       if (this.filteredArticles.length === 0) return [];
       const excluded = [this.featuredStory, ...this.latestHeadlines].filter(Boolean);
+      const remaining = this.filteredArticles.filter(a => !excluded.includes(a));
+      // Pick 3 articles for Editor's picks, preferably with images
+      return remaining.filter(a => a.urlToImage).slice(0, 3);
+    },
+
+    editorialGridArticles() {
+      if (this.filteredArticles.length === 0) return [];
+      const excluded = [this.featuredStory, ...this.latestHeadlines, ...this.editorsPicks].filter(Boolean);
       return this.filteredArticles.filter(a => !excluded.includes(a));
     },
 
@@ -190,6 +212,28 @@ export default {
       if (cat === "Hardware") return combined.includes("gpu") || combined.includes("cpu") || combined.includes("console");
       return false;
     },
+    
+    // ── Mock Metadata Generators ──
+    getMockAuthor(article) {
+      const badges = ["✔ Senior Reporter", "Gaming Editor", "Lead Reviewer", "Community Writer", "News Editor"];
+      const names = ["Ryan Dinsdale", "Rebekah Valentine", "Tom Marks", "Kat Bailey", "Matt Kim", "Taylor Lyles", "Phil Spencer", "Todd Howard"];
+      
+      const seed = article.title ? article.title.length : 0;
+      const name = names[seed % names.length];
+      const badge = badges[(seed * 2) % badges.length];
+      
+      return { name, badge };
+    },
+    getMockViews(article) {
+      const seed = article.title ? article.title.length : 0;
+      return (seed * 1234) % 95000 + 5000;
+    },
+    getMockComments(article) {
+      return Math.floor(this.getMockViews(article) / 100);
+    },
+    formatNumber(num) {
+      return new Intl.NumberFormat('en-US').format(num);
+    },
   },
 
   async mounted() {
@@ -243,7 +287,19 @@ export default {
       if (combinedArticles.length === 0) {
         this.error = "Failed to load news from our providers. Please try again later.";
       } else {
-        this.articles = combinedArticles.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+        const uniqueArticles = [];
+        const seenTitles = new Set();
+        
+        combinedArticles.forEach(article => {
+          if (!article.title) return;
+          const cleanTitle = article.title.toLowerCase().trim();
+          if (!seenTitles.has(cleanTitle)) {
+            seenTitles.add(cleanTitle);
+            uniqueArticles.push(article);
+          }
+        });
+        
+        this.articles = uniqueArticles.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
       }
       
       this.lastUpdated = new Date().toLocaleString();
@@ -252,6 +308,27 @@ export default {
       this.error = "Critical error loading news. Please try again later.";
     } finally {
       this.loading = false;
+    }
+
+    // ── Fetch Market Widget Data ──
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const nextYearDate = new Date();
+      nextYearDate.setFullYear(nextYearDate.getFullYear() + 1);
+      const nextYear = nextYearDate.toISOString().split('T')[0];
+
+      const [trendingRes, dealsRes, upcomingRes] = await Promise.all([
+        rawgApi.get("/games", { params: { ordering: "-added", page_size: 4 } }),
+        cheapSharkApi.get("/deals", { params: { storeID: 1, pageSize: 4 } }),
+        rawgApi.get("/games", { params: { dates: `${today},${nextYear}`, ordering: "-added", page_size: 4 } })
+      ]);
+      this.trendingGames = trendingRes.data.results || [];
+      this.steamDeals = dealsRes.data || [];
+      this.upcomingReleases = upcomingRes.data.results || [];
+    } catch (err) {
+      console.error("Failed to load market widget data:", err);
+    } finally {
+      this.marketLoading = false;
     }
   },
 };
@@ -302,11 +379,27 @@ export default {
       </div>
 
       <template v-else>
+        <!-- ── Breaking News Ticker ── -->
+        <div class="breaking-ticker mb-5" v-if="latestHeadlines.length > 0">
+          <div class="ticker-label">BREAKING</div>
+          <div class="ticker-scroll">
+            <div class="ticker-content">
+              <span v-for="(article, index) in latestHeadlines" :key="'tick'+index" class="ticker-item">
+                <span class="ticker-dot">•</span> {{ article.title }}
+              </span>
+              <!-- Duplicate for seamless scroll -->
+              <span v-for="(article, index) in latestHeadlines" :key="'tick2'+index" class="ticker-item">
+                <span class="ticker-dot">•</span> {{ article.title }}
+              </span>
+            </div>
+          </div>
+        </div>
+
         <!-- ── Editorial Hero ── -->
         <section v-if="featuredStory && (currentPage === 1 || searchTerm)" class="ed-hero-section">
           <div class="ed-hero-layout">
             
-            <!-- Main Featured Story -->
+            <!-- Main Featured Story (70%) -->
             <a :href="featuredStory.url" target="_blank" rel="noopener noreferrer" class="ed-featured-card">
               <div class="ed-feat-img-wrap">
                 <img v-if="featuredStory.urlToImage" :src="featuredStory.urlToImage" :alt="featuredStory.title" class="ed-feat-img" />
@@ -316,17 +409,32 @@ export default {
                 <div class="ed-meta">
                   <span class="ed-cat">{{ getArticleCategory(featuredStory) }}</span>
                   <span class="ed-dot">•</span>
-                  <span class="ed-source">{{ featuredStory.source?.name }}</span>
-                  <span class="ed-dot">•</span>
                   <span class="ed-time">{{ timeAgo(featuredStory.publishedAt) }}</span>
                 </div>
                 <h2 class="ed-feat-title">{{ featuredStory.title }}</h2>
                 <p class="ed-feat-desc">{{ featuredStory.description }}</p>
-                <div class="ed-read-btn">Read Full Story <span>&rarr;</span></div>
+                <div class="mt-3 mb-2">
+                  <button class="btn btn-primary px-4 py-2 fw-bold rounded-pill shadow-sm">Read Full Story <i class="bi bi-arrow-right ms-1"></i></button>
+                </div>
+                
+                <div class="ed-rich-meta">
+                  <div class="ed-author-block">
+                    <div class="author-avatar"><i class="bi bi-person-fill"></i></div>
+                    <div class="author-info">
+                      <span class="author-name">By {{ getMockAuthor(featuredStory).name }} <span class="badge bg-primary bg-opacity-25 text-primary ms-1"><i class="bi bi-check-circle-fill me-1"></i>{{ getMockAuthor(featuredStory).badge }}</span></span>
+                      <span class="author-source">{{ featuredStory.source?.name }}</span>
+                    </div>
+                  </div>
+                  <div class="ed-stats-block">
+                    <span><i class="bi bi-clock"></i> {{ getReadingTime(featuredStory.description) }}</span>
+                    <span><i class="bi bi-eye"></i> {{ formatNumber(getMockViews(featuredStory)) }} Views</span>
+                    <span><i class="bi bi-chat-text"></i> {{ getMockComments(featuredStory) }}</span>
+                  </div>
+                </div>
               </div>
             </a>
 
-            <!-- Latest Headlines Sidebar -->
+            <!-- Latest Headlines Sidebar (30%) -->
             <div class="ed-sidebar">
               <h3 class="ed-sidebar-title">The Latest</h3>
               <div class="ed-sidebar-list">
@@ -343,6 +451,10 @@ export default {
                     <span class="ed-time">{{ timeAgo(article.publishedAt) }}</span>
                   </div>
                   <h4 class="ed-side-title">{{ article.title }}</h4>
+                  <div class="ed-side-author d-flex align-items-center">
+                    By {{ getMockAuthor(article).name }} 
+                    <i class="bi bi-patch-check-fill text-primary ms-1" :title="getMockAuthor(article).badge"></i>
+                  </div>
                 </a>
               </div>
             </div>
@@ -350,9 +462,103 @@ export default {
           </div>
         </section>
 
-        <!-- ── News Grid ── -->
+        <!-- ── Live Market Widget (Store Integration) ── -->
+        <section class="market-widget-section mb-5" v-if="!searchTerm && currentPage === 1">
+          <div class="market-header d-flex justify-content-between align-items-center mb-4">
+            <h3 class="ed-grid-title m-0"><i class="bi bi-shop me-2"></i> Trending Games & Deals</h3>
+            <router-link to="/games" class="btn btn-outline-light btn-sm rounded-pill px-3">Store Home &rarr;</router-link>
+          </div>
+          
+          <div v-if="marketLoading" class="text-center py-5 text-muted">
+            <div class="spinner-border spinner-border-sm me-2"></div> Loading live market data...
+          </div>
+          
+          <div v-else class="market-grid">
+            <!-- Steam Deals -->
+            <div class="market-col">
+              <h4 class="market-col-title text-success"><i class="bi bi-tags-fill me-1"></i> Top Steam Deals</h4>
+              <div class="market-list">
+                <a v-for="deal in steamDeals" :key="deal.dealID" :href="`/games/${deal.gameID}`" class="market-item">
+                  <img :src="deal.thumb" class="market-thumb" />
+                  <div class="market-info">
+                    <span class="market-name">{{ deal.title }}</span>
+                    <div class="market-price-block">
+                      <span class="market-discount">-{{ Math.round(deal.savings) }}%</span>
+                      <span class="text-decoration-line-through text-muted small ms-1">${{ deal.normalPrice }}</span>
+                      <span class="market-price ms-auto">${{ deal.salePrice }}</span>
+                    </div>
+                  </div>
+                </a>
+              </div>
+            </div>
+
+            <!-- Trending Games -->
+            <div class="market-col">
+              <h4 class="market-col-title text-danger"><i class="bi bi-fire me-1"></i> Trending Now</h4>
+              <div class="market-list">
+                <router-link v-for="game in trendingGames" :key="game.id" :to="`/games/${game.id}`" class="market-item">
+                  <img :src="game.background_image" class="market-thumb" />
+                  <div class="market-info">
+                    <span class="market-name">{{ game.name }}</span>
+                    <div class="market-meta">
+                      <span class="text-warning"><i class="bi bi-star-fill"></i> {{ game.rating }}</span>
+                      <span class="text-muted ms-2">{{ formatDate(game.released) }}</span>
+                    </div>
+                  </div>
+                </router-link>
+              </div>
+            </div>
+
+            <!-- Upcoming Releases -->
+            <div class="market-col">
+              <h4 class="market-col-title text-primary"><i class="bi bi-calendar-star me-1"></i> Upcoming Releases</h4>
+              <div class="market-list">
+                <router-link v-for="game in upcomingReleases" :key="game.id" :to="`/games/${game.id}`" class="market-item">
+                  <img :src="game.background_image" class="market-thumb" />
+                  <div class="market-info">
+                    <span class="market-name">{{ game.name }}</span>
+                    <div class="market-meta d-flex justify-content-between align-items-center w-100">
+                      <span class="text-muted">{{ formatDate(game.released) }}</span>
+                      <button class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2" style="font-size: 0.75rem;"><i class="bi bi-heart me-1"></i> Wishlist</button>
+                    </div>
+                  </div>
+                </router-link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Editor's Picks (Horizontal Layout) ── -->
+        <section class="ed-picks-section mb-5" v-if="!searchTerm && currentPage === 1 && editorsPicks.length > 0">
+          <div class="ed-grid-header mb-4">
+            <h3 class="ed-grid-title m-0"><i class="bi bi-award me-2"></i> Editor's Picks</h3>
+          </div>
+          <div class="row g-4">
+            <div class="col-12 col-lg-4" v-for="article in editorsPicks" :key="'pick-'+article.url">
+              <a :href="article.url" target="_blank" rel="noopener noreferrer" class="ed-pick-card d-flex flex-column h-100 text-decoration-none">
+                <div class="ed-pick-img-wrap rounded overflow-hidden mb-3" style="aspect-ratio: 16/9;">
+                  <img :src="article.urlToImage" class="w-100 h-100 object-fit-cover" />
+                </div>
+                <div class="ed-pick-body d-flex flex-column flex-grow-1">
+                  <span class="text-primary fw-bold text-uppercase small mb-2" style="letter-spacing: 0.05em;">{{ getArticleCategory(article) }}</span>
+                  <h4 class="fw-bolder text-white mb-2 fs-5" style="line-height: 1.4;">{{ article.title }}</h4>
+                  <p class="text-secondary small mb-3">{{ article.description?.slice(0, 90) }}...</p>
+                  <div class="mt-auto d-flex align-items-center justify-content-between pt-3 border-top border-secondary border-opacity-25">
+                    <span class="text-muted small fw-bold">{{ timeAgo(article.publishedAt) }}</span>
+                    <div class="d-flex gap-2">
+                      <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-1 border-0" @click.prevent><i class="bi bi-bookmark"></i></button>
+                      <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-1 border-0" @click.prevent><i class="bi bi-share"></i></button>
+                    </div>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── News Grid (More Stories) ── -->
         <section id="editorial-grid" class="ed-grid-section" v-if="paginatedArticles.length">
-          <div class="ed-grid-header">
+          <div class="ed-grid-header mb-4">
             <h3 class="ed-grid-title">{{ searchTerm ? `Results for "${searchTerm}"` : (activeTab === 'Latest' ? 'More Stories' : activeTab + ' News') }}</h3>
           </div>
           
@@ -368,7 +574,7 @@ export default {
               <div class="ed-card-img-wrap">
                 <img v-if="article.urlToImage" v-lazy-img="article.urlToImage" :alt="article.title" class="ed-card-img" />
                 <div v-else class="ed-card-img-placeholder">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                  <i class="bi bi-newspaper fs-1 opacity-25"></i>
                 </div>
               </div>
               <div class="ed-card-body">
@@ -379,8 +585,15 @@ export default {
                 </div>
                 <h4 class="ed-card-title">{{ article.title }}</h4>
                 <p class="ed-card-desc">{{ article.description?.slice(0, 100) }}...</p>
-                <div class="ed-card-footer">
-                  <span class="ed-source">{{ article.source?.name }}</span>
+                <div class="ed-card-footer mt-auto pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                  <div class="d-flex align-items-center">
+                    <span class="ed-source"><i class="bi bi-person me-1"></i> {{ getMockAuthor(article).name }}</span>
+                  </div>
+                  <div class="d-flex gap-2 align-items-center">
+                    <span class="ed-stats me-2" title="Comments"><i class="bi bi-chat-text me-1"></i>{{ getMockComments(article) }}</span>
+                    <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-1 border-0" @click.prevent><i class="bi bi-bookmark"></i></button>
+                    <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-1 border-0" @click.prevent><i class="bi bi-share"></i></button>
+                  </div>
                 </div>
               </div>
             </a>
@@ -586,18 +799,15 @@ export default {
 .ed-featured-card {
   display: flex;
   flex-direction: column;
-  background: var(--bg-surface);
-  border: 1px solid var(--overlay-medium);
-  border-radius: 12px;
+  background: transparent;
   overflow: hidden;
   text-decoration: none;
   color: inherit;
-  transition: transform 0.2s, box-shadow 0.2s;
 }
-.ed-featured-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(0,0,0,0.3);
-  border-color: var(--overlay-heavy);
+.ed-featured-card:hover .ed-feat-title {
+  text-decoration: underline;
+  text-decoration-color: var(--primary);
+  text-underline-offset: 4px;
 }
 .ed-feat-img-wrap {
   width: 100%;
@@ -619,17 +829,18 @@ export default {
   background: var(--bg-base);
 }
 .ed-feat-content {
-  padding: 30px;
+  padding: 24px 0 0 0;
   display: flex;
   flex-direction: column;
   flex: 1;
 }
 .ed-feat-title {
-  font-size: 1.8rem;
-  font-weight: 800;
-  line-height: 1.25;
-  margin: 0 0 12px;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 900;
+  line-height: 1.1;
+  margin: 0 0 16px;
   color: var(--text-primary);
+  letter-spacing: -0.02em;
 }
 .ed-feat-desc {
   font-size: 1.05rem;
@@ -700,11 +911,17 @@ export default {
   margin-bottom: 8px;
 }
 .ed-side-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  line-height: 1.4;
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.3;
   color: var(--text-primary);
   margin: 0;
+  transition: color 0.2s;
+}
+.ed-sidebar-item:hover .ed-side-title {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 /* ── Grid Section ── */
@@ -730,17 +947,15 @@ export default {
 .ed-card {
   display: flex;
   flex-direction: column;
-  background: var(--bg-surface);
-  border: 1px solid var(--overlay-light);
-  border-radius: 8px;
+  background: transparent;
   overflow: hidden;
   text-decoration: none;
-  transition: transform 0.2s, box-shadow 0.2s;
 }
-.ed-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-  border-color: var(--overlay-medium);
+.ed-card:hover .ed-card-title {
+  color: var(--primary);
+}
+.ed-card:hover .ed-card-img {
+  transform: scale(1.05);
 }
 .ed-card-img-wrap {
   width: 100%;
@@ -752,6 +967,7 @@ export default {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
 }
 .ed-card-img-placeholder {
   width: 100%;
@@ -762,7 +978,7 @@ export default {
   color: var(--text-muted);
 }
 .ed-card-body {
-  padding: 20px;
+  padding: 16px 0 0 0;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -855,5 +1071,237 @@ export default {
 .journal-error svg {
   color: #ef4444;
   margin-bottom: 16px;
+}
+/* ── Breaking Ticker ── */
+.breaking-ticker {
+  display: flex;
+  background: var(--bg-surface);
+  border-left: 4px solid var(--primary);
+  border-radius: 4px;
+  overflow: hidden;
+  height: 40px;
+  align-items: center;
+}
+.ticker-label {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.8rem;
+  padding: 0 16px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  z-index: 2;
+  letter-spacing: 0.05em;
+}
+.ticker-scroll {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  height: 100%;
+}
+.ticker-content {
+  display: flex;
+  white-space: nowrap;
+  animation: scroll-ticker 30s linear infinite;
+  height: 100%;
+  align-items: center;
+}
+.ticker-item {
+  padding: 0 30px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+.ticker-dot {
+  color: var(--primary);
+  margin-right: 8px;
+}
+@keyframes scroll-ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ── Rich Meta ── */
+.ed-rich-meta {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--overlay-medium);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.ed-author-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.author-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--overlay-heavy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+}
+.author-info {
+  display: flex;
+  flex-direction: column;
+}
+.author-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+.author-source {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.ed-stats-block {
+  display: flex;
+  gap: 16px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.ed-side-author {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+/* ── Live Market Widget ── */
+.market-widget-section {
+  background: var(--bg-surface);
+  border-radius: 8px;
+  padding: 30px;
+  border: 1px solid var(--overlay-medium);
+}
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+}
+@media (max-width: 992px) {
+  .market-grid { grid-template-columns: 1fr; }
+}
+.market-col-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  letter-spacing: 0.05em;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--overlay-light);
+}
+.market-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.market-item {
+  display: flex;
+  gap: 16px;
+  text-decoration: none;
+  background: var(--bg-base);
+  border-radius: 6px;
+  padding: 12px;
+  transition: transform 0.2s, background 0.2s;
+  border: 1px solid transparent;
+}
+.market-item:hover {
+  transform: translateY(-2px);
+  background: var(--overlay-light);
+  border-color: var(--overlay-medium);
+}
+.market-thumb {
+  width: 70px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+.market-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+}
+.market-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.market-meta {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.market-price-block {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.market-discount {
+  background: #198754;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+.market-price {
+  color: #20c997;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+/* ── Editor's Picks ── */
+.ed-picks-section {
+  padding-top: 30px;
+  border-top: 1px solid var(--overlay-medium);
+}
+.ed-pick-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--overlay-light);
+  border-radius: 8px;
+  padding: 16px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.ed-pick-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+.ed-pick-card:hover .ed-pick-title {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ed-pick-card:hover .ed-pick-img-wrap img {
+  transform: scale(1.05);
+}
+.ed-pick-img-wrap {
+  position: relative;
+  background: var(--bg-base);
+}
+.ed-pick-img-wrap img {
+  transition: transform 0.3s ease;
+}
+.ed-pick-img-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: var(--overlay-heavy);
+  background: var(--bg-base);
 }
 </style>

@@ -14,7 +14,7 @@ import asyncio
 import hashlib
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import httpx
 
@@ -28,10 +28,13 @@ logger = logging.getLogger(__name__)
 TTL_NEWS = 10 * 60  # 10 minutes
 
 # ── Gaming keywords for query ─────────────────────────────────────────────────
-DEFAULT_QUERY = "gaming OR video games OR esports OR PC games OR PlayStation OR Xbox OR Nintendo"
+DEFAULT_QUERY = (
+    "gaming OR video games OR esports OR PC games OR PlayStation OR Xbox OR Nintendo"
+)
 
 
 # ── Internal fetch helpers ────────────────────────────────────────────────────
+
 
 async def _fetch_newsapi(query: str = DEFAULT_QUERY, page_size: int = 50) -> List[Dict]:
     """Fetch articles from NewsAPI /v2/everything."""
@@ -84,6 +87,7 @@ async def _fetch_newsdata(query: str = "gaming", page_size: int = 50) -> List[Di
 
 # ── Normalisation ─────────────────────────────────────────────────────────────
 
+
 def _normalize_newsapi(article: Dict) -> Optional[Dict]:
     """Map a raw NewsAPI article to our internal shape."""
     title = (article.get("title") or "").strip()
@@ -115,13 +119,15 @@ def _normalize_newsdata(article: Dict) -> Optional[Dict]:
     source_name = article.get("source_id") or article.get("source_name")
     image = article.get("image_url") or (
         article.get("multimedia", [{}])[0].get("url")
-        if article.get("multimedia") else None
+        if article.get("multimedia")
+        else None
     )
     categories = article.get("category", [])
     category = categories[0] if categories else None
 
     return {
-        "article_id": article.get("article_id") or hashlib.md5(title.encode()).hexdigest(),
+        "article_id": article.get("article_id")
+        or hashlib.md5(title.encode()).hexdigest(),
         "title": title,
         "description": truncate_text(article.get("description"), 300),
         "content": article.get("content"),
@@ -144,13 +150,14 @@ def _sort_key(article: Dict) -> datetime:
     raw = article.get("published_at") or ""
     for fmt in ("%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S%z"):
         try:
-            return datetime.strptime(raw[:19], fmt[:len(raw[:19])])
+            return datetime.strptime(raw[:19], fmt[: len(raw[:19])])
         except (ValueError, TypeError):
             continue
     return datetime(1970, 1, 1)
 
 
 # ── Public Service Function ───────────────────────────────────────────────────
+
 
 async def get_gaming_news(
     query: str = DEFAULT_QUERY,

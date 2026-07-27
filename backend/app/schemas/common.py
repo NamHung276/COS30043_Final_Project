@@ -2,7 +2,7 @@
 schemas/common.py — Shared Pydantic response models used across all routers.
 """
 
-from typing import Any, Generic, List, Optional, TypeVar
+from typing import Generic, List, Optional, TypeVar
 from pydantic import BaseModel, Field
 
 DataT = TypeVar("DataT")
@@ -16,16 +16,24 @@ class PaginatedResponse(BaseModel, Generic[DataT]):
     page: int = Field(description="Current page number (1-indexed)")
     page_size: int = Field(description="Number of items per page")
     total_pages: int = Field(description="Total number of pages")
-    next_page: Optional[int] = Field(default=None, description="Next page number, or null")
-    previous_page: Optional[int] = Field(default=None, description="Previous page number, or null")
+    next_page: Optional[int] = Field(
+        default=None, description="Next page number, or null"
+    )
+    previous_page: Optional[int] = Field(
+        default=None, description="Previous page number, or null"
+    )
 
 
 class ErrorResponse(BaseModel):
     """Standard error response shape returned by all endpoints on failure."""
 
     error: str = Field(description="Short error code or message")
-    detail: Optional[str] = Field(default=None, description="Detailed description of the error")
-    path: Optional[str] = Field(default=None, description="Request path that caused the error")
+    detail: Optional[str] = Field(
+        default=None, description="Detailed description of the error"
+    )
+    path: Optional[str] = Field(
+        default=None, description="Request path that caused the error"
+    )
 
 
 class HealthResponse(BaseModel):

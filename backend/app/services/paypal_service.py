@@ -9,6 +9,7 @@ from config import settings
 
 logger = logging.getLogger(__name__)
 
+
 class PayPalService:
     def __init__(self):
         self.client_id = settings.paypal_client_id
@@ -41,7 +42,7 @@ class PayPalService:
                     f"{self.base_url}/v1/oauth2/token",
                     headers=headers,
                     data=data,
-                    timeout=10.0
+                    timeout=10.0,
                 )
                 response.raise_for_status()
                 token_data = response.json()
@@ -68,7 +69,7 @@ class PayPalService:
             "purchase_units": [
                 {
                     "reference_id": str(game_id),
-                    "description": title[:127], # PayPal limits description length
+                    "description": title[:127],  # PayPal limits description length
                     "amount": {
                         "currency_code": "USD",
                         "value": formatted_price,
@@ -83,7 +84,7 @@ class PayPalService:
                     f"{self.base_url}/v2/checkout/orders",
                     headers=headers,
                     json=payload,
-                    timeout=10.0
+                    timeout=10.0,
                 )
                 response.raise_for_status()
                 data = response.json()
@@ -106,27 +107,29 @@ class PayPalService:
                 response = await client.post(
                     f"{self.base_url}/v2/checkout/orders/{order_id}/capture",
                     headers=headers,
-                    timeout=10.0
+                    timeout=10.0,
                 )
                 response.raise_for_status()
                 data = response.json()
-                
+
                 # Extract required return info: success, payer, amount, transaction id
                 status = data.get("status")
                 success = status == "COMPLETED"
-                
+
                 payer_info = data.get("payer", {})
                 payer_name = f"{payer_info.get('name', {}).get('given_name', '')} {payer_info.get('name', {}).get('surname', '')}".strip()
-                
+
                 purchase_units = data.get("purchase_units", [])
                 transaction_id = None
                 amount = "0.00"
-                
-                if purchase_units and purchase_units[0].get("payments", {}).get("captures"):
+
+                if purchase_units and purchase_units[0].get("payments", {}).get(
+                    "captures"
+                ):
                     capture = purchase_units[0]["payments"]["captures"][0]
                     transaction_id = capture.get("id")
                     amount = capture.get("amount", {}).get("value")
-                
+
                 return {
                     "success": success,
                     "payer": payer_name or payer_info.get("email_address"),
@@ -137,5 +140,6 @@ class PayPalService:
             except httpx.HTTPError as e:
                 logger.error(f"Failed to capture PayPal order: {e}")
                 raise Exception("Failed to capture PayPal order") from e
+
 
 paypal_service = PayPalService()

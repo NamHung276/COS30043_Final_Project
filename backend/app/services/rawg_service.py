@@ -22,11 +22,11 @@ logger = logging.getLogger(__name__)
 RAWG_BASE_URL = "https://api.rawg.io/api"
 
 # ── Cache TTLs ────────────────────────────────────────────────────────────────
-TTL_GAMES_LIST    = 5 * 60   # 5 minutes
-TTL_GAME_DETAIL   = 10 * 60  # 10 minutes
-TTL_SCREENSHOTS   = 10 * 60
-TTL_TRAILERS      = 10 * 60
-TTL_SEARCH        = 5 * 60
+TTL_GAMES_LIST = 5 * 60  # 5 minutes
+TTL_GAME_DETAIL = 10 * 60  # 10 minutes
+TTL_SCREENSHOTS = 10 * 60
+TTL_TRAILERS = 10 * 60
+TTL_SEARCH = 5 * 60
 
 
 def _params(**kwargs) -> Dict[str, Any]:
@@ -49,6 +49,7 @@ async def _get(path: str, params: Dict[str, Any]) -> Dict:
 
 # ── Public Service Functions ───────────────────────────────────────────────────
 
+
 async def get_games(
     page: int = 1,
     page_size: int = 20,
@@ -65,23 +66,31 @@ async def get_games(
         RAWG /games response dict with keys: count, next, previous, results
     """
     cache_key = build_cache_key(
-        "rawg", "games",
-        page, page_size, ordering,
-        genres or "", platforms or "",
-        search or "", tags or "",
+        "rawg",
+        "games",
+        page,
+        page_size,
+        ordering,
+        genres or "",
+        platforms or "",
+        search or "",
+        tags or "",
     )
 
     return await cache.get_or_set(
         cache_key,
-        lambda: _get("/games", _params(
-            page=page,
-            page_size=page_size,
-            ordering=ordering,
-            genres=genres,
-            platforms=platforms,
-            search=search,
-            tags=tags,
-        )),
+        lambda: _get(
+            "/games",
+            _params(
+                page=page,
+                page_size=page_size,
+                ordering=ordering,
+                genres=genres,
+                platforms=platforms,
+                search=search,
+                tags=tags,
+            ),
+        ),
         ttl=TTL_GAMES_LIST,
     )
 
@@ -92,12 +101,15 @@ async def search_games(query: str, page: int = 1, page_size: int = 20) -> Dict:
 
     return await cache.get_or_set(
         cache_key,
-        lambda: _get("/games", _params(
-            search=query,
-            page=page,
-            page_size=page_size,
-            search_precise=True,
-        )),
+        lambda: _get(
+            "/games",
+            _params(
+                search=query,
+                page=page,
+                page_size=page_size,
+                search_precise=True,
+            ),
+        ),
         ttl=TTL_SEARCH,
     )
 

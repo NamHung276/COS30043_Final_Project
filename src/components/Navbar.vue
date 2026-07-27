@@ -4,7 +4,7 @@
     :class="theme === 'dark' ? 'navbar-dark' : 'navbar-light'"
   >
     <div class="container">
-      <router-link class="navbar-brand" to="/">
+      <router-link class="navbar-brand" to="/" aria-label="GameHub Home">
         <img
           src="/logo/gamepad.svg"
           width="20"

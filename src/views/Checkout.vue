@@ -1,7 +1,7 @@
 <script>
 import { cartState } from "../services/cart";
 import { auth, db } from "../firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import PayPalCheckout from "../components/PayPalCheckout.vue";
 
@@ -51,12 +51,34 @@ export default {
       this.processing = true;
 
       try {
-        // Save each item as a purchase
-        const batchPromises = this.cart.items.map((item) => {
+        // Check for existing purchases to prevent duplicates
+        const existingSnap = await getDocs(query(
+          collection(db, "purchases"),
+          where("userId", "==", this.currentUser.uid)
+        ));
+        const ownedGameIds = new Set(existingSnap.docs.map(d => d.data().gameId));
+
+        const newItems = this.cart.items.filter(item => !ownedGameIds.has(item.id.toString()));
+        const alreadyOwned = this.cart.items.filter(item => ownedGameIds.has(item.id.toString()));
+
+        if (alreadyOwned.length > 0) {
+          const names = alreadyOwned.map(i => i.name).join(', ');
+          this.toast?.show(`Already in your library: ${names}`, "warning");
+        }
+
+        if (newItems.length === 0) {
+          this.toast?.show("All items are already in your library.", "info");
+          cartState.clear();
+          this.$router.push("/library");
+          return;
+        }
+
+        // Save each new item as a purchase
+        const batchPromises = newItems.map((item) => {
           return addDoc(collection(db, "purchases"), {
             userId: this.currentUser.uid,
             gameId: item.id.toString(),
-            title: item.name || item.title || "Unknown Game",
+            gameName: item.name || item.title || "Unknown Game",
             thumbnail: item.thumbnail || item.background_image || "",
             price: parseFloat(item.price) || 0,
             currency: "USD",
@@ -69,18 +91,12 @@ export default {
 
         await Promise.all(batchPromises);
 
-        this.toast?.show(
-          "Payment Successful! Games added to your library.",
-          "success"
-        );
         cartState.clear();
-
-        // Redirect to purchase history or library
-        this.$router.push("/purchase-history");
+        this.$router.push(`/checkout/success?count=${newItems.length}`);
       } catch (error) {
         console.error("Payment save failed:", error);
         this.toast?.show(
-          "Payment succeeded, but failed to save to database.",
+          "Payment succeeded, but failed to save to database. Please contact support.",
           "error"
         );
       } finally {

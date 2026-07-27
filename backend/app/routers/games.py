@@ -22,7 +22,6 @@ from fastapi import APIRouter, HTTPException, Query, status
 
 from app.services import rawg_service, cheapshark_service
 from app.services.recommendation_service import recommendation_service
-from app.schemas.game import GameSummary, GameDetail
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -30,9 +29,11 @@ router = APIRouter()
 
 # ── Helper ─────────────────────────────────────────────────────────────────────
 
+
 def _rawg_error(exc: Exception, game_id: Optional[int] = None) -> HTTPException:
     """Convert an httpx error into a FastAPI HTTPException with a clear message."""
     import httpx
+
     if isinstance(exc, httpx.HTTPStatusError):
         if exc.response.status_code == 404:
             return HTTPException(
@@ -51,6 +52,7 @@ def _rawg_error(exc: Exception, game_id: Optional[int] = None) -> HTTPException:
 
 # ── Endpoints ──────────────────────────────────────────────────────────────────
 
+
 @router.get(
     "/games",
     summary="List games",
@@ -62,10 +64,18 @@ def _rawg_error(exc: Exception, game_id: Optional[int] = None) -> HTTPException:
 )
 async def list_games(
     page: int = Query(default=1, ge=1, description="Page number"),
-    page_size: int = Query(default=20, ge=1, le=40, description="Items per page (max 40)"),
-    ordering: str = Query(default="-rating", description="Sort order (e.g., -rating, -released, name)"),
-    genres: Optional[str] = Query(default=None, description="Comma-separated genre slugs"),
-    platforms: Optional[str] = Query(default=None, description="Comma-separated platform IDs"),
+    page_size: int = Query(
+        default=20, ge=1, le=40, description="Items per page (max 40)"
+    ),
+    ordering: str = Query(
+        default="-rating", description="Sort order (e.g., -rating, -released, name)"
+    ),
+    genres: Optional[str] = Query(
+        default=None, description="Comma-separated genre slugs"
+    ),
+    platforms: Optional[str] = Query(
+        default=None, description="Comma-separated platform IDs"
+    ),
     tags: Optional[str] = Query(default=None, description="Comma-separated tag slugs"),
 ):
     try:
@@ -138,7 +148,9 @@ async def get_game_detail(game_id: int):
         trailers_task = rawg_service.get_trailers(game_id)
 
         detail, screenshots_data, trailers_data = await asyncio.gather(
-            detail_task, screenshots_task, trailers_task,
+            detail_task,
+            screenshots_task,
+            trailers_task,
             return_exceptions=True,
         )
 
@@ -154,13 +166,17 @@ async def get_game_detail(game_id: int):
         if not isinstance(screenshots_data, Exception):
             screenshots = cast(Dict[str, Any], screenshots_data).get("results", [])
         else:
-            logger.warning("Screenshots fetch failed for game %d: %s", game_id, screenshots_data)
+            logger.warning(
+                "Screenshots fetch failed for game %d: %s", game_id, screenshots_data
+            )
 
         trailers = []
         if not isinstance(trailers_data, Exception):
             trailers = cast(Dict[str, Any], trailers_data).get("results", [])
         else:
-            logger.warning("Trailers fetch failed for game %d: %s", game_id, trailers_data)
+            logger.warning(
+                "Trailers fetch failed for game %d: %s", game_id, trailers_data
+            )
 
         # Try to find CheapShark deals by game name (non-fatal)
         deals = []
@@ -171,7 +187,11 @@ async def get_game_detail(game_id: int):
             cs_results = await cheapshark_service.get_deals_by_game_name(game_name)
             if cs_results:
                 # cs_results is a list of {gameID, cheapest, cheapestDealID, external, ...}
-                best = min(cs_results, key=lambda g: float(g.get("cheapest", "9999")), default=None)
+                best = min(
+                    cs_results,
+                    key=lambda g: float(g.get("cheapest", "9999")),
+                    default=None,
+                )
                 if best:
                     cheapest_price = best.get("cheapest")
                     # Map storeID from the deal or use "Steam" as default for name lookup

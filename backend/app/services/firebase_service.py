@@ -47,6 +47,7 @@ def _init_firebase() -> bool:
     try:
         # pyrefly: ignore [missing-import]
         import firebase_admin
+
         # pyrefly: ignore [missing-import]
         from firebase_admin import credentials, auth, firestore
         from config import settings
@@ -65,9 +66,12 @@ def _init_firebase() -> bool:
 
         # Avoid re-initialising if already done (e.g., hot-reload)
         if not firebase_admin._apps:
-            _firebase_app = firebase_admin.initialize_app(cred, {
-                "projectId": settings.firebase_project_id,
-            })
+            _firebase_app = firebase_admin.initialize_app(
+                cred,
+                {
+                    "projectId": settings.firebase_project_id,
+                },
+            )
         else:
             _firebase_app = firebase_admin.get_app()
 

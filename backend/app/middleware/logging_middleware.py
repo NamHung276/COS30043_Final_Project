@@ -57,8 +57,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             level,
             "%s %s -> %d (%.0fms) from %s",
             request.method,
-            request.url.path
-            + (f"?{request.url.query}" if request.url.query else ""),
+            request.url.path + (f"?{request.url.query}" if request.url.query else ""),
             response.status_code,
             duration_ms,
             client_ip,

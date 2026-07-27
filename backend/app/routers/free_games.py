@@ -66,6 +66,7 @@ async def get_free_game(game_id: int):
         return await free_games_service.get_free_game_detail(game_id)
     except Exception as exc:
         import httpx
+
         if isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 404:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

@@ -22,13 +22,17 @@ class NewsArticle(BaseModel):
     The *provider* field indicates the original source.
     """
 
-    article_id: Optional[str] = Field(default=None, description="Unique article identifier")
+    article_id: Optional[str] = Field(
+        default=None, description="Unique article identifier"
+    )
     title: str
     description: Optional[str] = None
     content: Optional[str] = None
     url: Optional[str] = None
     url_to_image: Optional[str] = Field(default=None, description="Thumbnail image URL")
-    published_at: Optional[str] = Field(default=None, description="ISO 8601 publication date")
+    published_at: Optional[str] = Field(
+        default=None, description="ISO 8601 publication date"
+    )
     source: Optional[NewsSource] = None
     author: Optional[str] = None
     category: Optional[str] = None
@@ -40,6 +44,10 @@ class NewsResponse(BaseModel):
 
     articles: List[NewsArticle]
     total_results: int
-    sources: List[str] = Field(description="API sources that contributed to this response")
+    sources: List[str] = Field(
+        description="API sources that contributed to this response"
+    )
     fetched_at: Optional[str] = None
+
+
 # Schemas package

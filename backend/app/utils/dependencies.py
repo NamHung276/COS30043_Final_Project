@@ -21,7 +21,7 @@ Usage in a router:
 import logging
 from typing import Optional
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Header, HTTPException, status
 from app.models.user import UserContext
 from app.services import firebase_service
 

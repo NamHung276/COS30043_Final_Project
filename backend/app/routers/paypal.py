@@ -11,13 +11,16 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+
 class CreateOrderRequest(BaseModel):
     gameId: str
     title: str
     price: float
 
+
 class CaptureOrderRequest(BaseModel):
     orderId: str
+
 
 @router.post("/create-order")
 async def create_paypal_order(request: CreateOrderRequest):
@@ -27,9 +30,7 @@ async def create_paypal_order(request: CreateOrderRequest):
     """
     try:
         order_id = await paypal_service.create_order(
-            game_id=request.gameId,
-            title=request.title,
-            price=request.price
+            game_id=request.gameId, title=request.title, price=request.price
         )
         if not order_id:
             raise ValueError("Failed to obtain order ID from PayPal.")
@@ -38,8 +39,9 @@ async def create_paypal_order(request: CreateOrderRequest):
         logger.error(f"Error creating PayPal order: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create PayPal order"
+            detail="Failed to create PayPal order",
         )
+
 
 @router.post("/capture-order")
 async def capture_paypal_order(request: CaptureOrderRequest):
@@ -53,5 +55,5 @@ async def capture_paypal_order(request: CaptureOrderRequest):
         logger.error(f"Error capturing PayPal order {request.orderId}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to capture PayPal order"
+            detail="Failed to capture PayPal order",
         )

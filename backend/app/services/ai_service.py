@@ -54,7 +54,7 @@ async def chat(
                 gemini_history.append(
                     types.Content(
                         role=role,
-                        parts=[types.Part.from_text(text=msg.get("content", ""))]
+                        parts=[types.Part.from_text(text=msg.get("content", ""))],
                     )
                 )
 
@@ -63,9 +63,9 @@ async def chat(
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_INSTRUCTION,
             ),
-            history=gemini_history
+            history=gemini_history,
         )
-        
+
         response = chat_session.send_message(message)
 
         return {

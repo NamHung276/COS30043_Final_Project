@@ -41,8 +41,6 @@ export default {
       posts: [],
       purchases: [],
 
-      // Removed edit name and change password states
-
       unsubscribe: null,
     };
   },

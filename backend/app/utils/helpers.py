@@ -29,7 +29,9 @@ def safe_get(data: Any, *keys, default=None) -> Any:
     return current
 
 
-def truncate_text(text: Optional[str], max_length: int = 300, suffix: str = "...") -> Optional[str]:
+def truncate_text(
+    text: Optional[str], max_length: int = 300, suffix: str = "..."
+) -> Optional[str]:
     """
     Truncate *text* to at most *max_length* characters, appending *suffix* if truncated.
     Returns None if text is None.

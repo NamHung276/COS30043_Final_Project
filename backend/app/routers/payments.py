@@ -3,7 +3,12 @@ payments.py — Payment API routes (PayPal & CoinGecko)
 """
 
 from fastapi import APIRouter, HTTPException, status
-from app.schemas.payments import OrderCreateRequest, OrderCaptureRequest, OrderResponse, CryptoRatesResponse
+from app.schemas.payments import (
+    OrderCreateRequest,
+    OrderCaptureRequest,
+    OrderResponse,
+    CryptoRatesResponse,
+)
 from app.services.payment_service import payment_service
 from app.services.crypto_service import crypto_service
 import logging
@@ -11,6 +16,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
 
 @router.post("/paypal/create-order", response_model=OrderResponse)
 async def create_paypal_order(request: OrderCreateRequest):
@@ -22,18 +28,19 @@ async def create_paypal_order(request: OrderCreateRequest):
         order_data = await payment_service.create_order(
             amount=request.amount,
             currency=request.currency,
-            description=request.description
+            description=request.description,
         )
         return OrderResponse(
             order_id=order_data.get("id", ""),
-            status=order_data.get("status", "CREATED")
+            status=order_data.get("status", "CREATED"),
         )
     except Exception as e:
         logger.error(f"Error creating PayPal order: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create PayPal order"
+            detail="Failed to create PayPal order",
         )
+
 
 @router.post("/paypal/capture-order", response_model=dict)
 async def capture_paypal_order(request: OrderCaptureRequest):
@@ -48,8 +55,9 @@ async def capture_paypal_order(request: OrderCaptureRequest):
         logger.error(f"Error capturing PayPal order {request.order_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to capture PayPal order"
+            detail="Failed to capture PayPal order",
         )
+
 
 @router.get("/crypto-rates", response_model=CryptoRatesResponse)
 async def get_crypto_rates(currency: str = "usd"):
@@ -64,5 +72,5 @@ async def get_crypto_rates(currency: str = "usd"):
         logger.error(f"Error fetching crypto rates: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to fetch crypto rates"
+            detail="Failed to fetch crypto rates",
         )

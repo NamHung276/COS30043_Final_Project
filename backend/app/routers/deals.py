@@ -27,16 +27,28 @@ router = APIRouter()
     ),
 )
 async def get_deals(
-    page: int = Query(default=0, ge=0, description="Page number (0-indexed for CheapShark)"),
-    page_size: int = Query(default=60, ge=1, le=60, description="Items per page (max 60)"),
+    page: int = Query(
+        default=0, ge=0, description="Page number (0-indexed for CheapShark)"
+    ),
+    page_size: int = Query(
+        default=60, ge=1, le=60, description="Items per page (max 60)"
+    ),
     sort_by: str = Query(
         default="DealRating",
         description="Sort by: DealRating | Title | Savings | Price | MetacriticScore | Reviews | Release | Store | recent",
     ),
-    upper_price: Optional[float] = Query(default=None, ge=0, description="Maximum deal price"),
-    lower_price: Optional[float] = Query(default=None, ge=0, description="Minimum deal price"),
-    min_savings: Optional[int] = Query(default=None, ge=0, le=100, description="Minimum savings percentage (0-100)"),
-    store_id: Optional[str] = Query(default=None, description="Filter to a specific store ID"),
+    upper_price: Optional[float] = Query(
+        default=None, ge=0, description="Maximum deal price"
+    ),
+    lower_price: Optional[float] = Query(
+        default=None, ge=0, description="Minimum deal price"
+    ),
+    min_savings: Optional[int] = Query(
+        default=None, ge=0, le=100, description="Minimum savings percentage (0-100)"
+    ),
+    store_id: Optional[str] = Query(
+        default=None, description="Filter to a specific store ID"
+    ),
 ):
     try:
         deals = await cheapshark_service.get_deals(

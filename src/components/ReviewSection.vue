@@ -43,6 +43,7 @@ export default {
       newPlaytime: "",
       submitting: false,
       formError: "",
+      lastSubmittedAt: null, // rate-limiting
 
       // Editing state
       editingReviewId: null,
@@ -156,8 +157,25 @@ export default {
         return;
       }
 
+      // Rate limit: 30-second cooldown between reviews
+      if (this.lastSubmittedAt && Date.now() - this.lastSubmittedAt < 30000) {
+        const remaining = Math.ceil((30000 - (Date.now() - this.lastSubmittedAt)) / 1000);
+        this.formError = `Please wait ${remaining}s before submitting another review.`;
+        return;
+      }
+
       if (!this.newComment.trim()) {
         this.formError = "Please write a comment before submitting.";
+        return;
+      }
+
+      if (this.newComment.trim().length < 10) {
+        this.formError = "Your review must be at least 10 characters long.";
+        return;
+      }
+
+      if (this.newPlaytime && (isNaN(this.newPlaytime) || parseFloat(this.newPlaytime) < 0 || parseFloat(this.newPlaytime) > 9999)) {
+        this.formError = "Please enter a valid playtime between 0 and 9999 hours.";
         return;
       }
 
@@ -188,6 +206,7 @@ export default {
         this.newRating = 5;
         this.newRecommended = true;
         this.newPlaytime = "";
+        this.lastSubmittedAt = Date.now();
         await this.loadReviews();
         this.toast?.show("Review submitted successfully!", "success");
       } catch (error) {

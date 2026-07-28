@@ -9,6 +9,7 @@ const renderMarkdown = (text) => {
 };
 
 const isOpen = ref(false);
+const isDismissed = ref(false);
 const isTyping = ref(false);
 const newMessage = ref('');
 const messages = ref([
@@ -21,6 +22,10 @@ const toggleChat = () => {
   if (isOpen.value) {
     scrollToBottom();
   }
+};
+
+const dismissChat = () => {
+  isDismissed.value = true;
 };
 
 const scrollToBottom = () => {
@@ -63,7 +68,16 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="chatbot-wrapper">
+  <div class="chatbot-wrapper" v-if="!isDismissed">
+    <!-- Dismiss Widget Button -->
+    <button
+      v-if="!isOpen"
+      class="chatbot-dismiss-btn"
+      @click="dismissChat"
+      aria-label="Dismiss AI chat"
+    >
+      ✕
+    </button>
     <!-- Chat Widget Button -->
     <button 
       class="chatbot-toggle-btn" 
@@ -151,9 +165,33 @@ onMounted(() => {
 
 @media (max-width: 480px) {
   .chatbot-wrapper {
-    bottom: 5rem;
+    bottom: 2rem;
     right: 1rem;
   }
+}
+
+.chatbot-dismiss-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  border: 1px solid var(--overlay-medium);
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: -10px;
+  right: -5px;
+  z-index: 10000;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.chatbot-dismiss-btn:hover {
+  background: var(--overlay-medium);
+  color: var(--text-primary);
 }
 
 .chatbot-toggle-btn {

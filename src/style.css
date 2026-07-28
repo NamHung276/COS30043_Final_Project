@@ -2626,16 +2626,21 @@ a:hover {
   .steam-hero-overlay {
     background: linear-gradient(
       to bottom,
-      transparent 40%,
-      rgba(10, 15, 28, 0.65) 100%
+      transparent 10%,
+      rgba(10, 15, 28, 0.8) 50%,
+      var(--bg-surface) 100%
     );
   }
 
   .steam-info-panel {
     flex: none;
     border-left: none;
-    border-top: 1px solid var(--border-subtle);
+    border-top: none;
     padding: 14px;
+    background: var(--bg-surface);
+    margin-top: -30px;
+    position: relative;
+    z-index: 2;
   }
 
   .steam-screenshots-grid {

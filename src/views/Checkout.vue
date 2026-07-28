@@ -16,6 +16,7 @@ export default {
     return {
       currentUser: null,
       processing: false,
+      ownedIds: [],
     };
   },
 
@@ -23,6 +24,33 @@ export default {
     cart() {
       return cartState;
     },
+    hasConflict() {
+      return this.cart.items.some(item => this.ownedIds.includes(item.id.toString()));
+    },
+    conflictGames() {
+      return this.cart.items.filter(item => this.ownedIds.includes(item.id.toString()));
+    }
+  },
+
+  watch: {
+    currentUser: {
+      immediate: true,
+      async handler(user) {
+        if (user) {
+          try {
+            const existingSnap = await getDocs(query(
+              collection(db, "purchases"),
+              where("userId", "==", user.uid)
+            ));
+            this.ownedIds = existingSnap.docs.map(d => d.data().gameId);
+          } catch (e) {
+            console.error("Failed to fetch purchases", e);
+          }
+        } else {
+          this.ownedIds = [];
+        }
+      }
+    }
   },
 
   beforeUnmount() {
@@ -193,13 +221,19 @@ export default {
             </div>
 
             <!-- PayPal Component -->
-            <div v-if="cart.items.length > 0">
+            <div v-if="cart.items.length > 0 && !hasConflict">
               <PayPalCheckout
                 gameId="cart"
                 title="GameHub Checkout"
                 :price="cart.totalPrice"
                 @payment-success="handlePaymentSuccess"
               />
+            </div>
+
+            <div v-else-if="hasConflict" class="alert alert-danger mt-3 mb-0" style="font-size: 0.9rem;">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>
+              You already own <strong>{{ conflictGames.map(g => g.name || g.title).join(', ') }}</strong>. 
+              Please remove it from your cart to proceed.
             </div>
 
             <div v-else class="text-center py-4">

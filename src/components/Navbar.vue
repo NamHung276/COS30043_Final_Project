@@ -960,4 +960,20 @@ export default {
   background: linear-gradient(135deg, #4c1d95, #7c3aed);
   box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
 }
+
+@media (max-width: 991px) {
+  .user-dropdown-menu {
+    min-width: 100% !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 10px !important;
+    position: relative !important;
+    float: none !important;
+    margin-top: 0 !important;
+  }
+  .dropdown-menu.show {
+    display: block;
+  }
+}
 </style>

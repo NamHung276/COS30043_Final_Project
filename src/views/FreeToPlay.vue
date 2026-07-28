@@ -1,5 +1,5 @@
 <script>
-import { freeToGameApi } from "../services/api";
+import { backendApi } from "../services/api";
 import SkeletonCard from "../components/SkeletonCard.vue";
 
 const ALL_CATEGORIES = [
@@ -212,22 +212,16 @@ export default {
       this.error = null;
       this.currentPage = 1;
       try {
-        let data;
+        const params = {};
+        if (this.platform !== "all") params.platform = this.platform;
+        if (this.sortBy !== "relevance") params.sort_by = this.sortBy;
         if (this.tagMode && this.selectedTags.length) {
-          const params = { tag: this.selectedTags.join(".") };
-          if (this.platform !== "all") params.platform = this.platform;
-          if (this.sortBy !== "relevance") params.sort = this.sortBy;
-          const res = await freeToGameApi.get("/filter", { params });
-          data = res.data;
-        } else {
-          const params = {};
-          if (this.platform !== "all") params.platform = this.platform;
-          if (this.category) params.category = this.category;
-          if (this.sortBy !== "relevance") params["sort-by"] = this.sortBy;
-          const res = await freeToGameApi.get("/games", { params });
-          data = res.data;
+          params.tag = this.selectedTags.join(".");
+        } else if (this.category) {
+          params.category = this.category;
         }
-        this.games = Array.isArray(data) ? data : [];
+        const res = await backendApi.get("/free-games", { params });
+        this.games = res.data.results || [];
       } catch (err) {
         console.error(err);
         this.error = "Failed to load games. Please try again.";
@@ -714,7 +708,7 @@ export default {
 
       <p v-if="!loading && totalPages > 1" class="ftg-page-info">
         Page {{ currentPage }} of {{ totalPages }} ·
-        {{ filteredGames.length }} games shown
+        {{ filteredGames.length }} {{ filteredGames.length === 1 ? 'game' : 'games' }} shown
       </p>
     </div>
   </div>

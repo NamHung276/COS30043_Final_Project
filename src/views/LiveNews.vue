@@ -1,6 +1,6 @@
 <script>
 import SkeletonCard from "../components/SkeletonCard.vue";
-import { newsApi, newsDataApi, rawgApi, cheapSharkApi } from "../services/api";
+import { backendApi } from "../services/api";
 
 export default {
   components: { SkeletonCard },
@@ -238,68 +238,14 @@ export default {
 
   async mounted() {
     try {
-      const promises = [];
-
-      promises.push(
-        newsApi.get("/everything", {
-          params: {
-            q: 'gaming OR "video games"',
-            language: "en",
-            sortBy: "publishedAt",
-            pageSize: 80,
-          },
-        }).then(res => {
-          const articles = res.data.articles || [];
-          return articles.filter(a => a.title !== "[Removed]" && a.description !== null);
-        })
-      );
-
-      if (import.meta.env.VITE_NEWSDATA_API_KEY) {
-        promises.push(
-          newsDataApi.get("/latest", {
-            params: {
-              q: 'gaming OR "video games"',
-              language: "en",
-            },
-          }).then(res => {
-            const results = res.data.results || [];
-            return results.map(a => ({
-              title: a.title,
-              description: a.description,
-              url: a.link,
-              urlToImage: a.image_url,
-              publishedAt: a.pubDate,
-              source: { name: a.source_id },
-            })).filter(a => a.description && a.urlToImage);
-          })
-        );
-      }
-
-      const settled = await Promise.allSettled(promises);
-      let combinedArticles = [];
+      const { data } = await backendApi.get("/news", {
+        params: { page_size: 50 }
+      });
       
-      for (const result of settled) {
-        if (result.status === "fulfilled" && Array.isArray(result.value)) {
-          combinedArticles = combinedArticles.concat(result.value);
-        }
-      }
-
-      if (combinedArticles.length === 0) {
+      if (!data || !data.articles || data.articles.length === 0) {
         this.error = "Failed to load news from our providers. Please try again later.";
       } else {
-        const uniqueArticles = [];
-        const seenTitles = new Set();
-        
-        combinedArticles.forEach(article => {
-          if (!article.title) return;
-          const cleanTitle = article.title.toLowerCase().trim();
-          if (!seenTitles.has(cleanTitle)) {
-            seenTitles.add(cleanTitle);
-            uniqueArticles.push(article);
-          }
-        });
-        
-        this.articles = uniqueArticles.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+        this.articles = data.articles;
       }
       
       this.lastUpdated = new Date().toLocaleString();
@@ -318,12 +264,12 @@ export default {
       const nextYear = nextYearDate.toISOString().split('T')[0];
 
       const [trendingRes, dealsRes, upcomingRes] = await Promise.all([
-        rawgApi.get("/games", { params: { ordering: "-added", page_size: 4 } }),
-        cheapSharkApi.get("/deals", { params: { storeID: 1, pageSize: 4 } }),
-        rawgApi.get("/games", { params: { dates: `${today},${nextYear}`, ordering: "-added", page_size: 4 } })
+        backendApi.get("/games", { params: { ordering: "-added", page_size: 4 } }),
+        backendApi.get("/deals", { params: { store_id: "1", page_size: 4 } }),
+        backendApi.get("/games", { params: { dates: `${today},${nextYear}`, ordering: "-added", page_size: 4 } })
       ]);
       this.trendingGames = trendingRes.data.results || [];
-      this.steamDeals = dealsRes.data || [];
+      this.steamDeals = dealsRes.data.results || [];
       this.upcomingReleases = upcomingRes.data.results || [];
     } catch (err) {
       console.error("Failed to load market widget data:", err);

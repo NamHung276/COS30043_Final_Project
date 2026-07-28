@@ -1,7 +1,7 @@
 <script>
 import { inject } from "vue";
 import { auth, db } from "../firebase";
-import { freeToGameApi } from "../services/api";
+import { backendApi } from "../services/api";
 import { onAuthStateChanged } from "firebase/auth";
 import {
   collection,
@@ -186,17 +186,17 @@ export default {
       this.activeShot = 0;
 
       try {
-        const { data } = await freeToGameApi.get("/game", { params: { id } });
+        const { data } = await backendApi.get(`/free-games/${id}`);
         this.game = data;
 
         const genre = this.game.genre ? this.game.genre.toLowerCase() : null;
 
         const discoverPromise = genre
-          ? freeToGameApi.get("/games", { params: { category: genre } })
-          : Promise.resolve({ data: [] });
+          ? backendApi.get("/free-games", { params: { category: genre } })
+          : Promise.resolve({ data: { results: [] } });
 
-        const recentPromise = freeToGameApi.get("/games", {
-          params: { "sort-by": "release-date" },
+        const recentPromise = backendApi.get("/free-games", {
+          params: { sort_by: "release-date" },
         });
 
         const [discoverRes, recentRes] = await Promise.all([
@@ -204,14 +204,14 @@ export default {
           recentPromise,
         ]);
 
-        const discoverAll = (discoverRes.data || []).filter(
+        const discoverAll = (discoverRes.data.results || []).filter(
           (g) => g.id !== Number(id),
         );
         this.discoverMoreGames = discoverAll
           .sort(() => 0.5 - Math.random())
           .slice(0, 6);
 
-        this.recentGames = (recentRes.data || [])
+        this.recentGames = (recentRes.data.results || [])
           .filter((g) => g.id !== Number(id))
           .slice(0, 6);
 

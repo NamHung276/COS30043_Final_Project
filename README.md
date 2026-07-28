@@ -6,7 +6,7 @@ Built as the final project for COS30043, this application leverages Vue 3 and Fi
 
 ## 🚀 Technologies Used
 
-*   **Frontend Core:** Vue 3 (Composition API), Vite, Vue Router
+*   **Frontend Core:** Vue 3 (Composition API), Vite, Vue Router, **Pinia** (State Management)
 *   **Backend & API:** Python, FastAPI, Uvicorn (Handles server-side caching, external API proxying, and custom recommendation logic)
 *   **Database & Auth:** Firebase Authentication, Firestore
 *   **Styling:** Vanilla CSS (Glassmorphism, CSS Variables, Custom Gradients), Bootstrap 5 (for grid layout and utility classes), Bootstrap Icons
@@ -16,12 +16,14 @@ Built as the final project for COS30043, this application leverages Vue 3 and Fi
 
 *   **Browse Games:** Explore 500k+ free-to-play and premium titles with genre filters.
 *   **Smart Search:** Instant title search across the full game library.
-*   **Favorites & Wishlists:** Cloud-saved personal collection via Firestore, supporting list/grid views, real-time search, sorting, and genre filtering.
+*   **Favorites & Wishlists:** Cloud-saved personal collection via Firestore, supporting list/grid views, real-time search, sorting, and genre filtering (Cached locally using Pinia to eliminate N+1 queries).
 *   **Community Reviews:** A robust review system allowing users to rate games out of 5 stars, write detailed feedback, and vote on other community members' reviews.
 *   **Live News:** Real-time gaming news powered by NewsAPI.
 *   **Auth System:** User registration & login with Firebase Auth (Protected Routes, Secure Sessions).
 *   **Gamer Profiles:** A dynamic, Steam-inspired user profile displaying account statistics and recent community activity.
 *   **Admin Dashboard:** A moderation panel for managing user accounts and community posts.
+*   **Enterprise-Grade Security:** 100% of external API calls are securely proxied through the FastAPI backend, fully hiding sensitive API keys from the client-side.
+*   **Accessibility (WCAG 2.2.2):** Robust screen-reader support via `aria-live` regions and fully controllable pause/play elements.
 *   **Modern Aesthetics:** Deep dark-mode design by default, utilizing glowing accents, glassmorphism cards, and micro-animations to ensure a premium look and feel.
 *   **Responsive Design:** Optimised for desktop, tablet, and mobile viewing.
 

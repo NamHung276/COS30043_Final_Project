@@ -2,7 +2,7 @@
 import SkeletonCard from "../components/SkeletonCard.vue";
 import TrailerModal from "../components/TrailerModal.vue";
 import { inject } from "vue";
-import { rawgApi, freeToGameApi, backendApi } from "../services/api";
+import { backendApi } from "../services/api";
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
@@ -364,7 +364,7 @@ export default {
       this.error = null;
       try {
         const params = {
-          page_size: 100,
+          page_size: 40,
           ordering: this.searchTerm ? "-rating" : "-metacritic",
           // Exclude DLCs, editions, add-ons — only show main games
           exclude_additions: true,
@@ -431,12 +431,12 @@ export default {
           }
         }
 
-        const rawgReq = rawgApi
+        const rawgReq = backendApi
           .get("/games", { params })
           .catch(() => ({ data: { results: [], count: 0 } }));
-        const ftgReq = freeToGameApi
-          .get("/games", { params: ftgParams })
-          .catch(() => ({ data: [] }));
+        const ftgReq = backendApi
+          .get("/free-games", { params: ftgParams })
+          .catch(() => ({ data: { results: [] } }));
 
         const [rawgRes, ftgRes] = await Promise.all([rawgReq, ftgReq]);
 
@@ -445,7 +445,7 @@ export default {
           itemType: "rawg",
         }));
 
-        let ftgList = (ftgRes.data || []).map((g) => ({
+        let ftgList = (ftgRes.data?.results || []).map((g) => ({
           ...g,
           itemType: "f2p",
           name: g.title,
@@ -475,7 +475,7 @@ export default {
 
         this.games = combined;
         this.totalCount =
-          (rawgRes.data.count || 0) + (ftgRes.data?.length || 0);
+          (rawgRes.data.count || 0) + (ftgRes.data?.results?.length || 0);
       } catch (err) {
         console.error(err);
         this.error = "Failed to load games. Please try again later.";
@@ -1132,7 +1132,7 @@ export default {
 
       <p v-if="!loading" class="games-page-info">
         Page {{ currentPage }} of {{ totalPages }} &middot;
-        {{ filteredGames.length }} games shown
+        {{ filteredGames.length }} {{ filteredGames.length === 1 ? 'game' : 'games' }} shown
       </p>
     </div>
   </div>

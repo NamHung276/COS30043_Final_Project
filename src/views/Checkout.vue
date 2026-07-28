@@ -4,6 +4,7 @@ import { auth, db } from "../firebase";
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import PayPalCheckout from "../components/PayPalCheckout.vue";
+import { useLibraryStore } from "../stores/useLibraryStore";
 
 export default {
   name: "Checkout",
@@ -38,11 +39,9 @@ export default {
       async handler(user) {
         if (user) {
           try {
-            const existingSnap = await getDocs(query(
-              collection(db, "purchases"),
-              where("userId", "==", user.uid)
-            ));
-            this.ownedIds = existingSnap.docs.map(d => d.data().gameId);
+            const store = useLibraryStore();
+            await store.fetchPurchases();
+            this.ownedIds = store.purchases.map(d => d.gameId);
           } catch (e) {
             console.error("Failed to fetch purchases", e);
           }
@@ -80,11 +79,9 @@ export default {
 
       try {
         // Check for existing purchases to prevent duplicates
-        const existingSnap = await getDocs(query(
-          collection(db, "purchases"),
-          where("userId", "==", this.currentUser.uid)
-        ));
-        const ownedGameIds = new Set(existingSnap.docs.map(d => d.data().gameId));
+        const store = useLibraryStore();
+        await store.fetchPurchases();
+        const ownedGameIds = new Set(store.purchases.map(d => d.gameId));
 
         const newItems = this.cart.items.filter(item => !ownedGameIds.has(item.id.toString()));
         const alreadyOwned = this.cart.items.filter(item => ownedGameIds.has(item.id.toString()));
@@ -118,6 +115,9 @@ export default {
         });
 
         await Promise.all(batchPromises);
+        
+        // Refresh library store
+        await store.fetchPurchases(true);
 
         cartState.clear();
         this.$router.push(`/checkout/success?count=${newItems.length}`);

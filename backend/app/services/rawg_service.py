@@ -58,6 +58,10 @@ async def get_games(
     platforms: Optional[str] = None,
     search: Optional[str] = None,
     tags: Optional[str] = None,
+    dates: Optional[str] = None,
+    exclude_additions: Optional[bool] = None,
+    metacritic: Optional[str] = None,
+    ratings_count: Optional[int] = None,
 ) -> Dict:
     """
     Fetch a paginated list of games from RAWG.
@@ -75,6 +79,10 @@ async def get_games(
         platforms or "",
         search or "",
         tags or "",
+        dates or "",
+        str(exclude_additions).lower() if exclude_additions is not None else "",
+        metacritic or "",
+        ratings_count or "",
     )
 
     return await cache.get_or_set(
@@ -89,6 +97,10 @@ async def get_games(
                 platforms=platforms,
                 search=search,
                 tags=tags,
+                dates=dates,
+                exclude_additions=str(exclude_additions).lower() if exclude_additions is not None else None,
+                metacritic=metacritic,
+                ratings_count=ratings_count,
             ),
         ),
         ttl=TTL_GAMES_LIST,

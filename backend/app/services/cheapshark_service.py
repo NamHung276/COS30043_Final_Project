@@ -49,7 +49,8 @@ STORE_NAMES: Dict[str, str] = {
 
 async def _get(path: str, params: Optional[Dict[str, Any]] = None) -> Any:
     """GET request to CheapShark API."""
-    async with httpx.AsyncClient(base_url=CHEAPSHARK_BASE_URL, timeout=15.0) as client:
+    headers = {"User-Agent": "GameHub/1.0 (COS30043 Project)"}
+    async with httpx.AsyncClient(base_url=CHEAPSHARK_BASE_URL, timeout=15.0, headers=headers) as client:
         response = await client.get(path, params=params or {})
         response.raise_for_status()
         return response.json()

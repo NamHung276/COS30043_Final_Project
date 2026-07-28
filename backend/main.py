@@ -19,7 +19,7 @@ from fastapi.responses import JSONResponse
 from pythonjsonlogger import json as jsonlogger
 
 from config import settings
-from app.routers import health, games, deals, news, free_games, chatbot, payments, paypal, coingecko
+from app.routers import health, games, deals, news, free_games, chatbot, payments, paypal, coingecko, uploads
 from app.middleware.logging_middleware import RequestLoggingMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
 
@@ -120,6 +120,14 @@ app.add_middleware(
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
 
+# Mount static folder for uploads
+from fastapi.staticfiles import StaticFiles
+import os
+if not os.path.exists("uploads"):
+    os.makedirs("uploads")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+
 
 # ── Routers ────────────────────────────────────────────────────────────────────
 
@@ -134,6 +142,7 @@ app.include_router(chatbot.router,     prefix=API_PREFIX, tags=["Chatbot (Stub)"
 app.include_router(payments.router,    prefix=API_PREFIX + "/payments", tags=["Payments"])
 app.include_router(paypal.router,      prefix=API_PREFIX + "/paypal", tags=["PayPal Checkout"])
 app.include_router(coingecko.router,   prefix=API_PREFIX + "/crypto", tags=["Crypto (CoinGecko)"])
+app.include_router(uploads.router,     prefix=API_PREFIX, tags=["Uploads"])
 
 
 # ── Global Exception Handlers ──────────────────────────────────────────────────

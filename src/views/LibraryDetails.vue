@@ -2,7 +2,7 @@
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { rawgApi } from "../services/api";
+import { backendApi } from "../services/api";
 
 export default {
   name: "LibraryDetails",
@@ -130,7 +130,7 @@ export default {
 
         // Fetch RAWG game data
         if (this.purchase.gameId) {
-          const rawgRes = await rawgApi.get(`/games/${this.purchase.gameId}`);
+          const rawgRes = await backendApi.get(`/games/${this.purchase.gameId}`);
           this.game = rawgRes.data;
 
           // Generate genre-based achievements

@@ -1,6 +1,7 @@
 <script>
 import SkeletonCard from "../components/SkeletonCard.vue";
-import { rawgApi } from "../services/api";
+import TrailerModal from "../components/TrailerModal.vue";
+import { backendApi } from "../services/api";
 
 // RAWG parent_platform IDs
 const PLATFORMS = [
@@ -203,7 +204,7 @@ export default {
           params.parent_platforms = plat.id;
         }
 
-        const { data } = await rawgApi.get("/games", { params });
+        const { data } = await backendApi.get("/games", { params });
         this.games = data.results || [];
         this.totalCount = data.count || 0;
 
@@ -711,7 +712,7 @@ export default {
 
       <p v-if="!loading" class="games-page-info">
         Page {{ currentPage }} of {{ totalPages }} &middot;
-        {{ filteredGames.length }} games shown
+        {{ filteredGames.length }} {{ filteredGames.length === 1 ? 'game' : 'games' }} shown
       </p>
     </div>
   </div>

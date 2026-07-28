@@ -1,6 +1,6 @@
 <script>
 import { inject } from "vue";
-import { rawgApi, freeToGameApi, cheapSharkApi, backendApi } from "../services/api";
+import { backendApi } from "../services/api";
 import { Sparkles, CalendarDays, Flame } from "@lucide/vue";
 import CryptoMarket from "../components/CryptoMarket.vue";
 import { auth, db } from "../firebase";
@@ -259,16 +259,16 @@ export default {
   methods: {
     async loadFeatured() {
       try {
-        const f2pReq = freeToGameApi
-          .get("/games", { params: { "sort-by": "popularity" } })
-          .catch(() => ({ data: [] }));
-        const rawgReq = rawgApi
+        const f2pReq = backendApi
+          .get("/free-games", { params: { sort_by: "popularity" } })
+          .catch(() => ({ data: { results: [] } }));
+        const rawgReq = backendApi
           .get("/games", { params: { ordering: "-added", page_size: 20 } })
           .catch(() => ({ data: { results: [] } }));
 
         const [f2pRes, rawgRes] = await Promise.all([f2pReq, rawgReq]);
 
-        const f2pGames = (f2pRes.data || [])
+        const f2pGames = (f2pRes.data?.results || [])
           .sort(() => 0.5 - Math.random())
           .slice(0, 5)
           .map((g) => ({
@@ -297,14 +297,17 @@ export default {
         );
 
         // Populate trendingFree for the tabbed section
-        this.trendingFree = (f2pRes.data || []).slice(0, 10).map((g) => ({
-          ...g,
-          itemType: "f2p",
-          name: g.title,
-          background_image: g.thumbnail,
-          genres: [{ name: g.genre }],
-          id: g.id,
-        }));
+        this.trendingFree = (f2pRes.data?.results || [])
+          .filter((g) => g.thumbnail)
+          .slice(0, 10)
+          .map((g) => ({
+            ...g,
+            itemType: "f2p",
+            name: g.title,
+            background_image: g.thumbnail,
+            genres: [{ name: g.genre }],
+            id: g.id,
+          }));
 
         if (this.featuredGames.length) {
           this.fetchDetail(this.featuredGames[0]);
@@ -326,14 +329,14 @@ export default {
         past.setDate(past.getDate() - 90);
         const pastStr = past.toISOString().split("T")[0];
 
-        const { data } = await rawgApi.get("/games", {
+        const { data } = await backendApi.get("/games", {
           params: {
             ordering: "-released",
-            page_size: 20,
+            page_size: 30,
             dates: `${pastStr},${today}`,
           },
         });
-        this.newReleases = data.results || [];
+        this.newReleases = (data.results || []).filter(g => g.background_image).slice(0, 20);
       } catch (e) {
         console.error(e);
         this.toast?.show("Could not load new releases right now.", "error");
@@ -349,14 +352,14 @@ export default {
         future.setFullYear(future.getFullYear() + 1);
         const futureStr = future.toISOString().split("T")[0];
 
-        const { data } = await rawgApi.get("/games", {
+        const { data } = await backendApi.get("/games", {
           params: {
-            ordering: "-added",
-            page_size: 20,
+            ordering: "released",
+            page_size: 30,
             dates: `${today},${futureStr}`,
           },
         });
-        this.comingSoon = data.results || [];
+        this.comingSoon = (data.results || []).filter(g => g.background_image).slice(0, 20);
       } catch (e) {
         console.error(e);
         this.toast?.show("Could not load upcoming games right now.", "error");
@@ -367,17 +370,17 @@ export default {
 
     async loadHotDeals() {
       try {
-        const { data } = await cheapSharkApi.get("/deals", {
+        const { data } = await backendApi.get("/deals", {
           params: {
-            sortBy: "DealRating",
-            pageSize: 12,
-            onSale: 1,
-            upperPrice: 30,
+            sort_by: "DealRating",
+            page_size: 12,
+            min_savings: 1,
+            upper_price: 30,
           },
         });
         const uniqueDeals = [];
         const seenTitles = new Set();
-        for (const deal of data || []) {
+        for (const deal of data.results || []) {
           const key = deal.title.trim().toLowerCase();
           if (!seenTitles.has(key)) {
             uniqueDeals.push(deal);
@@ -399,16 +402,15 @@ export default {
       if (this.detailCache[cacheKey]) return;
       try {
         if (game.itemType === "f2p") {
-          const res = await fetch(
-            `https://www.freetogame.com/api/game?id=${game.id}`,
-          );
-          const data = await res.json();
+          const { data } = await backendApi.get(`/free-games/${game.id}`);
           this.detailCache = { ...this.detailCache, [cacheKey]: data };
         } else {
-          const { data } = await rawgApi.get(`/games/${game.id}`);
+          const { data } = await backendApi.get(`/games/${game.id}`);
           this.detailCache = { ...this.detailCache, [cacheKey]: data };
         }
-      } catch {}
+      } catch (err) {
+        console.error("fetchDetail failed", err);
+      }
     },
 
     goTo(index, dir = "next") {

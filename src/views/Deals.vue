@@ -1,5 +1,5 @@
 <script>
-import { cheapSharkApi } from "../services/api";
+import { backendApi } from "../services/api";
 import SkeletonCard from "../components/SkeletonCard.vue";
 import { inject } from "vue";
 import { auth, db } from "../firebase";
@@ -195,16 +195,16 @@ export default {
       this.loading = true;
       this.error = null;
       try {
-        const { data } = await cheapSharkApi.get("/deals", {
+        const { data } = await backendApi.get("/deals", {
           params: {
-            sortBy: this.sortBy,
-            upperPrice: this.maxPrice,
-            lowerPrice: 0,
-            pageSize: 60,
-            onSale: 1,
+            sort_by: this.sortBy,
+            upper_price: this.maxPrice,
+            lower_price: 0,
+            page_size: 60,
+            min_savings: 1,
           },
         });
-        this.deals = data;
+        this.deals = data.results || [];
         this.currentPage = 1;
       } catch (err) {
         console.error(err);

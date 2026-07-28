@@ -47,6 +47,7 @@ async def _fetch_newsapi(query: str = DEFAULT_QUERY, page_size: int = 50) -> Lis
         "language": "en",
         "sortBy": "publishedAt",
         "pageSize": page_size,
+        "domains": "ign.com,polygon.com,gamespot.com,pcgamer.com,kotaku.com,destructoid.com,nintendolife.com,pushsquare.com,rockpapershotgun.com",
         "apiKey": settings.news_api_key,
     }
 
@@ -71,6 +72,7 @@ async def _fetch_newsdata(query: str = "gaming", page_size: int = 50) -> List[Di
         "q": query,
         "language": "en",
         "category": "technology,entertainment",
+        "domain": "ign,polygon,gamespot,pcgamer,kotaku",
         "apikey": settings.newsdata_api_key,
     }
 
@@ -101,8 +103,8 @@ def _normalize_newsapi(article: Dict) -> Optional[Dict]:
         "description": truncate_text(article.get("description"), 300),
         "content": article.get("content"),
         "url": article.get("url"),
-        "url_to_image": article.get("urlToImage"),
-        "published_at": article.get("publishedAt"),
+        "urlToImage": article.get("urlToImage"),
+        "publishedAt": article.get("publishedAt"),
         "source": {"id": source.get("id"), "name": source.get("name")},
         "author": article.get("author"),
         "category": None,
@@ -132,8 +134,8 @@ def _normalize_newsdata(article: Dict) -> Optional[Dict]:
         "description": truncate_text(article.get("description"), 300),
         "content": article.get("content"),
         "url": article.get("link"),
-        "url_to_image": image,
-        "published_at": article.get("pubDate"),
+        "urlToImage": image,
+        "publishedAt": article.get("pubDate"),
         "source": {"id": source_name, "name": source_name},
         "author": (
             article.get("creator", [None])[0]
@@ -146,8 +148,8 @@ def _normalize_newsdata(article: Dict) -> Optional[Dict]:
 
 
 def _sort_key(article: Dict) -> datetime:
-    """Parse published_at for sorting (newest first). Fallback to epoch if unparseable."""
-    raw = article.get("published_at") or ""
+    """Parse publishedAt for sorting (newest first). Fallback to epoch if unparseable."""
+    raw = article.get("publishedAt") or ""
     for fmt in ("%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S%z"):
         try:
             return datetime.strptime(raw[:19], fmt[: len(raw[:19])])

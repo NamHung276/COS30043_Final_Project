@@ -12,6 +12,8 @@ import {
   doc,
 } from "firebase/firestore";
 import SkeletonCard from "../components/SkeletonCard.vue";
+import { useLibraryStore } from "../stores/useLibraryStore";
+import { mapState } from "pinia";
 
 export default {
   components: { SkeletonCard, Heart },
@@ -22,7 +24,6 @@ export default {
 
   data() {
     return {
-      favorites: [],
       loading: true,
       currentUser: null,
       searchQuery: "",
@@ -33,6 +34,7 @@ export default {
   },
 
   computed: {
+    ...mapState(useLibraryStore, ["favorites"]),
     allGenres() {
       const genres = [
         "All",
@@ -75,7 +77,8 @@ export default {
     async removeFavorite(favoriteId, title) {
       try {
         await deleteDoc(doc(db, "favorites", favoriteId));
-        this.favorites = this.favorites.filter((fav) => fav.id !== favoriteId);
+        const store = useLibraryStore();
+        store.favorites = store.favorites.filter((fav) => fav.id !== favoriteId);
         this.toast.show(`Removed "${title}" from wishlist`, "info");
       } catch (error) {
         console.error("Failed to remove from wishlist:", error);
@@ -85,18 +88,11 @@ export default {
 
     async loadFavorites(user) {
       this.loading = true;
-      const favoritesQuery = query(
-        collection(db, "favorites"),
-        where("userId", "==", user.uid),
-      );
-      const snapshot = await getDocs(favoritesQuery);
-      const favs = snapshot.docs.map((docSnap) => ({
-        id: docSnap.id,
-        ...docSnap.data(),
-      }));
-
-      // Sort in descending order of createdAt locally to avoid requiring a composite index
-      favs.sort((a, b) => {
+      const store = useLibraryStore();
+      await store.fetchFavorites(true);
+      
+      // Sort in descending order of createdAt locally
+      store.favorites.sort((a, b) => {
         const timeA =
           a.createdAt && typeof a.createdAt.toMillis === "function"
             ? a.createdAt.toMillis()
@@ -108,7 +104,6 @@ export default {
         return timeB - timeA;
       });
 
-      this.favorites = favs;
       this.loading = false;
     },
 
@@ -128,14 +123,15 @@ export default {
   },
 
   mounted() {
-    this.unsubscribe = onAuthStateChanged(auth, (user) => {
+    this.unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        this.favorites = [];
+        const store = useLibraryStore();
+        store.clearStore();
         this.currentUser = null;
         return;
       }
       this.currentUser = user;
-      this.loadFavorites(user);
+      await this.loadFavorites(user);
     });
   },
 };

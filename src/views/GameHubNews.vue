@@ -549,7 +549,7 @@ export default {
                 </span>
                 <span class="ghn-list-date">{{ formatDate(item.date) }}</span>
                 <span class="ghn-list-read-time" v-if="item.readingTime || item.content">
-                  &bull; {{ item.readingTime || Math.max(1, Math.ceil((item.content?.length || 0) / 1000)) }} min read
+                  &bull; {{ item.readingTime || Math.max(1, Math.ceil((item.content?.trim().split(/\s+/).length || 0) / 200)) }} min read
                 </span>
               </div>
               <router-link :to="detailLink(item)" class="ghn-list-title-link">

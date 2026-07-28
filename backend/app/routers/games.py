@@ -77,6 +77,11 @@ async def list_games(
         default=None, description="Comma-separated platform IDs"
     ),
     tags: Optional[str] = Query(default=None, description="Comma-separated tag slugs"),
+    dates: Optional[str] = Query(default=None, description="Comma-separated start and end date e.g. 2026-01-01,2026-12-31"),
+    search: Optional[str] = Query(default=None, description="Search query"),
+    exclude_additions: Optional[bool] = Query(default=None, description="Exclude DLCs"),
+    metacritic: Optional[str] = Query(default=None, description="Metacritic range"),
+    ratings_count: Optional[int] = Query(default=None, description="Min ratings count"),
 ):
     try:
         data = await rawg_service.get_games(
@@ -86,6 +91,11 @@ async def list_games(
             genres=genres,
             platforms=platforms,
             tags=tags,
+            dates=dates,
+            search=search,
+            exclude_additions=exclude_additions,
+            metacritic=metacritic,
+            ratings_count=ratings_count,
         )
         return data
     except Exception as exc:

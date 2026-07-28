@@ -3,6 +3,8 @@ import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, query, where, getDocs, updateDoc, deleteDoc, doc } from "firebase/firestore";
 import SkeletonCard from "../components/SkeletonCard.vue";
+import { useLibraryStore } from "../stores/useLibraryStore";
+import { mapState } from "pinia";
 
 export default {
   name: "Library",
@@ -11,7 +13,6 @@ export default {
   data() {
     return {
       currentUser: null,
-      purchases: [],
       loading: true,
       error: null,
       activeSessionTimer: null,
@@ -20,11 +21,15 @@ export default {
       viewMode: "grid",   // 'grid' | 'list'
       sortBy: "recent",   // 'recent' | 'playtime' | 'az' | 'status'
       searchQuery: "",
-      wishlistCount: 0,
     };
   },
 
   computed: {
+    ...mapState(useLibraryStore, ["purchases"]),
+    wishlistCount() {
+      const store = useLibraryStore();
+      return store.favorites.length;
+    },
     // Total playtime across all games in seconds
     totalPlaytimeSeconds() {
       return this.purchases.reduce((sum, g) => sum + (g.playtime || 0), 0);
@@ -93,11 +98,12 @@ export default {
   },
 
   mounted() {
-    this.unsubscribe = onAuthStateChanged(auth, (user) => {
+    this.unsubscribe = onAuthStateChanged(auth, async (user) => {
       this.currentUser = user;
       if (user) {
-        this.fetchLibrary();
-        this.fetchWishlistCount();
+        const store = useLibraryStore();
+        await Promise.all([store.fetchPurchases(), store.fetchFavorites()]);
+        this.loading = store.loadingPurchases;
       }
     });
 
@@ -112,50 +118,11 @@ export default {
   },
 
   methods: {
-    async fetchWishlistCount() {
-      try {
-        const snap = await getDocs(query(collection(db, "favorites"), where("userId", "==", this.currentUser.uid)));
-        this.wishlistCount = snap.size;
-      } catch (e) {
-        console.error("Failed to load wishlist count", e);
-      }
-    },
     async fetchLibrary() {
       this.loading = true;
-      this.error = null;
-
       try {
-        const q = query(
-          collection(db, "purchases"),
-          where("userId", "==", this.currentUser.uid),
-        );
-        const snap = await getDocs(q);
-
-        const results = snap.docs.map((doc) => {
-          const data = doc.data();
-          let currentStatus = data.status;
-          
-          return {
-            id: doc.id,
-            ...data,
-            status: currentStatus || 'not_installed',
-            gameName: data.gameName || data.title || "Unknown Game",
-          };
-        });
-
-        this.purchases = results.sort((a, b) => {
-          const tA = a.createdAt?.seconds || 0;
-          const tB = b.createdAt?.seconds || 0;
-          return tB - tA;
-        });
-
-        // Reset any hanging 'playing' states if page was reloaded
-        this.purchases.forEach((g) => {
-          if (g.status === 'playing') {
-            g.status = 'installed';
-            updateDoc(doc(db, "purchases", g.id), { status: 'installed' });
-          }
-        });
+        const store = useLibraryStore();
+        await store.fetchPurchases(true); // force refresh on explicit call
       } catch (err) {
         console.error("Failed to load library:", err);
         this.error = "Failed to load your library. Please try again later.";

@@ -392,7 +392,7 @@ import { auth, db } from "../firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { cartState } from "../services/cart";
-import { rawgApi } from "../services/api";
+import { backendApi } from "../services/api";
 
 export default {
   data() {
@@ -510,7 +510,7 @@ export default {
         return;
       }
       try {
-        const { data } = await rawgApi.get("/games", {
+        const { data } = await backendApi.get("/games", {
           params: {
             search: this.searchQuery.trim(),
             page_size: 6,

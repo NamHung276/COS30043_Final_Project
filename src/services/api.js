@@ -2,45 +2,6 @@
 
 import axios from "axios";
 
-// ── FreeToGame API ────────────────────────────────────────────────────────────
-export const freeToGameApi = axios.create({
-  baseURL: "https://www.freetogame.com/api",
-  timeout: 10000,
-});
-
-// ── NewsAPI (via Vite proxy: /newsapi → https://newsapi.org) ──────────────────
-export const newsApi = axios.create({
-  baseURL: "/newsapi/v2",
-  timeout: 10000,
-  params: {
-    apiKey: import.meta.env.VITE_NEWS_API_KEY,
-  },
-});
-
-// ── NewsData.io API ────────────────────────────────────────────────────────
-export const newsDataApi = axios.create({
-  baseURL: "https://newsdata.io/api/1",
-  timeout: 10000,
-  params: {
-    apikey: import.meta.env.VITE_NEWSDATA_API_KEY,
-  },
-});
-
-// ── CheapShark Deals API (via Vite proxy: /cheapshark → https://www.cheapshark.com) ──
-export const cheapSharkApi = axios.create({
-  baseURL: "/cheapshark/api/1.0",
-  timeout: 10000,
-});
-
-// ── RAWG Video Games Database API ────────────────────────────────────────────
-export const rawgApi = axios.create({
-  baseURL: "https://api.rawg.io/api",
-  timeout: 10000,
-  params: {
-    key: import.meta.env.VITE_RAWG_API_KEY,
-  },
-});
-
 // ── Internal Backend API ──────────────────────────────────────────────────────
 // Dev: uses Vite proxy (/api → http://localhost:8000/api)
 // Prod: calls Render backend directly
@@ -57,7 +18,7 @@ const cache = new Map();
 const CACHE_TTL = 3 * 60 * 1000; // 3 minutes
 
 // ── Shared Interceptors & Caching ─────────────────────────
-[freeToGameApi, newsApi, newsDataApi, cheapSharkApi, rawgApi, backendApi].forEach((instance) => {
+[backendApi].forEach((instance) => {
   // Simple GET Cache to prevent duplicate API calls
   const originalGet = instance.get;
   instance.get = async function (url, config) {

@@ -96,11 +96,51 @@ export default {
       this.coverImageFile = file;
       this.image = URL.createObjectURL(file);
     },
+    async compressImage(file) {
+      if (!file.type.startsWith("image/")) return file;
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+          const img = new Image();
+          img.src = e.target.result;
+          img.onload = () => {
+            let { width, height } = img;
+            const max = 1200;
+            if (width > max || height > max) {
+              if (width > height) { height = Math.round((height * max) / width); width = max; }
+              else { width = Math.round((width * max) / height); height = max; }
+            }
+            const canvas = document.createElement("canvas");
+            canvas.width = width; canvas.height = height;
+            canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+            canvas.toBlob((blob) => {
+              if (!blob) return resolve(file);
+              const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: "image/jpeg" });
+              resolve(newFile.size < file.size ? newFile : file);
+            }, "image/jpeg", 0.75);
+          };
+          img.onerror = () => resolve(file);
+        };
+        reader.onerror = () => resolve(file);
+      });
+    },
     async uploadImageToFirebase(file) {
-      const uniqueName = `${Date.now()}_${file.name}`;
-      const imgRef = storageRef(storage, `news_images/${uniqueName}`);
-      await uploadBytes(imgRef, file);
-      return await getDownloadURL(imgRef);
+      const compressedFile = await this.compressImage(file);
+      const formData = new FormData();
+      formData.append("file", compressedFile);
+      
+      const response = await fetch("http://localhost:8000/api/uploads", {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to upload image to backend");
+      }
+      
+      const data = await response.json();
+      return data.url;
     },
     async onUploadImg(files, callback) {
       try {

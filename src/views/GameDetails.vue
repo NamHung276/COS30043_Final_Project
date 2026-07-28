@@ -1,7 +1,7 @@
 <script>
 import { inject } from "vue";
 import { auth, db } from "../firebase";
-import { rawgApi, cheapSharkApi } from "../services/api";
+import { backendApi } from "../services/api";
 import { trackUserActivity } from "../services/tracking";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
@@ -426,16 +426,10 @@ export default {
       this.activeShot = 0;
 
       try {
-        const [gameRes, ssRes, moviesRes, simRes] = await Promise.all([
-          rawgApi.get(`/games/${id}`),
-          rawgApi.get(`/games/${id}/screenshots`),
-          rawgApi.get(`/games/${id}/movies`),
-          rawgApi.get(`/games/${id}/game-series`),
-        ]);
+        const gameRes = await backendApi.get(`/games/${id}`);
         this.game = gameRes.data;
-        this.screenshots = ssRes.data.results || [];
-        this.trailers = moviesRes.data.results || [];
-        this.similarGames = (simRes.data.results || []).slice(0, 6);
+        this.screenshots = this.game.screenshots || [];
+        this.trailers = this.game.trailers || [];
 
         const genreSlug = this.game.genres?.[0]?.slug;
 
@@ -445,12 +439,12 @@ export default {
         const dateStr = `${past.toISOString().split("T")[0]},${today.toISOString().split("T")[0]}`;
 
         const discoverPromise = genreSlug
-          ? rawgApi.get("/games", {
-              params: { genres: genreSlug, ordering: "-added", page_size: 7 },
+          ? backendApi.get("/games", {
+              params: { genres: genreSlug, ordering: "-added", page_size: 14 },
             })
           : Promise.resolve({ data: { results: [] } });
 
-        const recentPromise = rawgApi.get("/games", {
+        const recentPromise = backendApi.get("/games", {
           params: { dates: dateStr, ordering: "-released", page_size: 6 },
         });
 
@@ -459,9 +453,9 @@ export default {
           recentPromise,
         ]);
 
-        this.discoverMoreGames = (discoverRes.data.results || [])
-          .filter((g) => g.id !== Number(id))
-          .slice(0, 6);
+        const allDiscover = (discoverRes.data.results || []).filter((g) => g.id !== Number(id));
+        this.similarGames = allDiscover.slice(0, 6);
+        this.discoverMoreGames = allDiscover.slice(6, 12);
         this.recentGames = recentRes.data.results || [];
 
         document.title = `${this.game.name} | GameHub`;
@@ -488,14 +482,14 @@ export default {
       this.dealsLoading = true;
       this.deals = [];
       try {
-        const res = await cheapSharkApi.get("/deals", {
+        const res = await backendApi.get("/deals", {
           params: {
             title: title.substring(0, 30), // CheapShark title search
-            pageSize: 5,
-            sortBy: "Price",
+            page_size: 5,
+            sort_by: "Price",
           },
         });
-        this.deals = (res.data || []).filter((d) => d.title && d.salePrice);
+        this.deals = (res.data.results || []).filter((d) => d.title && d.salePrice);
       } catch {
         // Silently fail — not critical
       } finally {

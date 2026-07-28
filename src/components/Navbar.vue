@@ -261,18 +261,34 @@
             <span class="ms-2 d-lg-none">Cart</span>
           </router-link>
 
-          <!-- Theme Toggle (Always visible) -->
-          <button
-            class="btn btn-link nav-link theme-toggle-btn me-2"
-            @click="toggleTheme"
-            :aria-label="theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
-            :title="theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
-          >
-            <svg v-if="theme === 'dark'" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></svg>
-            <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
-          </button>
+
 
           <template v-if="!currentUser && authReady">
+            <!-- Settings for Logged-Out Users -->
+            <li class="nav-item dropdown list-unstyled ms-0 ms-lg-1 me-2">
+              <a
+                class="nav-link dropdown-toggle d-flex align-items-center"
+                href="#"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                title="Settings"
+              >
+                <i class="bi bi-gear-fill"></i>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 user-dropdown-menu mt-2">
+                <li>
+                  <button class="dropdown-item nav-dd-item" @click.stop="toggleTheme">
+                    <span class="nav-dd-icon" style="background: rgba(148, 163, 184, 0.15); box-shadow: 0 2px 8px rgba(148, 163, 184, 0.2);">
+                      <i v-if="theme === 'dark'" class="bi bi-moon-fill" style="font-size: 0.85rem; color: #94a3b8"></i>
+                      <i v-else class="bi bi-sun-fill" style="font-size: 0.85rem; color: #f59e0b"></i>
+                    </span>
+                    Theme: {{ theme === 'dark' ? 'Dark' : 'Light' }}
+                  </button>
+                </li>
+              </ul>
+            </li>
+
             <router-link class="nav-btn-login" to="/login" @click="closeMenu">Login</router-link>
             <router-link class="nav-btn-signup" to="/register" @click="closeMenu">Sign Up</router-link>
           </template>
@@ -347,6 +363,15 @@
                     </span>
                     Settings
                   </router-link>
+                </li>
+                <li>
+                  <button class="dropdown-item nav-dd-item" @click.stop="toggleTheme">
+                    <span class="nav-dd-icon" style="background: rgba(148, 163, 184, 0.15); box-shadow: 0 2px 8px rgba(148, 163, 184, 0.2);">
+                      <i v-if="theme === 'dark'" class="bi bi-moon-fill" style="font-size: 0.85rem; color: #94a3b8"></i>
+                      <i v-else class="bi bi-sun-fill" style="font-size: 0.85rem; color: #f59e0b"></i>
+                    </span>
+                    Theme: {{ theme === 'dark' ? 'Dark' : 'Light' }}
+                  </button>
                 </li>
                 <li><hr class="dropdown-divider border-secondary opacity-25"></li>
 

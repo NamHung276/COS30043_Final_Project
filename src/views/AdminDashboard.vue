@@ -396,72 +396,57 @@ export default {
 </script>
 
 <template>
-  <div class="admin-wrapper" v-if="isAdmin">
-    <!-- ── Sidebar ── -->
-    <aside class="gh-sidebar" :class="{ 'sidebar-mobile-open': sidebarOpen }">
-      <div class="sidebar-header">
-        <div class="gh-logo">
-          <i class="bi bi-controller"></i>
-          <span>GameHub</span>
+  <div class="admin-page" v-if="isAdmin">
+    <div class="container py-5">
+      <!-- Header -->
+      <div class="mb-5 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+          <h1 class="admin-page-title display-5 fw-bold mb-2">Operations Center</h1>
+          <p class="text-muted-light m-0">Manage community feed, players, flagged content, and platform activity.</p>
         </div>
-        <span class="console-tag">Operations Center</span>
-      </div>
-      
-      <div class="sidebar-section-title">Moderation</div>
-      <nav class="sidebar-nav">
-        <button class="nav-btn" :class="{ active: activeTab === 'dashboard' }" @click="activeTab = 'dashboard'">
-          <i class="bi bi-grid-fill"></i> 
-          <span>Dashboard</span>
-        </button>
-        <button class="nav-btn" :class="{ active: activeTab === 'reviews' }" @click="activeTab = 'reviews'">
-          <i class="bi bi-flag-fill"></i> 
-          <span>Moderation Queue</span>
-          <span class="nav-badge" v-if="badgeCounts.reports > 0">{{ badgeCounts.reports }}</span>
-        </button>
-        <button class="nav-btn" :class="{ active: activeTab === 'news' }" @click="activeTab = 'news'">
-          <i class="bi bi-newspaper"></i> 
-          <span>Community Feed</span>
-          <span class="nav-badge" v-if="badgeCounts.news > 0">{{ badgeCounts.news }}</span>
-        </button>
-        <button class="nav-btn" :class="{ active: activeTab === 'users' }" @click="activeTab = 'users'">
-          <i class="bi bi-people-fill"></i> 
-          <span>Players</span>
-          <span class="nav-badge" v-if="badgeCounts.users > 0">{{ badgeCounts.users }}</span>
-        </button>
-      </nav>
-
-      <div class="sidebar-section-title mt-4" v-show="false">System</div>
-      <nav class="sidebar-nav" v-show="false">
-        <button class="nav-btn" @click="actionComingSoon('Settings')">
-          <i class="bi bi-gear-fill"></i> 
-          <span>Platform Settings</span>
-        </button>
-      </nav>
-      
-      <div class="sidebar-footer">
-        <div class="admin-profile">
-          <div class="admin-avatar"><i class="bi bi-person-fill"></i></div>
-          <div class="admin-info">
-            <p class="admin-user">{{ currentUser?.email }}</p>
-            <span class="admin-badge">Administrator</span>
-          </div>
+        <div class="d-flex align-items-center gap-3">
+           <div class="admin-profile profile-glass-card p-2 px-3 rounded-pill d-flex align-items-center gap-3">
+             <div class="admin-avatar text-primary fs-3"><i class="bi bi-shield-fill"></i></div>
+             <div class="admin-info d-flex flex-column pe-2">
+               <span class="admin-user fw-bold m-0" style="font-size:0.95rem;">{{ currentUser?.email }}</span>
+               <span class="admin-badge text-primary" style="font-size:0.65rem; font-weight:800; text-transform:uppercase">Administrator</span>
+             </div>
+           </div>
         </div>
       </div>
-    </aside>
 
-    <!-- ── Main Content Area ── -->
-    <main class="gh-main">
-      <div class="d-md-none d-flex align-items-center justify-content-between p-3 border-bottom border-secondary" style="background: var(--bg-surface-var); position: sticky; top: 0; z-index: 10;">
-        <div class="gh-logo m-0" style="font-size: 1.2rem;">
-          <i class="bi bi-controller"></i>
-          <span>GameHub</span>
+      <div class="row g-4">
+        <!-- ── Sidebar ── -->
+        <div class="col-lg-3">
+          <aside class="gh-sidebar profile-glass-card p-3 h-100">
+            <div class="sidebar-section-title">Moderation</div>
+            <nav class="sidebar-nav">
+              <button class="nav-btn" :class="{ active: activeTab === 'dashboard' }" @click="activeTab = 'dashboard'">
+                <i class="bi bi-grid-fill me-3"></i> 
+                <span>Dashboard</span>
+              </button>
+              <button class="nav-btn" :class="{ active: activeTab === 'reviews' }" @click="activeTab = 'reviews'">
+                <i class="bi bi-flag-fill me-3"></i> 
+                <span>Queue</span>
+                <span class="nav-badge ms-auto" v-if="badgeCounts.reports > 0">{{ badgeCounts.reports }}</span>
+              </button>
+              <button class="nav-btn" :class="{ active: activeTab === 'news' }" @click="activeTab = 'news'">
+                <i class="bi bi-newspaper me-3"></i> 
+                <span>Feed</span>
+                <span class="nav-badge ms-auto" v-if="badgeCounts.news > 0">{{ badgeCounts.news }}</span>
+              </button>
+              <button class="nav-btn" :class="{ active: activeTab === 'users' }" @click="activeTab = 'users'">
+                <i class="bi bi-people-fill me-3"></i> 
+                <span>Players</span>
+                <span class="nav-badge ms-auto" v-if="badgeCounts.users > 0">{{ badgeCounts.users }}</span>
+              </button>
+            </nav>
+          </aside>
         </div>
-        <button class="btn btn-outline-secondary btn-sm border-0 text-primary-var" @click="sidebarOpen = !sidebarOpen">
-          <i class="bi bi-list fs-4"></i>
-        </button>
-      </div>
 
-      <div class="content-container" @click="sidebarOpen = false">
+        <!-- ── Main Content Area ── -->
+        <div class="col-lg-9">
+          <div class="content-container">
         
         <!-- ── TAB: DASHBOARD ── -->
         <div v-if="activeTab === 'dashboard'" class="gh-tab-pane fade-in">
@@ -838,10 +823,10 @@ export default {
             </div>
           </div>
         </div>
-
+        </div>
       </div>
-    </main>
-
+    </div>
+  </div>
     <!-- ── MODALS ── -->
     
     <!-- Delete Post Modal -->
@@ -903,174 +888,120 @@ export default {
 
 <style scoped>
 /* ── Variables & Reset ── */
-.admin-wrapper {
-  display: flex;
+.admin-page {
   min-height: 100vh;
-  /* Premium AAA Gaming Background */
-  background-image: 
-    radial-gradient(circle at top right, rgba(0, 210, 255, 0.08) 0%, transparent 60%),
-    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E"),
-    linear-gradient(to bottom, #090c15, #05080f);
-  background-attachment: fixed;
+  background: var(--bg-deep);
   color: var(--text-primary);
   font-family: var(--font-family);
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Sidebar ── */
+.admin-page-title {
+  color: var(--text-primary) !important;
+}
+
+.text-muted-light {
+  color: var(--overlay-text) !important;
+}
+
+.profile-glass-card {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-sm);
+}
+
 .gh-sidebar {
-  width: 280px;
-  background: rgba(10, 15, 25, 0.7);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  border-right: 1px solid var(--overlay-medium);
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  height: 100vh;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-.sidebar-header {
-  padding: 30px 24px;
-  border-bottom: 1px solid var(--overlay-light);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.gh-logo {
-  font-size: 1.5rem;
-  font-weight: 900;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  letter-spacing: -0.02em;
-}
-.gh-logo i {
-  color: var(--primary);
-}
-.console-tag {
-  font-size: 0.7rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--primary);
-  padding: 3px 8px;
-  background: rgba(0, 210, 255, 0.1);
-  border-radius: 4px;
-  align-self: flex-start;
+  border-radius: 20px;
 }
 
 .sidebar-section-title {
-  padding: 24px 24px 8px;
+  padding: 12px 20px 8px;
   font-size: 0.7rem;
   font-weight: 800;
   color: var(--overlay-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  padding: 0 12px;
   gap: 4px;
 }
+
 .nav-btn {
-  background: transparent;
-  border: none;
-  color: var(--overlay-text);
-  text-align: left;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 14px;
+  width: 100%;
+  padding: 12px 20px;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-weight: 500;
+  text-align: left;
   transition: all 0.2s ease;
-  position: relative;
 }
-.nav-btn span:first-of-type { flex: 1; }
+
+.nav-btn i {
+  font-size: 1.1rem;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
 .nav-badge {
   background: #ef4444;
-  color: var(--text-primary);
+  color: #fff;
   font-size: 0.7rem;
   font-weight: 800;
   padding: 2px 8px;
   border-radius: 12px;
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
 }
 
 .nav-btn:hover {
   background: var(--overlay-light);
-  color: var(--text-primary);
-  transform: translateX(4px);
 }
+
 .nav-btn.active {
-  background: linear-gradient(90deg, rgba(0, 210, 255, 0.15) 0%, transparent 100%);
-  color: var(--text-primary);
-  border-left: 3px solid var(--primary);
-  border-radius: 4px;
+  background: rgba(124, 58, 237, 0.15);
+  color: var(--primary-light);
+  font-weight: 600;
 }
+
 .nav-btn.active i {
-  color: var(--primary);
+  color: var(--primary-light);
+  opacity: 1;
 }
 
-.sidebar-footer {
-  margin-top: auto;
-  padding: 20px;
-  background: rgba(0, 0, 0, 0.2);
-  border-top: 1px solid var(--overlay-light);
-}
-.admin-profile {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.admin-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary) 0%, #3a00f5 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  color: var(--text-primary);
-}
-.admin-user {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 2px;
-  max-width: 150px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.admin-badge {
-  font-size: 0.65rem;
-  background: var(--overlay-medium);
-  color: var(--overlay-text);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 800;
-  text-transform: uppercase;
+@media (max-width: 991.98px) {
+  .gh-sidebar {
+    display: flex;
+    overflow-x: auto;
+    padding: 10px !important;
+    white-space: nowrap;
+    scrollbar-width: none;
+    margin-bottom: 20px;
+  }
+  .gh-sidebar::-webkit-scrollbar {
+    display: none;
+  }
+  .sidebar-section-title {
+    display: none;
+  }
+  .sidebar-nav {
+    flex-direction: row;
+    gap: 8px;
+  }
+  .nav-btn {
+    width: auto;
+    margin-bottom: 0;
+    padding: 10px 16px;
+  }
 }
 
-/* ── Main Content ── */
-.gh-main {
-  flex: 1;
-  padding: 40px;
-  overflow-y: auto;
-}
-.content-container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
 .pane-header {
   margin-bottom: 32px;
 }
@@ -1095,20 +1026,20 @@ export default {
   margin-bottom: 24px;
 }
 .stat-card {
-  background: var(--overlay-light);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--overlay-medium);
-  border-radius: 16px;
-  padding: 24px;
   display: flex;
   align-items: center;
   gap: 20px;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
-  transition: transform 0.2s, border-color 0.2s;
+  padding: 24px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 .stat-card:hover {
   transform: translateY(-2px);
-  border-color: var(--overlay-heavy);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.2);
 }
 .stat-icon {
   width: 50px;
@@ -1145,7 +1076,7 @@ export default {
 .search-bar {
   display: flex;
   align-items: center;
-  background: rgba(0,0,0,0.3);
+  background: var(--overlay-light);
   border: 1px solid var(--overlay-medium);
   border-radius: 8px;
   padding: 10px 16px;
@@ -1180,7 +1111,7 @@ export default {
   transition: all 0.2s;
 }
 .filter-pill:hover, .filter-pill.active {
-  background: rgba(0, 210, 255, 0.15);
+  background: rgba(124, 58, 237, 0.15);
   border-color: var(--primary);
   color: var(--text-primary);
 }
@@ -1193,22 +1124,15 @@ export default {
 }
 @media (max-width: 950px) {
   .dashboard-grid { grid-template-columns: 1fr; }
-  .gh-sidebar { width: 70px; }
-  .sidebar-header span, .sidebar-section-title, .nav-btn span, .admin-info { display: none; }
-  .nav-btn { justify-content: center; padding: 12px; }
-  .nav-btn i { font-size: 1.2rem; margin: 0; }
-  .sidebar-header { align-items: center; padding: 24px 0; }
-  .gh-logo { font-size: 1.8rem; }
-  .admin-avatar { margin: 0 auto; }
 }
 
 .gh-widget {
-  background: var(--overlay-light);
-  backdrop-filter: blur(15px);
-  border: 1px solid var(--overlay-medium);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
   border-radius: 16px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   overflow: hidden;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
   margin-bottom: 24px;
 }
 .widget-header {
@@ -1217,7 +1141,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(0,0,0,0.15);
+  background: rgba(0,0,0,0.05);
 }
 .widget-header h3 {
   font-size: 1.1rem;
@@ -1229,8 +1153,8 @@ export default {
   gap: 10px;
 }
 .badge-count {
-  background: rgba(0, 210, 255, 0.15);
-  color: var(--primary);
+  background: rgba(124, 58, 237, 0.15);
+  color: var(--primary-light);
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 0.75rem;
@@ -1259,7 +1183,7 @@ export default {
   background: var(--overlay-light);
   padding: 20px 24px;
   border-radius: 12px;
-  border: 1px solid var(--overlay-light);
+  border: 1px solid var(--overlay-medium);
   transition: background 0.2s, border-color 0.2s;
 }
 .report-item:hover {
@@ -1310,8 +1234,8 @@ export default {
 }
 .qa-btn i { font-size: 1.1rem; color: var(--primary); }
 .qa-btn:hover { 
-  background: rgba(0, 210, 255, 0.1); 
-  border-color: rgba(0, 210, 255, 0.3);
+  background: rgba(124, 58, 237, 0.1); 
+  border-color: rgba(124, 58, 237, 0.3);
   transform: translateY(-2px);
 }
 
@@ -1357,7 +1281,7 @@ export default {
   text-transform: uppercase;
   color: var(--text-muted);
   border-bottom: 1px solid var(--overlay-light);
-  background: rgba(0,0,0,0.1);
+  background: rgba(0,0,0,0.05);
 }
 .gh-table td {
   padding: 24px 32px;
@@ -1368,7 +1292,7 @@ export default {
   background: var(--overlay-light);
 }
 .row-highlight td {
-  background: rgba(0, 210, 255, 0.04);
+  background: rgba(124, 58, 237, 0.04);
 }
 .primary-col { color: var(--text-primary); }
 .muted-col { color: var(--text-secondary); }
@@ -1385,16 +1309,16 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-primary);
+  color: #fff;
   font-size: 1.1rem;
 }
 .admin-av { background: linear-gradient(135deg, var(--primary) 0%, #3a00f5 100%); }
-.user-av { background: var(--overlay-medium); }
+.user-av { background: var(--overlay-medium); color: var(--text-primary); }
 
 .article-thumb {
   width: 48px;
   height: 48px;
-  background: rgba(0,0,0,0.3);
+  background: rgba(0,0,0,0.15);
   border: 1px solid var(--overlay-medium);
   border-radius: 8px;
   display: flex;
@@ -1413,7 +1337,7 @@ export default {
   display: inline-flex;
   align-items: center;
 }
-.badge-primary { background: rgba(0, 210, 255, 0.15); color: var(--primary); border: 1px solid rgba(0,210,255,0.3); }
+.badge-primary { background: rgba(124, 58, 237, 0.15); color: var(--primary-light); border: 1px solid rgba(124, 58, 237, 0.3); }
 .badge-neutral { background: var(--overlay-medium); color: var(--text-muted); }
 .badge-danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
 .badge-success { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
@@ -1457,7 +1381,7 @@ export default {
 
 .btn-gh-solid {
   background: var(--primary);
-  color: #000;
+  color: #fff;
   border: none;
   border-radius: 8px;
   padding: 10px 20px;
@@ -1469,7 +1393,7 @@ export default {
 .btn-gh-solid.small { padding: 8px 16px; font-size: 0.85rem; }
 .btn-gh-solid:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
 }
 .btn-gh-text {
   background: transparent;
@@ -1484,7 +1408,7 @@ export default {
 
 .btn-gh-danger-solid {
   background: #ef4444;
-  color: var(--text-primary);
+  color: #fff;
   border: none;
   border-radius: 8px;
   font-weight: 700;
@@ -1498,11 +1422,11 @@ export default {
 .gh-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.8);
+  background: rgba(0,0,0,0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 1050;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
@@ -1513,7 +1437,7 @@ export default {
   border-radius: 16px;
   width: 90%;
   max-width: 440px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
   animation: modalIn 0.3s ease-out;
 }
 @keyframes modalIn {
@@ -1545,19 +1469,5 @@ export default {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-@media (max-width: 768px) {
-  .gh-sidebar {
-    position: fixed;
-    top: 0;
-    left: -280px;
-    height: 100vh;
-    z-index: 1000;
-    transition: left 0.3s ease;
-  }
-  .gh-sidebar.sidebar-mobile-open {
-    left: 0;
-  }
 }
 </style>

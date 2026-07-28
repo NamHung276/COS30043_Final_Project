@@ -1084,7 +1084,13 @@ export default {
                   v-for="n in 5"
                   :key="n"
                   class="skeleton steam-tab-item-skeleton"
-                ></div>
+              </template>
+              <template v-else-if="activeTabGames.length === 0">
+                <div style="padding: 60px 20px; text-align: center; color: var(--text-muted); background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px dashed var(--border-glass);">
+                  <i class="bi bi-exclamation-circle" style="font-size: 2rem; margin-bottom: 12px; opacity: 0.7; display: block;"></i>
+                  <p style="margin-bottom: 4px; font-weight: 500;">There is an issue loading games</p>
+                  <p style="font-size: 0.85rem; opacity: 0.7; margin-bottom: 0;">Please try again or return later.</p>
+                </div>
               </template>
               <template v-else>
                 <router-link
@@ -1319,6 +1325,11 @@ export default {
         </div>
 
         <!-- Deals strip -->
+        <div v-else-if="hotDeals.length === 0" style="padding: 40px 20px; text-align: center; color: var(--text-muted); background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px dashed var(--border-glass); margin-bottom: 8px;">
+          <i class="bi bi-exclamation-circle" style="font-size: 2rem; margin-bottom: 12px; opacity: 0.7; display: block;"></i>
+          <p style="margin-bottom: 4px; font-weight: 500;">There is an issue loading deals</p>
+          <p style="font-size: 0.85rem; opacity: 0.7; margin-bottom: 0;">Please try again or return later.</p>
+        </div>
         <div v-else class="h-scroll-strip">
           <a
             v-for="deal in hotDeals"

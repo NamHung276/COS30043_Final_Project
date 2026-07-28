@@ -1,10 +1,12 @@
 <script setup>
-import { ref, provide } from "vue";
+import { ref, provide, onMounted, watch } from "vue";
 import Navbar from "./components/Navbar.vue";
 import Footer from "./components/Footer.vue";
 import ScrollToTop from "./components/ScrollToTop.vue";
 import ToastNotification from "./components/ToastNotification.vue";
 import ChatbotWidget from "./components/ChatbotWidget.vue";
+import { useAuthStore } from "./stores/useAuthStore";
+import { useWishlistStore } from "./stores/useWishlistStore";
 
 const toastRef = ref(null);
 
@@ -14,6 +16,29 @@ provide("toast", {
     toastRef.value?.show(message, type, duration);
   },
 });
+
+// ── Single global auth listener ──────────────────────────────────────────────
+// Previously every authenticated view registered its own onAuthStateChanged.
+// Now we register exactly ONE listener here for the entire application lifetime.
+const authStore = useAuthStore();
+const wishlistStore = useWishlistStore();
+
+onMounted(() => {
+  authStore.init();
+});
+
+// When auth state resolves, load the wishlist once for the session.
+// When the user signs out, reset the wishlist.
+watch(
+  () => authStore.currentUser,
+  async (user) => {
+    if (user) {
+      await wishlistStore.loadWishlist(user.uid);
+    } else {
+      wishlistStore.reset();
+    }
+  },
+);
 </script>
 
 <template>

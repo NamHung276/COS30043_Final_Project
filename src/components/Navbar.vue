@@ -261,9 +261,8 @@
             <span class="ms-2 d-lg-none">Cart</span>
           </router-link>
 
-          <!-- Theme Toggle (Always visible when logged out, inside dropdown when logged in) -->
+          <!-- Theme Toggle (Always visible) -->
           <button
-            v-if="!currentUser"
             class="btn btn-link nav-link theme-toggle-btn me-2"
             @click="toggleTheme"
             :aria-label="theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
@@ -280,7 +279,7 @@
 
           <template v-if="currentUser">
             <!-- User Menu Dropdown -->
-            <li class="nav-item dropdown list-unstyled ms-1">
+            <li class="nav-item dropdown list-unstyled ms-0 ms-lg-1">
               <a
                 class="nav-link dropdown-toggle d-flex align-items-center nav-profile-link"
                 href="#"
@@ -350,14 +349,7 @@
                   </router-link>
                 </li>
                 <li><hr class="dropdown-divider border-secondary opacity-25"></li>
-                <li>
-                  <a href="#" class="dropdown-item nav-dd-item" @click.prevent.stop="toggleTheme" :aria-label="theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
-                    <span class="nav-dd-icon" style="background: var(--overlay-medium); border: 1px solid var(--overlay-heavy);">
-                      <i :class="theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill'" style="font-size: 0.85rem; color: var(--warning);"></i>
-                    </span>
-                    {{ theme === 'dark' ? 'Light Mode' : 'Dark Mode' }}
-                  </a>
-                </li>
+
                 <template v-if="isAdmin">
                   <li><hr class="dropdown-divider border-secondary opacity-25"></li>
                   <li>

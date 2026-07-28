@@ -34,7 +34,9 @@ export const cartState = reactive({
   },
 
   remove(gameId) {
-    this.items = this.items.filter((item) => item.id !== gameId);
+    this.items = this.items.filter(
+      (item) => String(item.id) !== String(gameId)
+    );
   },
 
   clear() {
@@ -42,7 +44,7 @@ export const cartState = reactive({
   },
 
   has(gameId) {
-    return this.items.some((item) => item.id === gameId);
+    return this.items.some((item) => String(item.id) === String(gameId));
   },
 });
 

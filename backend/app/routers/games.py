@@ -22,6 +22,8 @@ from fastapi import APIRouter, HTTPException, Query, status
 
 from app.services import rawg_service, cheapshark_service
 from app.services.recommendation_service import recommendation_service
+from app.schemas.game import GameDetail, GameSummary, Screenshot, Trailer
+from app.schemas.common import RAWGPaginatedResponse
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -55,6 +57,7 @@ def _rawg_error(exc: Exception, game_id: Optional[int] = None) -> HTTPException:
 
 @router.get(
     "/games",
+    response_model=RAWGPaginatedResponse[GameSummary],
     summary="List games",
     description=(
         "Returns a paginated list of games from RAWG. "
@@ -105,6 +108,7 @@ async def list_games(
 
 @router.get(
     "/games/search",
+    response_model=RAWGPaginatedResponse[GameSummary],
     summary="Search games",
     description="Search games by name. Results cached for 5 minutes.",
 )
@@ -140,6 +144,7 @@ async def get_recommendations(
 
 @router.get(
     "/games/{game_id}",
+    response_model=GameDetail,
     summary="Aggregated game detail",
     description=(
         "**Aggregated endpoint.** Returns a single JSON object combining:\n"
@@ -204,8 +209,8 @@ async def get_game_detail(game_id: int):
                 )
                 if best:
                     cheapest_price = best.get("cheapest")
-                    # Map storeID from the deal or use "Steam" as default for name lookup
-                    cheapest_store = "Steam"
+                    # No easy storeID mapping from /games CheapShark endpoint
+                    cheapest_store = None
                 deals = cs_results
         except Exception as cs_exc:
             logger.warning("CheapShark lookup failed for game %d: %s", game_id, cs_exc)
@@ -231,6 +236,7 @@ async def get_game_detail(game_id: int):
 
 @router.get(
     "/games/{game_id}/screenshots",
+    response_model=RAWGPaginatedResponse[Screenshot],
     summary="Game screenshots",
     description="Returns screenshot images for the given game. Cached 10 minutes.",
 )
@@ -244,6 +250,7 @@ async def get_game_screenshots(game_id: int):
 
 @router.get(
     "/games/{game_id}/trailers",
+    response_model=RAWGPaginatedResponse[Trailer],
     summary="Game trailers",
     description="Returns trailer/clip data for the given game. Cached 10 minutes.",
 )

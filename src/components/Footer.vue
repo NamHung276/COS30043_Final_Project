@@ -67,8 +67,10 @@
             <ul class="gd-footer-links">
               <li><router-link to="/profile">My Profile</router-link></li>
               <li><router-link to="/library">My Library</router-link></li>
-              <li><router-link to="/login">Sign In</router-link></li>
-              <li><router-link to="/register">Create Account</router-link></li>
+              <template v-if="!currentUser">
+                <li><router-link to="/login">Sign In</router-link></li>
+                <li><router-link to="/register">Create Account</router-link></li>
+              </template>
               <li><router-link to="/about">About GameHub</router-link></li>
             </ul>
           </div>

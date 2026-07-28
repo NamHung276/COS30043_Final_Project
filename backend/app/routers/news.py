@@ -15,6 +15,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Query, status
 
 from app.services import news_service
+from app.schemas.news import NewsResponse
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -26,6 +27,7 @@ _DEFAULT_QUERY = (
 
 @router.get(
     "/news",
+    response_model=NewsResponse,
     summary="Gaming news",
     description=(
         "Returns merged gaming news from NewsAPI and NewsData.io. "

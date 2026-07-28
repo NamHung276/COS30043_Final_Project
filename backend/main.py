@@ -8,13 +8,15 @@ exception handlers. Run with:
 """
 
 import logging
+import os
 import sys
 import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 # pyrefly: ignore [missing-import]
 from pythonjsonlogger import json as jsonlogger
 
@@ -121,8 +123,6 @@ app.add_middleware(RateLimitMiddleware)
 app.add_middleware(RequestLoggingMiddleware)
 
 # Mount static folder for uploads
-from fastapi.staticfiles import StaticFiles
-import os
 if not os.path.exists("uploads"):
     os.makedirs("uploads")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
@@ -175,5 +175,4 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 @app.get("/", include_in_schema=False)
 async def root():
     """Redirect root to Swagger docs."""
-    from fastapi.responses import RedirectResponse
     return RedirectResponse(url="/docs")

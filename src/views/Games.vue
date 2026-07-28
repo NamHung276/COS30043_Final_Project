@@ -3,55 +3,34 @@ import SkeletonCard from "../components/SkeletonCard.vue";
 import TrailerModal from "../components/TrailerModal.vue";
 import { inject } from "vue";
 import { backendApi } from "../services/api";
-import { auth, db } from "../firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
+import { mapState } from "pinia";
+import { useAuthStore } from "../stores/useAuthStore";
+import { useWishlistStore } from "../stores/useWishlistStore";
+import {
+  metacriticClass,
+  ratingStars,
+  ratingLabel,
+  platformIcons,
+  gamePrice,
+  gameDiscount,
+  discountedPrice,
+} from "../composables/useGameUtils";
 
 // RAWG parent_platform IDs
 const PLATFORMS = [
   { key: "all", label: "All Platforms", icon: null, id: null },
   { key: "pc", label: "PC", icon: "/game_logo/pc.svg", id: 1 },
-  {
-    key: "ps",
-    label: "PlayStation",
-    icon: "/game_logo/playstation_logo.png",
-    id: 2,
-  },
+  { key: "ps", label: "PlayStation", icon: "/game_logo/playstation_logo.png", id: 2 },
   { key: "xbox", label: "Xbox", icon: "/game_logo/xbox_logo.png", id: 3 },
-  {
-    key: "nintendo",
-    label: "Nintendo",
-    icon: "/game_logo/nintendo_logo.png",
-    id: 7,
-  },
+  { key: "nintendo", label: "Nintendo", icon: "/game_logo/nintendo_logo.png", id: 7 },
   { key: "mobile", label: "Mobile", icon: "/game_logo/mobile.svg", id: "4,8" },
 ];
 
 const ALL_GENRES = [
-  "All",
-  "Action",
-  "Adventure",
-  "Anime",
-  "Arcade",
-  "Battle Royale",
-  "Card",
-  "Casual",
-  "Fantasy",
-  "Fighting",
-  "Horror",
-  "Indie",
-  "MMORPG",
-  "MOBA",
-  "Platformer",
-  "Puzzle",
-  "Racing",
-  "RPG",
-  "Sci-Fi",
-  "Shooter",
-  "Simulation",
-  "Sports",
-  "Strategy",
-  "Survival",
+  "All", "Action", "Adventure", "Anime", "Arcade", "Battle Royale", "Card",
+  "Casual", "Fantasy", "Fighting", "Horror", "Indie", "MMORPG", "MOBA",
+  "Platformer", "Puzzle", "Racing", "RPG", "Sci-Fi", "Shooter", "Simulation",
+  "Sports", "Strategy", "Survival",
 ];
 
 export default {
@@ -59,7 +38,17 @@ export default {
 
   setup() {
     const toast = inject("toast");
-    return { toast };
+    // Expose shared utility functions to the template
+    return {
+      toast,
+      metacriticClass,
+      ratingStars,
+      ratingLabel,
+      platformIcons,
+      gamePrice,
+      gameDiscount,
+      discountedPrice,
+    };
   },
 
   data() {
@@ -70,8 +59,8 @@ export default {
       searchTerm: "",
       selectedGenre: "All",
       selectedPlatform: "all",
-      sortBy: "rating", // 'rating' | 'release' | 'az' | 'metacritic'
-      viewMode: "grid", // 'grid' | 'list'
+      sortBy: "rating",
+      viewMode: "grid",
       genres: ALL_GENRES,
       platforms: PLATFORMS,
       currentPage: 1,
@@ -81,30 +70,23 @@ export default {
       // Trailer modal
       trailerGame: null,
       showTrailer: false,
-      // Auth
-      currentUser: null,
-      // Wishlist set (gameId strings already wishlisted)
-      wishlisted: new Set(),
-      // Recommendations
+      // Recommendations (auth-gated)
       recommendedGames: [],
       loadingRecommendations: false,
     };
   },
 
   computed: {
+    // Auth & wishlist state from centralised stores
+    ...mapState(useAuthStore, ["currentUser"]),
+    ...mapState(useWishlistStore, ["wishlistedIds"]),
+
     sortedGames() {
       const list = [...this.games];
-      if (this.sortBy === "rating") {
-        list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-      } else if (this.sortBy === "metacritic") {
-        list.sort((a, b) => (b.metacritic || 0) - (a.metacritic || 0));
-      } else if (this.sortBy === "release") {
-        list.sort(
-          (a, b) => new Date(b.released || 0) - new Date(a.released || 0),
-        );
-      } else if (this.sortBy === "az") {
-        list.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-      }
+      if (this.sortBy === "rating") list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      else if (this.sortBy === "metacritic") list.sort((a, b) => (b.metacritic || 0) - (a.metacritic || 0));
+      else if (this.sortBy === "release") list.sort((a, b) => new Date(b.released || 0) - new Date(a.released || 0));
+      else if (this.sortBy === "az") list.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
       return list;
     },
 
@@ -149,6 +131,14 @@ export default {
         if (newVal) this.selectedGenre = newVal;
       },
     },
+    "$route.query.search": {
+      immediate: true,
+      handler(newVal) {
+        if (newVal !== undefined && newVal !== this.searchTerm) {
+          this.searchTerm = newVal || "";
+        }
+      },
+    },
     searchTerm() {
       this.currentPage = 1;
       clearTimeout(this.searchTimeout);
@@ -167,61 +157,20 @@ export default {
     sortBy() {
       this.currentPage = 1;
     },
+    // React to auth state changes via the centralised store
+    currentUser: {
+      immediate: true,
+      async handler(user) {
+        if (user) {
+          await this.fetchRecommendations();
+        } else {
+          this.recommendedGames = [];
+        }
+      },
+    },
   },
 
   methods: {
-    metacriticClass(score) {
-      if (!score) return "mc-none";
-      if (score >= 75) return "mc-green";
-      if (score >= 50) return "mc-yellow";
-      return "mc-red";
-    },
-
-    // Deterministic fake price based on game id
-    gamePrice(game) {
-      if (game.itemType === "f2p") return 0;
-      const base = (game.id % 40) + 10;
-      return (base + 0.99).toFixed(2);
-    },
-
-    // Fake discount for some games (25% chance)
-    gameDiscount(game) {
-      if (game.itemType === "f2p") return 0;
-      const roll = game.id % 4;
-      if (roll === 0) return 40;
-      if (roll === 1) return 25;
-      return 0;
-    },
-
-    discountedPrice(game) {
-      const price = parseFloat(this.gamePrice(game));
-      const disc = this.gameDiscount(game);
-      if (!disc) return null;
-      return (price * (1 - disc / 100)).toFixed(2);
-    },
-
-    ratingStars(rating) {
-      // Returns array of 5: 'full' | 'half' | 'empty'
-      const stars = [];
-      const r = rating || 0;
-      for (let i = 1; i <= 5; i++) {
-        if (r >= i) stars.push("full");
-        else if (r >= i - 0.5) stars.push("half");
-        else stars.push("empty");
-      }
-      return stars;
-    },
-
-    ratingLabel(rating) {
-      if (!rating) return "";
-      if (rating >= 4.5) return "Overwhelmingly Positive";
-      if (rating >= 4.0) return "Very Positive";
-      if (rating >= 3.5) return "Mostly Positive";
-      if (rating >= 3.0) return "Mixed";
-      if (rating >= 2.0) return "Mostly Negative";
-      return "Negative";
-    },
-
     openTrailer(game, e) {
       e.preventDefault();
       e.stopPropagation();
@@ -235,7 +184,6 @@ export default {
     },
 
     trailerYoutubeId(game) {
-      // RAWG clip field sometimes has a YouTube id
       if (game.clip?.video) {
         const m = game.clip.video.match(
           /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=))([\w-]{11})/,
@@ -261,91 +209,13 @@ export default {
         this.$router.push("/login");
         return;
       }
-      const gameId = game.id;
-      if (this.wishlisted.has(String(gameId))) {
+      const gameId = String(game.id ?? game.gameId);
+      if (this.wishlistedIds.has(gameId)) {
         this.toast?.show("Already in your wishlist!", "info");
         return;
       }
-      try {
-        const snap = await getDocs(
-          query(
-            collection(db, "favorites"),
-            where("userId", "==", this.currentUser.uid),
-            where("gameId", "==", gameId),
-          ),
-        );
-        if (!snap.empty) {
-          this.wishlisted.add(String(gameId));
-          this.toast?.show("Already in your wishlist!", "info");
-          return;
-        }
-        await addDoc(collection(db, "favorites"), {
-          userId: this.currentUser.uid,
-          gameId,
-          title: game.name,
-          thumbnail: game.background_image,
-          genre: game.genres?.[0]?.name || "",
-          priority: "Interested",
-          addedAt: new Date().toISOString(),
-        });
-        this.wishlisted.add(String(gameId));
-        this.toast?.show(`♥ "${game.name}" added to wishlist`, "success");
-      } catch (err) {
-        console.error(err);
-        this.toast?.show("Failed to add to wishlist", "error");
-      }
-    },
-
-    async loadWishlist() {
-      if (!this.currentUser) return;
-      try {
-        const snap = await getDocs(
-          query(
-            collection(db, "favorites"),
-            where("userId", "==", this.currentUser.uid),
-          ),
-        );
-        snap.forEach((d) => this.wishlisted.add(String(d.data().gameId)));
-      } catch {
-        /* silent */
-      }
-    },
-
-    platformIcons(platforms) {
-      if (!platforms?.length) return [];
-      const icons = [];
-      const ids = platforms.map((p) => p.platform.id);
-      // PC = 4
-      if (ids.includes(4)) icons.push({ key: "pc", label: "PC" });
-      // PlayStation = 16,18,27,187,19 etc
-      if (platforms.some((p) => p.platform.slug?.includes("playstation")))
-        icons.push({ key: "ps", label: "PlayStation" });
-      // Xbox
-      if (platforms.some((p) => p.platform.slug?.includes("xbox")))
-        icons.push({ key: "xbox", label: "Xbox" });
-      // Nintendo
-      if (
-        platforms.some(
-          (p) =>
-            p.platform.slug?.includes("nintendo") ||
-            p.platform.slug?.includes("switch") ||
-            p.platform.slug?.includes("wii") ||
-            p.platform.slug?.includes("3ds") ||
-            p.platform.slug?.includes("nes") ||
-            p.platform.slug?.includes("snes"),
-        )
-      )
-        icons.push({ key: "nintendo", label: "Nintendo" });
-      // Mobile
-      if (
-        platforms.some(
-          (p) =>
-            p.platform.slug?.includes("ios") ||
-            p.platform.slug?.includes("android"),
-        )
-      )
-        icons.push({ key: "mobile", label: "Mobile" });
-      return icons;
+      const wishlistStore = useWishlistStore();
+      await wishlistStore.addToWishlist(game, this.toast);
     },
 
     selectPlatform(key) {
@@ -366,20 +236,14 @@ export default {
         const params = {
           page_size: 40,
           ordering: this.searchTerm ? "-rating" : "-metacritic",
-          // Exclude DLCs, editions, add-ons — only show main games
           exclude_additions: true,
-          // Minimum metacritic score to filter out obscure / unofficial games
           metacritic: "30,100",
-          // Must have at least 3 ratings
           ratings_count: 3,
         };
 
         if (this.searchTerm) params.search = this.searchTerm;
 
-        // Server-side platform filter using RAWG parent_platforms
-        const plat = this.platforms.find(
-          (p) => p.key === this.selectedPlatform,
-        );
+        const plat = this.platforms.find((p) => p.key === this.selectedPlatform);
         if (plat && plat.id !== null) {
           params.parent_platforms = plat.id;
         }
@@ -388,40 +252,19 @@ export default {
         if (plat && plat.key === "pc") ftgParams.platform = "pc";
         if (plat && plat.key === "mobile") ftgParams.platform = "browser";
 
-        // Server-side Genre filtering
         if (this.selectedGenre !== "All") {
-          // FreeToGame category mappings (lowercase, replace spaces)
-          ftgParams.category = this.selectedGenre
-            .toLowerCase()
-            .replace(" ", "-");
+          ftgParams.category = this.selectedGenre.toLowerCase().replace(" ", "-");
 
-          // RAWG genre mapping
           const rawgGenreMap = {
-            Shooter: "shooter",
-            Strategy: "strategy",
-            Racing: "racing",
-            Sports: "sports",
-            Action: "action",
-            RPG: "role-playing-games-rpg",
-            Adventure: "adventure",
-            Simulation: "simulation",
-            Puzzle: "puzzle",
-            Arcade: "arcade",
-            Platformer: "platformer",
-            Fighting: "fighting",
-            MMORPG: "massively-multiplayer",
-            Indie: "indie",
-            Casual: "casual",
-            Card: "card",
+            Shooter: "shooter", Strategy: "strategy", Racing: "racing",
+            Sports: "sports", Action: "action", RPG: "role-playing-games-rpg",
+            Adventure: "adventure", Simulation: "simulation", Puzzle: "puzzle",
+            Arcade: "arcade", Platformer: "platformer", Fighting: "fighting",
+            MMORPG: "massively-multiplayer", Indie: "indie", Casual: "casual", Card: "card",
           };
           const rawgTagMap = {
-            Anime: "anime",
-            "Battle Royale": "battle-royale",
-            MOBA: "moba",
-            Survival: "survival",
-            Fantasy: "fantasy",
-            "Sci-Fi": "sci-fi",
-            Horror: "horror",
+            Anime: "anime", "Battle Royale": "battle-royale", MOBA: "moba",
+            Survival: "survival", Fantasy: "fantasy", "Sci-Fi": "sci-fi", Horror: "horror",
           };
 
           if (rawgGenreMap[this.selectedGenre]) {
@@ -463,10 +306,9 @@ export default {
           );
         }
 
-        // Interleave them loosely
+        // Interleave: 2 premium for every 1 free
         let combined = [];
-        let rIdx = 0,
-          fIdx = 0;
+        let rIdx = 0, fIdx = 0;
         while (rIdx < rawgList.length || fIdx < ftgList.length) {
           if (rIdx < rawgList.length) combined.push(rawgList[rIdx++]);
           if (rIdx < rawgList.length) combined.push(rawgList[rIdx++]);
@@ -474,11 +316,10 @@ export default {
         }
 
         this.games = combined;
-        this.totalCount =
-          (rawgRes.data.count || 0) + (ftgRes.data?.results?.length || 0);
+        this.totalCount = (rawgRes.data.count || 0) + (ftgRes.data?.results?.length || 0);
       } catch (err) {
         console.error(err);
-        this.error = "Failed to load games. Please try again later.";
+        this.error = "Failed to load games. Please try again.";
       } finally {
         this.loading = false;
       }
@@ -488,11 +329,11 @@ export default {
       if (!this.currentUser) return;
       this.loadingRecommendations = true;
       try {
-        const res = await backendApi.get(`/games/recommendations`, {
-          params: { user_id: this.currentUser.uid }
+        const res = await backendApi.get("/games/recommendations", {
+          params: { user_id: this.currentUser.uid },
         });
-        if (res.data && res.data.results) {
-          this.recommendedGames = res.data.results.map(g => ({
+        if (res.data?.results) {
+          this.recommendedGames = res.data.results.map((g) => ({
             ...g,
             itemType: "rawg",
           }));
@@ -506,25 +347,15 @@ export default {
   },
 
   beforeUnmount() {
-    if (this.unsubscribe) {
-      this.unsubscribe();
-    }
+    clearTimeout(this.searchTimeout);
   },
 
   async mounted() {
-    this.unsubscribe = onAuthStateChanged(auth, async (user) => {
-      this.currentUser = user;
-      if (user) {
-        await this.loadWishlist();
-        await this.fetchRecommendations();
-      } else {
-        this.recommendedGames = [];
-      }
-    });
     await this.fetchGames();
   },
 };
 </script>
+
 
 <template>
   <div class="games-page">
@@ -716,12 +547,12 @@ export default {
                 </button>
                 <button
                   class="card-float-btn wishlist-btn"
-                  :class="{ wishlisted: wishlisted.has(String(game.id)) }"
+                  :class="{ wishlisted: wishlistedIds.has(String(game.id)) }"
                   @click="addToWishlist(game, $event)"
-                  :title="wishlisted.has(String(game.id)) ? 'In Wishlist' : 'Add to Wishlist'"
-                  :aria-label="wishlisted.has(String(game.id)) ? 'In Wishlist' : 'Add to Wishlist'"
+                  :title="wishlistedIds.has(String(game.id)) ? 'In Wishlist' : 'Add to Wishlist'"
+                  :aria-label="wishlistedIds.has(String(game.id)) ? 'In Wishlist' : 'Add to Wishlist'"
                 >
-                  {{ wishlisted.has(String(game.id)) ? "♥" : "♡" }}
+                  {{ wishlistedIds.has(String(game.id)) ? "♥" : "♡" }}
                 </button>
               </div>
 
@@ -833,20 +664,20 @@ export default {
               <!-- Wishlist button -->
               <button
                 class="card-float-btn wishlist-btn"
-                :class="{ wishlisted: wishlisted.has(String(game.id)) }"
+                :class="{ wishlisted: wishlistedIds.has(String(game.id)) }"
                 @click="addToWishlist(game, $event)"
                 :title="
-                  wishlisted.has(String(game.id))
+                  wishlistedIds.has(String(game.id))
                     ? 'In Wishlist'
                     : 'Add to Wishlist'
                 "
                 :aria-label="
-                  wishlisted.has(String(game.id))
+                  wishlistedIds.has(String(game.id))
                     ? 'In Wishlist'
                     : 'Add to Wishlist'
                 "
               >
-                {{ wishlisted.has(String(game.id)) ? "♥" : "♡" }}
+                {{ wishlistedIds.has(String(game.id)) ? "♥" : "♡" }}
               </button>
             </div>
 
@@ -1067,13 +898,13 @@ export default {
               </button>
               <button
                 class="glr-btn wishlist"
-                :class="{ active: wishlisted.has(String(game.id)) }"
+                :class="{ active: wishlistedIds.has(String(game.id)) }"
                 @click="addToWishlist(game, $event)"
                 :aria-label="
-                  wishlisted.has(String(game.id)) ? 'In Wishlist' : 'Wishlist'
+                  wishlistedIds.has(String(game.id)) ? 'In Wishlist' : 'Wishlist'
                 "
               >
-                {{ wishlisted.has(String(game.id)) ? "♥" : "♡" }}
+                {{ wishlistedIds.has(String(game.id)) ? "♥" : "♡" }}
               </button>
             </div>
           </div>

@@ -3,9 +3,10 @@ import { inject } from "vue";
 import { backendApi } from "../services/api";
 import { Sparkles, CalendarDays, Flame } from "@lucide/vue";
 import CryptoMarket from "../components/CryptoMarket.vue";
-import { auth, db } from "../firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
+import { mapState } from "pinia";
+import { useAuthStore } from "../stores/useAuthStore";
+import { useWishlistStore } from "../stores/useWishlistStore";
+import { metacriticClass, ratingStars, ratingLabel, formatDate } from "../composables/useGameUtils";
 
 const GENRES = [
   {
@@ -103,7 +104,8 @@ export default {
   },
   setup() {
     const toast = inject("toast");
-    return { toast };
+    // Expose shared utility functions to the template
+    return { toast, metacriticClass, ratingStars, ratingLabel, formatDate };
   },
 
   data() {
@@ -147,14 +149,16 @@ export default {
       isAutopaused: false,
 
       // Auth and Recommendations
-      currentUser: null,
       recommendedGames: [],
       loadingRecommendations: false,
-      wishlisted: new Set(),
     };
   },
 
   computed: {
+    // Auth & wishlist state from centralised stores
+    ...mapState(useAuthStore, ["currentUser"]),
+    ...mapState(useWishlistStore, ["wishlistedIds"]),
+
     currentGame() {
       return this.featuredGames[this.activeIndex] || null;
     },
@@ -214,16 +218,6 @@ export default {
   },
 
   async mounted() {
-    this.unsubscribe = onAuthStateChanged(auth, async (user) => {
-      this.currentUser = user;
-      if (user) {
-        await this.loadWishlist();
-        await this.fetchRecommendations();
-      } else {
-        this.recommendedGames = [];
-      }
-    });
-
     // Load featured carousel + new releases in parallel
     await Promise.allSettled([
       this.loadFeatured(),
@@ -231,6 +225,11 @@ export default {
       this.loadComingSoon(),
       this.loadHotDeals(),
     ]);
+
+    // Fetch recommendations if user is already authenticated
+    if (this.currentUser) {
+      await this.fetchRecommendations();
+    }
 
     // Setup stats intersection observer
     this.$nextTick(() => {
@@ -253,7 +252,6 @@ export default {
   beforeUnmount() {
     this.stopAutoplay();
     if (this.statsObserver) this.statsObserver.disconnect();
-    if (this.unsubscribe) this.unsubscribe();
   },
 
   methods: {
@@ -454,22 +452,7 @@ export default {
       }
     },
 
-    metacriticClass(score) {
-      if (!score) return "mc-grey";
-      const n = parseInt(score);
-      return n >= 75 ? "mc-green" : n >= 50 ? "mc-yellow" : "mc-red";
-    },
-    formatDate(value) {
-      if (!value) return "—";
-      const date = new Date(value);
-      if (Number.isNaN(date.getTime())) return value;
-      return new Intl.DateTimeFormat("en", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }).format(date);
-    },
-
+    // Note: metacriticClass is imported from useGameUtils and exposed via setup()
     setTab(tabName) {
       this.activeTab = tabName;
       this.hoveredGame = null;
@@ -498,61 +481,27 @@ export default {
       }
     },
 
-    async loadWishlist() {
-      if (!this.currentUser) return;
-      try {
-        const snap = await getDocs(
-          query(
-            collection(db, "favorites"),
-            where("userId", "==", this.currentUser.uid),
-          ),
-        );
-        snap.forEach((d) => this.wishlisted.add(String(d.data().gameId)));
-      } catch {
-        /* silent */
+    async addToWishlist(game, e) {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      if (!this.currentUser) {
+        this.toast?.show("Please log in to add to wishlist", "warning");
+        this.$router.push("/login");
+        return;
       }
+      const gameId = String(game.id ?? game.gameId);
+      if (this.wishlistedIds.has(gameId)) {
+        this.toast?.show("Already in your wishlist!", "info");
+        return;
+      }
+      const wishlistStore = useWishlistStore();
+      await wishlistStore.addToWishlist(game, this.toast);
     },
 
-    // Used for Recommended Games styling
-    gamePrice(game) {
-      if (game.itemType === "f2p") return 0;
-      const base = (game.id % 40) + 10;
-      return (base + 0.99).toFixed(2);
-    },
-    gameDiscount(game) {
-      if (game.itemType === "f2p") return 0;
-      const roll = game.id % 4;
-      if (roll === 0) return 40;
-      if (roll === 1) return 25;
-      return 0;
-    },
-    discountedPrice(game) {
-      const price = parseFloat(this.gamePrice(game));
-      const disc = this.gameDiscount(game);
-      if (!disc) return null;
-      return (price * (1 - disc / 100)).toFixed(2);
-    },
-    ratingStars(rating) {
-      const stars = [];
-      const r = rating || 0;
-      for (let i = 1; i <= 5; i++) {
-        if (r >= i) stars.push("full");
-        else if (r >= i - 0.5) stars.push("half");
-        else stars.push("empty");
-      }
-      return stars;
-    },
-    ratingLabel(rating) {
-      if (!rating) return "";
-      if (rating >= 4.5) return "Overwhelmingly Positive";
-      if (rating >= 4.0) return "Very Positive";
-      if (rating >= 3.5) return "Mostly Positive";
-      if (rating >= 3.0) return "Mixed";
-      if (rating >= 2.0) return "Mostly Negative";
-      return "Negative";
-    },
+    // Note: ratingStars, ratingLabel, metacriticClass, formatDate are imported
+    // from useGameUtils and exposed via setup() — no local definitions needed.
   },
 };
+
 </script>
 
 <template>
@@ -1084,6 +1033,7 @@ export default {
                   v-for="n in 5"
                   :key="n"
                   class="skeleton steam-tab-item-skeleton"
+                ></div>
               </template>
               <template v-else-if="activeTabGames.length === 0">
                 <div style="padding: 60px 20px; text-align: center; color: var(--text-muted); background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px dashed var(--border-glass);">

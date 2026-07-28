@@ -10,8 +10,11 @@ import logging
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query, status
+from typing import List
 
 from app.services import cheapshark_service
+from app.schemas.game import Deal, Store
+from app.schemas.common import PaginatedResponse
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -19,6 +22,7 @@ router = APIRouter()
 
 @router.get(
     "/deals",
+    response_model=PaginatedResponse[Deal],
     summary="Game deals",
     description=(
         "Returns a list of game deals from CheapShark. "
@@ -76,6 +80,7 @@ async def get_deals(
 
 @router.get(
     "/deals/stores",
+    response_model=List[Store],
     summary="List deal stores",
     description="Returns the list of all supported stores from CheapShark. Cached for 1 hour.",
 )

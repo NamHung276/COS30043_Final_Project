@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { auth, db } from "../firebase";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { auth } from "../firebase";
+import { signOut } from "firebase/auth";
+import { useAuthStore } from "../stores/useAuthStore";
 import Home from "../views/Home.vue";
 import About from "../views/About.vue";
 import Games from "../views/Games.vue";
@@ -160,43 +160,27 @@ const router = createRouter({
   routes,
 });
 
-// Helper — waits for Firebase to confirm the current auth state
-// (onAuthStateChanged fires once immediately with the current user, then again on changes)
-function getCurrentUser() {
-  return new Promise((resolve) => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      unsubscribe();
-      resolve(user);
-    });
-  });
-}
-
 // Route guard — redirect if not authenticated or not admin
 router.beforeEach(async (to, from) => {
   if (to.meta.requiresAuth) {
-    const user = await getCurrentUser();
-    if (!user) {
+    const authStore = useAuthStore();
+    await authStore.waitForReady();
+
+    if (!authStore.isAuthenticated) {
       return "/login";
     }
 
-    try {
-      const snap = await getDoc(doc(db, "users", user.uid));
-      
-      // Check if user is banned
-      if (snap.exists() && snap.data().status === "Banned") {
-        await signOut(auth);
-        return "/login?banned=true";
-      }
+    // Check if user is banned
+    if (authStore.isBanned) {
+      await signOut(auth);
+      return "/login?banned=true";
+    }
 
-      // Extra check: admin-only routes
-      if (to.meta.requiresAdmin) {
-        const role = snap.exists() ? snap.data().role : "user";
-        if (role !== "admin") {
-          return "/"; // redirect non-admins to home
-        }
+    // Extra check: admin-only routes
+    if (to.meta.requiresAdmin) {
+      if (authStore.userRole !== "admin") {
+        return "/"; // redirect non-admins to home
       }
-    } catch {
-      return "/";
     }
   }
   return true;

@@ -15,13 +15,22 @@ class PaginatedResponse(BaseModel, Generic[DataT]):
     count: int = Field(description="Total number of items across all pages")
     page: int = Field(description="Current page number (1-indexed)")
     page_size: int = Field(description="Number of items per page")
-    total_pages: int = Field(description="Total number of pages")
+    total_pages: Optional[int] = Field(default=0, description="Total number of pages")
     next_page: Optional[int] = Field(
         default=None, description="Next page number, or null"
     )
     previous_page: Optional[int] = Field(
         default=None, description="Previous page number, or null"
     )
+
+
+class RAWGPaginatedResponse(BaseModel, Generic[DataT]):
+    """RAWG API native pagination format."""
+    
+    count: int = Field(description="Total number of items")
+    next: Optional[str] = Field(default=None, description="Next page URL")
+    previous: Optional[str] = Field(default=None, description="Previous page URL")
+    results: List[DataT] = Field(description="List of items on the current page")
 
 
 class ErrorResponse(BaseModel):

@@ -84,10 +84,10 @@ class GameSummary(BaseModel):
     metacritic: Optional[int] = None
     rating: Optional[float] = None
     ratings_count: Optional[int] = None
-    genres: List[Genre] = []
-    platforms: List[Dict[str, Any]] = []
-    tags: List[Dict[str, Any]] = []
-    short_screenshots: List[Dict[str, Any]] = []
+    genres: Optional[List[Genre]] = []
+    platforms: Optional[List[Dict[str, Any]]] = []
+    tags: Optional[List[Dict[str, Any]]] = []
+    short_screenshots: Optional[List[Dict[str, Any]]] = []
 
 
 class GameDetail(BaseModel):
@@ -113,19 +113,19 @@ class GameDetail(BaseModel):
     playtime: Optional[int] = None
     website: Optional[str] = None
 
-    genres: List[Genre] = []
-    platforms: List[Dict[str, Any]] = []
-    developers: List[Developer] = []
-    publishers: List[Publisher] = []
-    stores: List[Dict[str, Any]] = []
-    tags: List[Dict[str, Any]] = []
+    genres: Optional[List[Genre]] = []
+    platforms: Optional[List[Dict[str, Any]]] = []
+    developers: Optional[List[Developer]] = []
+    publishers: Optional[List[Publisher]] = []
+    stores: Optional[List[Dict[str, Any]]] = []
+    tags: Optional[List[Dict[str, Any]]] = []
 
     # ── Aggregated Media ─────────────────────────────────────────────────────────
     screenshots: List[Screenshot] = []
     trailers: List[Trailer] = []
 
     # ── CheapShark Deals ─────────────────────────────────────────────────────────
-    deals: List[Deal] = []
+    deals: Optional[List[Dict[str, Any]]] = []
     cheapest_deal_price: Optional[str] = None
     cheapest_deal_store: Optional[str] = None
 

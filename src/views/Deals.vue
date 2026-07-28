@@ -2,38 +2,17 @@
 import { backendApi } from "../services/api";
 import SkeletonCard from "../components/SkeletonCard.vue";
 import { inject } from "vue";
-import { auth, db } from "../firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
+import { mapState } from "pinia";
+import { useAuthStore } from "../stores/useAuthStore";
+import { useWishlistStore } from "../stores/useWishlistStore";
+import { STORE_NAMES, storeName, metacriticClass, ratingStars } from "../composables/useGameUtils";
 
-const STORE_NAMES = {
-  1: "Steam",
-  2: "GamersGate",
-  3: "GreenManGaming",
-  7: "GOG",
-  8: "Origin",
-  11: "Humble Store",
-  13: "Uplay",
-  15: "Fanatical",
-  21: "WinGameStore",
-  23: "GameBillet",
-  24: "Voidu",
-  25: "Epic Games",
-  27: "Games Planet",
-  28: "Games Tradera",
-  29: "Games Republic",
-  30: "Silagrastore",
-  31: "Allyouplay",
-  32: "DLGamer",
-  33: "Noctre",
-  34: "DreamGame",
-};
 
 export default {
   components: { SkeletonCard },
   setup() {
     const toast = inject("toast");
-    return { toast };
+    return { toast, storeName, metacriticClass, ratingStars };
   },
 
   data() {
@@ -46,18 +25,18 @@ export default {
       maxPrice: 20,
       minSavings: 0,
       selectedStore: "",
-      searchTerm: "",
-      searchTerm: "",
+      searchTerm: "", // fixed: was declared twice (bug)
       currentPage: 1,
       itemsPerPage: 12,
       stores: Object.entries(STORE_NAMES).map(([id, name]) => ({ id, name })),
-      // Auth / Wishlist
-      currentUser: null,
-      wishlisted: new Set(),
     };
   },
 
   computed: {
+    // Auth & wishlist state from centralised stores
+    ...mapState(useAuthStore, ["currentUser"]),
+    ...mapState(useWishlistStore, ["wishlistedIds"]),
+
     filteredDeals() {
       const term = this.searchTerm.toLowerCase();
       return this.deals.filter((deal) => {
@@ -106,9 +85,6 @@ export default {
   },
 
   methods: {
-    storeName(storeID) {
-      return STORE_NAMES[storeID] || `Store #${storeID}`;
-    },
     savingsInt(savings) {
       return Math.round(parseFloat(savings));
     },
@@ -118,17 +94,8 @@ export default {
       if (n >= 60) return "rating-mixed";
       return "rating-negative";
     },
-    ratingStars(pct) {
-      const p = parseInt(pct) || 0;
-      const stars = [];
-      const rating = p / 20; // 100% = 5 stars
-      for (let i = 1; i <= 5; i++) {
-        if (rating >= i) stars.push("full");
-        else if (rating >= i - 0.5) stars.push("half");
-        else stars.push("empty");
-      }
-      return stars;
-    },
+    // Note: ratingStars, storeName, metacriticClass are imported from useGameUtils
+    // and exposed via setup() — no need to define them locally.
     dealUrl(dealID) {
       return `https://www.cheapshark.com/redirect?dealID=${dealID}`;
     },
@@ -140,50 +107,23 @@ export default {
         this.$router.push("/login");
         return;
       }
-      // Deal items use deal.gameID instead of RAWG id
       const id = String(deal.gameID || deal.dealID);
-      if (this.wishlisted.has(id)) {
+      if (this.wishlistedIds.has(id)) {
         this.toast?.show("Already in wishlist!", "info");
         return;
       }
-      try {
-        const snap = await getDocs(
-          query(
-            collection(db, "favorites"),
-            where("userId", "==", this.currentUser.uid),
-            where("gameId", "==", deal.gameID),
-          ),
-        );
-        if (!snap.empty) {
-          this.wishlisted.add(id);
-          return;
-        }
-        await addDoc(collection(db, "favorites"), {
-          userId: this.currentUser.uid,
-          gameId: deal.gameID,
-          title: deal.title,
-          thumbnail: deal.thumb,
+      // Map CheapShark deal to a game-like object for the store
+      const wishlistStore = useWishlistStore();
+      await wishlistStore.addToWishlist(
+        {
+          id: deal.gameID || deal.dealID,
+          name: deal.title,
+          background_image: deal.thumb,
           genre: "Deal",
-          priority: "Interested",
-          addedAt: new Date().toISOString(),
-        });
-        this.wishlisted.add(id);
-        this.toast?.show(`♥ "${deal.title}" added to wishlist`, "success");
-      } catch {
-        this.toast?.show("Failed to add to wishlist", "error");
-      }
-    },
-    async loadWishlist() {
-      if (!this.currentUser) return;
-      try {
-        const snap = await getDocs(
-          query(
-            collection(db, "favorites"),
-            where("userId", "==", this.currentUser.uid),
-          ),
-        );
-        snap.forEach((d) => this.wishlisted.add(String(d.data().gameId)));
-      } catch {}
+          source: "rawg",
+        },
+        this.toast,
+      );
     },
     goToPage(page) {
       if (page >= 1 && page <= this.computedTotalPages) {
@@ -215,17 +155,7 @@ export default {
     },
   },
 
-  beforeUnmount() {
-    if (this.unsubscribe) {
-      this.unsubscribe();
-    }
-  },
-
   async mounted() {
-    this.unsubscribe = onAuthStateChanged(auth, async (user) => {
-      this.currentUser = user;
-      if (user) await this.loadWishlist();
-    });
     await this.fetchDeals();
   },
 };
@@ -504,24 +434,24 @@ export default {
               <button
                 class="card-float-btn wishlist-btn"
                 :class="{
-                  wishlisted: wishlisted.has(
+                  wishlisted: wishlistedIds.has(
                     String(deal.gameID || deal.dealID),
                   ),
                 }"
                 @click.prevent="addToWishlist(deal, $event)"
                 :title="
-                  wishlisted.has(String(deal.gameID || deal.dealID))
+                  wishlistedIds.has(String(deal.gameID || deal.dealID))
                     ? 'In Wishlist'
                     : 'Add to Wishlist'
                 "
                 :aria-label="
-                  wishlisted.has(String(deal.gameID || deal.dealID))
+                  wishlistedIds.has(String(deal.gameID || deal.dealID))
                     ? 'In Wishlist'
                     : 'Add to Wishlist'
                 "
               >
                 {{
-                  wishlisted.has(String(deal.gameID || deal.dealID)) ? "♥" : "♡"
+                  wishlistedIds.has(String(deal.gameID || deal.dealID)) ? "♥" : "♡"
                 }}
               </button>
             </div>
@@ -663,17 +593,17 @@ export default {
               <button
                 class="glr-btn wishlist"
                 :class="{
-                  active: wishlisted.has(String(deal.gameID || deal.dealID)),
+                  active: wishlistedIds.has(String(deal.gameID || deal.dealID)),
                 }"
                 @click="addToWishlist(deal, $event)"
                 :aria-label="
-                  wishlisted.has(String(deal.gameID || deal.dealID))
+                  wishlistedIds.has(String(deal.gameID || deal.dealID))
                     ? 'In Wishlist'
                     : 'Wishlist'
                 "
               >
                 {{
-                  wishlisted.has(String(deal.gameID || deal.dealID)) ? "♥" : "♡"
+                  wishlistedIds.has(String(deal.gameID || deal.dealID)) ? "♥" : "♡"
                 }}
               </button>
             </div>

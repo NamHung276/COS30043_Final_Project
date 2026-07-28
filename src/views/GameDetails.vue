@@ -9,36 +9,19 @@ import ReviewSection from "../components/ReviewSection.vue";
 import TrailerModal from "../components/TrailerModal.vue";
 import { cartState } from "../services/cart";
 import { getGameState } from "../services/gameState";
+import { mapState } from "pinia";
+import { useAuthStore } from "../stores/useAuthStore";
+import { useWishlistStore } from "../stores/useWishlistStore";
+import { STORE_NAMES, storeName, metacriticClass, formatDate, platformIcon } from "../composables/useGameUtils";
 
-const STORE_NAMES = {
-  1: "Steam",
-  2: "GamersGate",
-  3: "GreenManGaming",
-  7: "GOG",
-  8: "Origin",
-  11: "Humble Store",
-  13: "Uplay",
-  15: "Fanatical",
-  21: "WinGameStore",
-  23: "GameBillet",
-  24: "Voidu",
-  25: "Epic Games",
-  27: "Games Planet",
-  28: "Games Tradera",
-  29: "Games Republic",
-  30: "Silagrastore",
-  31: "Allyouplay",
-  32: "DLGamer",
-  33: "Noctre",
-  34: "DreamGame",
-};
+// STORE_NAMES is now imported from useGameUtils — single source of truth.
 
 export default {
   components: { ReviewSection, TrailerModal },
 
   setup() {
     const toast = inject("toast");
-    return { toast };
+    return { toast, storeName, metacriticClass, formatDate, platformIcon };
   },
 
   data() {
@@ -48,7 +31,6 @@ export default {
       trailers: [],
       similarGames: [],
       loading: true,
-      currentUser: null,
       activeShot: 0,
       lightboxSrc: null,
       lightboxIndex: 0,
@@ -57,15 +39,17 @@ export default {
       recentGames: [],
       carouselInterval: null,
       showFullDescription: false,
-      // Trailer modal
       showTrailerModal: false,
-      // CheapShark deals
       deals: [],
       dealsLoading: false,
     };
   },
 
   computed: {
+    // Auth & wishlist state from centralised stores
+    ...mapState(useAuthStore, ["currentUser"]),
+    ...mapState(useWishlistStore, ["wishlistedIds"]),
+
     metacriticClass() {
       const s = this.game?.metacritic;
       if (!s) return "mc-grey";
@@ -282,27 +266,25 @@ export default {
     },
 
     platformIcon(name) {
-      const n = name.toLowerCase();
-      if (n.includes("pc") || n.includes("windows")) return "/game_logo/pc.svg";
-      if (n.includes("playstation")) return "/game_logo/playstation_logo.png";
-      if (n.includes("xbox")) return "/game_logo/xbox_logo.png";
-      if (n.includes("nintendo") || n.includes("switch"))
-        return "/game_logo/nintendo_logo.png";
-      if (n.includes("mac")) return "/game_logo/macos.png";
-      if (n.includes("linux")) return "/game_logo/linux.png";
-      if (n.includes("android") || n.includes("ios") || n.includes("mobile"))
-        return "/game_logo/mobile.svg";
-      return "/logo/gamepad.svg";
+      const n = (name || '').toLowerCase();
+      if (n.includes('pc') || n.includes('windows')) return '/game_logo/pc.svg';
+      if (n.includes('playstation')) return '/game_logo/playstation_logo.png';
+      if (n.includes('xbox')) return '/game_logo/xbox_logo.png';
+      if (n.includes('nintendo') || n.includes('switch')) return '/game_logo/nintendo_logo.png';
+      if (n.includes('mac')) return '/game_logo/macos.png';
+      if (n.includes('linux')) return '/game_logo/linux.png';
+      if (n.includes('android') || n.includes('ios') || n.includes('mobile')) return '/game_logo/mobile.svg';
+      return '/logo/gamepad.svg';
     },
 
     formatDate(value) {
-      if (!value) return "—";
+      if (!value) return '—';
       const date = new Date(value);
       if (Number.isNaN(date.getTime())) return value;
-      return new Intl.DateTimeFormat("en", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
+      return new Intl.DateTimeFormat('en', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
       }).format(date);
     },
 
@@ -320,29 +302,17 @@ export default {
         setTimeout(() => this.$router.push("/login"), 1500);
         return;
       }
-      try {
-        const snap = await getDocs(
-          query(
-            collection(db, "favorites"),
-            where("userId", "==", this.currentUser.uid),
-            where("gameId", "==", this.game.id),
-          ),
-        );
-        if (!snap.empty) {
-          this.showFavStatus("⚠️ Already in your wishlist!", "warning");
-          return;
-        }
-        await addDoc(collection(db, "favorites"), {
-          userId: this.currentUser.uid,
-          gameId: this.game.id,
-          title: this.game.name,
-          thumbnail: this.game.background_image,
-          genre: this.game.genres?.[0]?.name || "",
-        });
+      const gameId = String(this.game.id);
+      if (this.wishlistedIds.has(gameId)) {
+        this.showFavStatus("Already in your wishlist!", "warning");
+        return;
+      }
+      const wishlistStore = useWishlistStore();
+      const added = await wishlistStore.addToWishlist(this.game, null);
+      if (added) {
         this.showFavStatus("Added to wishlist!", "success");
-      } catch (err) {
-        console.error(err);
-        this.showFavStatus("Something went wrong. Please try again.", "error");
+      } else {
+        this.showFavStatus("Already in your wishlist!", "warning");
       }
     },
 
@@ -499,17 +469,10 @@ export default {
   },
 
   mounted() {
-    this.unsubscribe = onAuthStateChanged(auth, (user) => {
-      this.currentUser = user;
-      if (user && this.game) {
-        trackUserActivity("view", this.game);
-      }
-    });
     document.addEventListener("keydown", this.onLightboxKey);
   },
 
   beforeUnmount() {
-    if (this.unsubscribe) this.unsubscribe();
     this.stopCarousel();
     document.removeEventListener("keydown", this.onLightboxKey);
   },

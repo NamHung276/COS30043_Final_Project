@@ -1,6 +1,10 @@
 <script>
 import { backendApi } from "../services/api";
 import SkeletonCard from "../components/SkeletonCard.vue";
+import { inject } from "vue";
+import { mapState } from "pinia";
+import { useAuthStore } from "../stores/useAuthStore";
+import { useWishlistStore } from "../stores/useWishlistStore";
 
 const ALL_CATEGORIES = [
   "mmorpg",
@@ -52,7 +56,10 @@ const ALL_CATEGORIES = [
 
 export default {
   components: { SkeletonCard },
-  inject: ["toast"],
+  setup() {
+    const toast = inject("toast");
+    return { toast };
+  },
 
   data() {
     return {
@@ -69,11 +76,14 @@ export default {
       currentPage: 1,
       itemsPerPage: 12,
       allCategories: ALL_CATEGORIES,
-      wishlisted: new Set(),
     };
   },
 
   computed: {
+    // Auth & wishlist state from centralised stores
+    ...mapState(useAuthStore, ["currentUser"]),
+    ...mapState(useWishlistStore, ["wishlistedIds"]),
+
     filteredGames() {
       const term = this.searchTerm.toLowerCase().trim();
       if (!term) return this.games;
@@ -151,38 +161,21 @@ export default {
       return "PC (Windows)";
     },
 
-    ftgRating(game) {
-      // Mock rating based on ID for consistency since FTG API doesn't have ratings
-      return (game.id % 20) / 10 + 3;
-    },
-
-    ratingStars(rating) {
-      const stars = [];
-      for (let i = 1; i <= 5; i++) {
-        if (rating >= i) stars.push("full");
-        else if (rating >= i - 0.5) stars.push("half");
-        else stars.push("empty");
+    async addToWishlist(game, event) {
+      event.stopPropagation();
+      if (!this.currentUser) {
+        this.toast?.show("Please log in to add to wishlist", "warning");
+        this.$router.push("/login");
+        return;
       }
-      return stars;
-    },
-
-    ratingLabel(rating) {
-      if (rating >= 4.5) return "Overwhelmingly Positive";
-      if (rating >= 4.0) return "Very Positive";
-      if (rating >= 3.0) return "Mostly Positive";
-      return "Mixed";
-    },
-
-    addToWishlist(game, event) {
       const gameId = String(game.id);
-      if (this.wishlisted.has(gameId)) {
-        this.wishlisted.delete(gameId);
-        this.toast?.show(`${game.title} removed from wishlist`, "info");
-      } else {
-        this.wishlisted.add(gameId);
-        this.toast?.show(`${game.title} added to wishlist!`, "success");
+      if (this.wishlistedIds.has(gameId)) {
+        this.toast?.show("Already in your wishlist!", "info");
+        return;
       }
-      this.wishlisted = new Set(this.wishlisted); // trigger reactivity
+      // Pass itemType so the store sets source: 'freetogame' correctly
+      const wishlistStore = useWishlistStore();
+      await wishlistStore.addToWishlist({ ...game, itemType: "f2p" }, this.toast);
     },
 
     goToPage(page) {
@@ -233,7 +226,6 @@ export default {
   },
 
   mounted() {
-    // Pick up ?category= from the URL if coming from a genre tile
     const queryCat = this.$route.query.category;
     if (queryCat && typeof queryCat === "string") {
       this.category = queryCat;
@@ -537,20 +529,20 @@ export default {
               <!-- Wishlist button -->
               <button
                 class="card-float-btn wishlist-btn"
-                :class="{ wishlisted: wishlisted.has(String(game.id)) }"
+                :class="{ wishlisted: wishlistedIds.has(String(game.id)) }"
                 @click.prevent="addToWishlist(game, $event)"
                 :title="
-                  wishlisted.has(String(game.id))
+                  wishlistedIds.has(String(game.id))
                     ? 'In Wishlist'
                     : 'Add to Wishlist'
                 "
                 :aria-label="
-                  wishlisted.has(String(game.id))
+                  wishlistedIds.has(String(game.id))
                     ? 'In Wishlist'
                     : 'Add to Wishlist'
                 "
               >
-                {{ wishlisted.has(String(game.id)) ? "♥" : "♡" }}
+                {{ wishlistedIds.has(String(game.id)) ? "♥" : "♡" }}
               </button>
             </div>
 

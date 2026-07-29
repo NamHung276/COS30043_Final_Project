@@ -1065,17 +1065,14 @@ export default {
                         v-for="(genre, i) in (game.genres || []).slice(0, 3)"
                         :key="i"
                         class="steam-tab-tag"
-                        >{{ genre.name }}</span
-                      >
+                        >{{ genre.name }}</span>
                     </div>
                   </div>
                   <div class="steam-tab-item-meta d-none d-sm-flex">
                     <span v-if="game.itemType === 'f2p'" class="steam-tab-free"
-                      >Free to Play</span
-                    >
+                      >Free to Play</span>
                     <span v-else-if="game.price" class="steam-tab-price"
-                      >${{ game.price }}</span
-                    >
+                      >${{ game.price }}</span>
                   </div>
                 </router-link>
               </template>
@@ -1094,11 +1091,9 @@ export default {
                   <span
                     class="preview-mc"
                     :class="metacriticClass(hoveredGame.metacritic)"
-                    >{{ hoveredGame.metacritic }}</span
-                  >
+                    >{{ hoveredGame.metacritic }}</span>
                   <span style="color: var(--text-secondary); font-size: 0.75rem"
-                    >Metacritic</span
-                  >
+                    >Metacritic</span>
                 </div>
                 <div class="steam-preview-screenshots">
                   <img
@@ -1115,8 +1110,7 @@ export default {
                       )"
                       :key="i"
                       class="steam-tab-tag"
-                      >{{ genre.name }}</span
-                    >
+                      >{{ genre.name }}</span>
                   </div>
                 </div>
               </div>
@@ -1378,8 +1372,7 @@ export default {
           <div class="col-md-4">
             <div class="feature-card fc-violet">
               <span class="feature-card-icon"
-                ><i class="bi bi-joystick"></i
-              ></span>
+                ><i class="bi bi-joystick"></i></span>
               <h5>Massive Library</h5>
               <p>
                 Discover 500,000+ titles from RAWG's database plus 400+
@@ -1390,8 +1383,7 @@ export default {
           <div class="col-md-4">
             <div class="feature-card fc-cyan">
               <span class="feature-card-icon"
-                ><i class="bi bi-broadcast"></i
-              ></span>
+                ><i class="bi bi-broadcast"></i></span>
               <h5>Live Gaming News</h5>
               <p>
                 Stay ahead with real-time gaming news from NewsAPI alongside our
@@ -1422,8 +1414,7 @@ export default {
               "
             >
               <span class="feature-card-icon"
-                ><i class="bi bi-bookmark-heart"></i
-              ></span>
+                ><i class="bi bi-bookmark-heart"></i></span>
               <h5>Personal Collection</h5>
               <p>
                 Save any game to your wishlist. Your collection is synced to the
@@ -1444,8 +1435,7 @@ export default {
               "
             >
               <span class="feature-card-icon"
-                ><i class="bi bi-pencil-square"></i
-              ></span>
+                ><i class="bi bi-pencil-square"></i></span>
               <h5>Write Reviews</h5>
               <p>
                 Share your thoughts. Leave star-rated reviews on any game and

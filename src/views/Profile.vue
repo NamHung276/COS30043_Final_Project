@@ -181,10 +181,7 @@ export default {
         // Fetch individually to prevent one failing collection (e.g., missing permissions) from breaking everything
         try {
           const reviewsSnap = await getDocs(reviewsQuery);
-          this.reviews = reviewsSnap.docs.map((d) => ({
-            id: d.id,
-            ...d.data(),
-          }));
+          this.reviews = reviewsSnap.docs.map((d) => ({ id: d.id, ...d.data() })).filter(item => item.status !== "deleted");
         } catch (e) {
           console.warn("Failed to fetch reviews", e);
         }
@@ -201,7 +198,7 @@ export default {
 
         try {
           const postsSnap = await getDocs(postsQuery);
-          this.posts = postsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          this.posts = postsSnap.docs.map((d) => ({ id: d.id, ...d.data() })).filter(item => item.status !== "deleted");
         } catch (e) {
           console.warn("Failed to fetch posts", e);
         }

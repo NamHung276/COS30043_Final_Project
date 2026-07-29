@@ -24,7 +24,7 @@ export async function trackUserActivity(action, gameData) {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    // Fail silently - analytics shouldn't break the app
-    console.error("Failed to track activity:", error);
+    // Fail silently - analytics shouldn't break the app or pollute the console
+    // console.debug("Analytics tracking failed or permissions insufficient.");
   }
 }

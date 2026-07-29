@@ -119,7 +119,7 @@ export default {
             where("category", "==", this.article.category)
           );
           const snap = await getDocs(q);
-          const related = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          const related = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(item => item.status !== "deleted");
           
           this.relatedArticles = related
             .filter(item => String(item.id) !== String(articleId))

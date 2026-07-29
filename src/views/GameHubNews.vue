@@ -159,7 +159,7 @@ export default {
       // 2. Load all unified news (this should succeed for all users to read)
       try {
         const allSnap = await getDocs(collection(db, "news"));
-        this.allNews = allSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        this.allNews = allSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(item => item.status !== "deleted");
       } catch (error) {
         console.error("Error loading news:", error);
       } finally {

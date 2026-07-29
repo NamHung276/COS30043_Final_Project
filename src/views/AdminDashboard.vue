@@ -52,6 +52,7 @@ export default {
       // Loading states
       loadingUsers: true,
       loadingPosts: true,
+      isSubmitting: false,
 
       // Confirmation modals
       confirmDelete: null,
@@ -187,17 +188,11 @@ export default {
 
         const fetchedUsers = await Promise.all(snap.docs.map(async (d) => {
           const data = d.data();
-          const articlesQuery = query(collection(db, "news"), where("userId", "==", d.id));
-          const articlesCountSnap = await getCountFromServer(articlesQuery);
-          
-          const reviewsQuery = query(collection(db, "reviews"), where("userId", "==", d.id));
-          const reviewsCountSnap = await getCountFromServer(reviewsQuery);
-
           return {
             uid: d.id,
             ...data,
-            mockArticles: articlesCountSnap.data().count,
-            mockReviews: reviewsCountSnap.data().count,
+            articleCount: "—",
+            reviewCount: "—",
             mockStatus: data.status || "Active"
           };
         }));
@@ -256,9 +251,10 @@ export default {
     },
 
     async confirmDeletePost() {
-      if (!this.confirmDelete) return;
+      if (!this.confirmDelete || this.isSubmitting) return;
+      this.isSubmitting = true;
       try {
-        await deleteDoc(doc(db, "news", this.confirmDelete.id));
+        await updateDoc(doc(db, "news", this.confirmDelete.id), { status: "deleted" });
         this.posts = this.posts.filter((p) => p.id !== this.confirmDelete.id);
         this.toast.show("News post removed from community.", "success");
         
@@ -276,6 +272,7 @@ export default {
         this.toast.show("Failed to remove post.", "error");
       } finally {
         this.confirmDelete = null;
+        this.isSubmitting = false;
       }
     },
 
@@ -288,7 +285,8 @@ export default {
     },
 
     async confirmChangeRole() {
-      if (!this.confirmRole) return;
+      if (!this.confirmRole || this.isSubmitting) return;
+      this.isSubmitting = true;
       try {
         await updateDoc(doc(db, "users", this.confirmRole.uid), {
           role: this.confirmRole.newRole,
@@ -310,6 +308,7 @@ export default {
         this.toast.show("Failed to update role.", "error");
       } finally {
         this.confirmRole = null;
+        this.isSubmitting = false;
       }
     },
 
@@ -322,7 +321,8 @@ export default {
     },
 
     async confirmBanAction() {
-      if (!this.confirmBan) return;
+      if (!this.confirmBan || this.isSubmitting) return;
+      this.isSubmitting = true;
       try {
         const newStatus = this.confirmBan.isBanned ? 'Active' : 'Banned';
         await updateDoc(doc(db, "users", this.confirmBan.uid), {
@@ -346,6 +346,7 @@ export default {
         this.toast.show("Failed to update user status.", "error");
       } finally {
         this.confirmBan = null;
+        this.isSubmitting = false;
       }
     },
 
@@ -356,13 +357,28 @@ export default {
     async reportAction(id, actionStr, target) {
       try {
         const report = this.reportedItems.find(r => r.id === id);
-        if (actionStr === "Delete" && report) {
+        if (!report) return;
+
+        if (actionStr === "View") {
           if (report.type === "Article") {
-            await deleteDoc(doc(db, "news", report.targetId));
+            this.$router.push(`/gamehub-news/${report.targetId}`);
           } else if (report.type === "Review") {
-            await deleteDoc(doc(db, "reviews", report.targetId));
+            this.$router.push(`/games/${report.gameId}`);
+          } else {
+            this.toast.show("Cannot view this type of content directly.", "info");
+          }
+          return; // Do not delete the report
+        }
+
+        if (actionStr === "Delete") {
+          if (report.type === "Article") {
+            await updateDoc(doc(db, "news", report.targetId), { status: "deleted" });
+          } else if (report.type === "Review") {
+            await updateDoc(doc(db, "reviews", report.targetId), { status: "deleted" });
           }
         }
+        
+        // Both Dismiss and Delete will remove the report itself
         await deleteDoc(doc(db, "reports", id));
         this.reportedItems = this.reportedItems.filter(r => r.id !== id);
         
@@ -761,8 +777,8 @@ export default {
                       </div>
                     </td>
                     <td class="muted-col">{{ u.email }}</td>
-                    <td class="muted-col">{{ u.mockArticles }}</td>
-                    <td class="muted-col">{{ u.mockReviews }}</td>
+                    <td class="muted-col">{{ u.articleCount }}</td>
+                    <td class="muted-col">{{ u.reviewCount }}</td>
                     <td>
                       <span class="gh-badge" :class="u.mockStatus === 'Active' ? 'badge-neutral' : 'badge-danger'">
                         <i v-if="u.mockStatus === 'Active'" class="bi bi-circle-fill text-success" style="font-size: 0.5rem; vertical-align: middle; margin-right: 4px;"></i>
@@ -837,7 +853,7 @@ export default {
         <p class="text-muted small">This action removes the post from the Community Feed. It cannot be undone.</p>
         <div class="modal-actions">
           <button class="btn-gh-text" @click="confirmDelete = null">Cancel</button>
-          <button class="btn-gh-danger-solid" @click="confirmDeletePost">Delete Article</button>
+          <button class="btn-gh-danger-solid" @click="confirmDeletePost" :disabled="isSubmitting">Delete Article</button>
         </div>
       </div>
     </div>
@@ -857,7 +873,7 @@ export default {
         <p class="text-muted small" v-else>They will lose all console access immediately.</p>
         <div class="modal-actions">
           <button class="btn-gh-text" @click="confirmRole = null">Cancel</button>
-          <button :class="confirmRole.newRole === 'admin' ? 'btn-gh-solid' : 'btn-gh-danger-solid'" @click="confirmChangeRole">Confirm Change</button>
+          <button :class="confirmRole.newRole === 'admin' ? 'btn-gh-solid' : 'btn-gh-danger-solid'" @click="confirmChangeRole" :disabled="isSubmitting">Confirm Change</button>
         </div>
       </div>
     </div>
@@ -877,7 +893,7 @@ export default {
         <p class="text-muted small" v-else>They will regain full access to their account.</p>
         <div class="modal-actions">
           <button class="btn-gh-text" @click="confirmBan = null">Cancel</button>
-          <button :class="confirmBan.isBanned ? 'btn-gh-solid' : 'btn-gh-danger-solid'" @click="confirmBanAction">
+          <button :class="confirmBan.isBanned ? 'btn-gh-solid' : 'btn-gh-danger-solid'" @click="confirmBanAction" :disabled="isSubmitting">
             {{ confirmBan.isBanned ? 'Confirm Unban' : 'Confirm Ban' }}
           </button>
         </div>

@@ -133,10 +133,7 @@ export default {
 
       const snapshot = await getDocs(reviewsQuery);
 
-      this.reviews = snapshot.docs.map((docSnap) => ({
-        id: docSnap.id,
-        ...docSnap.data(),
-      }));
+      this.reviews = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() })).filter(item => item.status !== "deleted");
 
       this.loading = false;
     },

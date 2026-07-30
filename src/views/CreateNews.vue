@@ -3,6 +3,7 @@ import { auth, db, storage } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
+import { backendApi } from "../services/api";
 import { MdEditor, MdPreview } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 import 'md-editor-v3/lib/preview.css';
@@ -130,17 +131,8 @@ export default {
       const formData = new FormData();
       formData.append("file", compressedFile);
       
-      const response = await fetch("http://localhost:8000/api/uploads", {
-        method: "POST",
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to upload image to backend");
-      }
-      
-      const data = await response.json();
-      return data.url;
+      const response = await backendApi.post("/uploads", formData);
+      return response.data.url;
     },
     async onUploadImg(files, callback) {
       try {

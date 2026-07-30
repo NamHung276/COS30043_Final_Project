@@ -1,10 +1,16 @@
 <script>
+import { auth } from "../firebase";
+
 export default {
   name: "PayPalCheckout",
   props: {
     gameId: {
       type: String,
-      required: true,
+      required: false,
+    },
+    items: {
+      type: Array,
+      default: () => [],
     },
     title: {
       type: String,
@@ -12,7 +18,7 @@ export default {
     },
     price: {
       type: Number,
-      required: true,
+      required: false,
     },
   },
   data() {
@@ -50,18 +56,32 @@ export default {
             const baseUrl = import.meta.env.PROD
               ? `${import.meta.env.VITE_API_BASE_URL || "https://gamehub-api-er30.onrender.com"}/api`
               : "http://localhost:8000/api";
+              
+            const idToken = await auth.currentUser?.getIdToken();
+            
+            // Collect items. If cart, use items array. If single game, use gameId.
+            let itemsToPurchase = [];
+            if (this.items && this.items.length > 0) {
+              itemsToPurchase = this.items.map(id => parseInt(id));
+            } else if (this.gameId && this.gameId !== "cart") {
+              itemsToPurchase = [parseInt(this.gameId)];
+            }
+              
             const response = await fetch(`${baseUrl}/paypal/create-order`, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { 
+                "Content-Type": "application/json",
+                ...(idToken && { "Authorization": `Bearer ${idToken}` })
+              },
               body: JSON.stringify({
-                gameId: this.gameId,
+                items: itemsToPurchase,
                 title: this.title,
-                price: this.price,
+                // price is calculated securely on the backend now
               }),
             });
             const data = await response.json();
-            if (data.orderId) {
-              return data.orderId;
+            if (data.order_id || data.orderId) {
+              return data.order_id || data.orderId;
             } else {
               throw new Error("No order ID returned");
             }
@@ -75,11 +95,17 @@ export default {
             const baseUrl = import.meta.env.PROD
               ? `${import.meta.env.VITE_API_BASE_URL || "https://gamehub-api-er30.onrender.com"}/api`
               : "http://localhost:8000/api";
+              
+            const idToken = await auth.currentUser?.getIdToken();
+            
             const response = await fetch(`${baseUrl}/paypal/capture-order`, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { 
+                "Content-Type": "application/json",
+                ...(idToken && { "Authorization": `Bearer ${idToken}` })
+              },
               body: JSON.stringify({
-                orderId: data.orderID,
+                order_id: data.orderID,
               }),
             });
             const captureData = await response.json();

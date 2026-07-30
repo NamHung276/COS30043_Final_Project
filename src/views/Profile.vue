@@ -691,7 +691,7 @@ export default {
 .profile-banner {
   position: relative;
   height: 320px;
-  background: #0f1016;
+  background: var(--bg-deep);
   border-bottom: 1px solid var(--overlay-light);
   overflow: hidden;
 }
@@ -743,7 +743,7 @@ export default {
 
 .badge-explorer {
   background: rgba(124, 58, 237, 0.2);
-  color: #c4b5fd;
+  color: var(--accent-light);
   border: 1px solid rgba(124, 58, 237, 0.4);
   padding: 4px 12px;
   border-radius: 20px;
@@ -791,14 +791,14 @@ export default {
 }
 
 .gd-input.is-invalid {
-  border-color: #ef4444;
+  border-color: var(--danger);
   background-image: none;
 }
 .gd-input.is-invalid:focus {
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
 }
 .gd-input.is-valid {
-  border-color: #22c55e;
+  border-color: var(--success);
   background-image: none;
 }
 .gd-input.is-valid:focus {

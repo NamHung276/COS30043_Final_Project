@@ -594,20 +594,7 @@ export default {
               <span class="game-genre-tag">{{ game.genre }}</span>
             </div>
 
-            <!-- Star Rating -->
-            <div class="game-card-stars">
-              <span
-                v-for="(star, si) in ratingStars(ftgRating(game))"
-                :key="si"
-                class="star-icon"
-                :class="star"
-              >
-                {{ star === "full" ? "★" : star === "half" ? "⯨" : "☆" }}
-              </span>
-              <span class="rating-label">{{
-                ratingLabel(ftgRating(game))
-              }}</span>
-            </div>
+
 
             <!-- Price row -->
             <div class="game-card-price-row">

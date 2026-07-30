@@ -11,6 +11,8 @@ import {
   deleteDoc,
   doc,
   serverTimestamp,
+  arrayUnion,
+  arrayRemove
 } from "firebase/firestore";
 
 export default {
@@ -51,6 +53,9 @@ export default {
       editComment: "",
       editRecommended: true,
       editPlaytime: "",
+      
+      // Track pending votes to prevent spam clicks
+      votingRequests: [],
     };
   },
 
@@ -304,9 +309,15 @@ export default {
         return;
       }
 
+      if (this.votingRequests.includes(reviewId)) return;
+      this.votingRequests.push(reviewId);
+
       const uid = this.currentUser.uid;
       const review = this.reviews.find((r) => r.id === reviewId);
-      if (!review) return;
+      if (!review) {
+        this.votingRequests = this.votingRequests.filter(id => id !== reviewId);
+        return;
+      }
 
       // Snapshot previous state so we can roll back if the write fails
       const prevLikes = [...(review.likes || [])];
@@ -314,20 +325,27 @@ export default {
 
       let likes = [...prevLikes];
       let dislikes = [...prevDislikes];
+      
+      // Build atomic operations for Firestore
+      let updates = {};
 
       if (type === "like") {
         if (likes.includes(uid)) {
           likes = likes.filter((id) => id !== uid);
+          updates = { likes: arrayRemove(uid) };
         } else {
           likes.push(uid);
           dislikes = dislikes.filter((id) => id !== uid);
+          updates = { likes: arrayUnion(uid), dislikes: arrayRemove(uid) };
         }
       } else {
         if (dislikes.includes(uid)) {
           dislikes = dislikes.filter((id) => id !== uid);
+          updates = { dislikes: arrayRemove(uid) };
         } else {
           dislikes.push(uid);
           likes = likes.filter((id) => id !== uid);
+          updates = { dislikes: arrayUnion(uid), likes: arrayRemove(uid) };
         }
       }
 
@@ -335,7 +353,7 @@ export default {
       review.dislikes = dislikes;
 
       try {
-        await updateDoc(doc(db, "reviews", reviewId), { likes, dislikes });
+        await updateDoc(doc(db, "reviews", reviewId), updates);
       } catch (error) {
         console.error("Failed to vote:", error);
         // Roll back the optimistic update since the write didn't actually succeed
@@ -345,6 +363,8 @@ export default {
           "Failed to save your vote. Please try again.",
           "error",
         );
+      } finally {
+        this.votingRequests = this.votingRequests.filter(id => id !== reviewId);
       }
     },
 

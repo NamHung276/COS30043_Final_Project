@@ -2,6 +2,15 @@
 import SkeletonCard from "../components/SkeletonCard.vue";
 import TrailerModal from "../components/TrailerModal.vue";
 import { backendApi } from "../services/api";
+import {
+  metacriticClass,
+  ratingStars,
+  ratingLabel,
+  platformIcons,
+  gamePrice,
+  gameDiscount,
+  discountedPrice,
+} from "../composables/useGameUtils";
 
 // RAWG parent_platform IDs
 const PLATFORMS = [
@@ -25,6 +34,18 @@ const PLATFORMS = [
 
 export default {
   components: { SkeletonCard },
+
+  setup() {
+    return {
+      metacriticClass,
+      ratingStars,
+      ratingLabel,
+      platformIcons,
+      gamePrice,
+      gameDiscount,
+      discountedPrice,
+    };
+  },
 
   data() {
     return {
@@ -105,44 +126,6 @@ export default {
   },
 
   methods: {
-    metacriticClass(score) {
-      if (!score) return "mc-none";
-      if (score >= 75) return "mc-green";
-      if (score >= 50) return "mc-yellow";
-      return "mc-red";
-    },
-
-    platformIcons(platforms) {
-      if (!platforms?.length) return [];
-      const icons = [];
-      const ids = platforms.map((p) => p.platform.id);
-      if (ids.includes(4)) icons.push({ key: "pc", label: "PC" });
-      if (platforms.some((p) => p.platform.slug?.includes("playstation")))
-        icons.push({ key: "ps", label: "PlayStation" });
-      if (platforms.some((p) => p.platform.slug?.includes("xbox")))
-        icons.push({ key: "xbox", label: "Xbox" });
-      if (
-        platforms.some(
-          (p) =>
-            p.platform.slug?.includes("nintendo") ||
-            p.platform.slug?.includes("switch") ||
-            p.platform.slug?.includes("wii") ||
-            p.platform.slug?.includes("3ds") ||
-            p.platform.slug?.includes("nes") ||
-            p.platform.slug?.includes("snes"),
-        )
-      )
-        icons.push({ key: "nintendo", label: "Nintendo" });
-      if (
-        platforms.some(
-          (p) =>
-            p.platform.slug?.includes("ios") ||
-            p.platform.slug?.includes("android"),
-        )
-      )
-        icons.push({ key: "mobile", label: "Mobile" });
-      return icons;
-    },
 
     selectPlatform(key) {
       this.selectedPlatform = key;
@@ -167,28 +150,13 @@ export default {
         ? this.wishlisted.delete(String(game.id))
         : this.wishlisted.add(String(game.id));
     },
-    gameDiscount(game) {
-      return 0;
-    },
-    gamePrice(game) {
-      return "59.99";
-    },
-    discountedPrice(game) {
-      return "59.99";
-    },
-    ratingStars(rating) {
-      return ["full", "full", "full", "half", "empty"];
-    },
-    ratingLabel(rating) {
-      return "Great";
-    },
 
     async fetchGames() {
       this.loading = true;
       this.error = null;
       try {
         const params = {
-          page_size: 100,
+          page_size: 40,
           ordering: this.searchTerm ? "-rating" : "-metacritic",
           exclude_additions: true,
           metacritic: "30,100",
@@ -1031,18 +999,18 @@ export default {
   z-index: 2;
 }
 .mc-green {
-  background: #15803d;
-  color: #d1fae5;
+  background: var(--success);
+  color: var(--success-text);
   border: 1px solid rgba(21, 128, 61, 0.4);
 }
 .mc-yellow {
-  background: #92400e;
-  color: #fde68a;
+  background: var(--warning);
+  color: var(--warning-text);
   border: 1px solid rgba(146, 64, 14, 0.4);
 }
 .mc-red {
-  background: #991b1b;
-  color: #fee2e2;
+  background: var(--danger);
+  color: var(--danger-text);
   border: 1px solid rgba(153, 27, 27, 0.4);
 }
 .mc-none {
@@ -1113,12 +1081,12 @@ export default {
   flex-shrink: 0;
 }
 .game-type.free {
-  background: #16a34a;
+  background: var(--success);
   color: white;
 }
 .game-type.premium {
-  background: #f59e0b;
-  color: #111;
+  background: var(--warning);
+  color: var(--text-primary);
 }
 
 /* Genre tags */
@@ -1181,7 +1149,7 @@ export default {
   color: var(--text-primary);
 }
 .trailer-btn:hover {
-  background: #7c3aed;
+  background: var(--accent-dark);
 }
 .wishlist-btn {
   background: rgba(0, 0, 0, 0.6);
@@ -1202,17 +1170,16 @@ export default {
   display: flex;
   align-items: center;
   gap: 3px;
-  margin-top: auto;
 }
 .star-icon {
   font-size: 0.85rem;
   line-height: 1;
 }
 .star-icon.full {
-  color: #f59e0b;
+  color: var(--warning);
 }
 .star-icon.half {
-  color: #f59e0b;
+  color: var(--warning);
   opacity: 0.7;
 }
 .star-icon.empty {
@@ -1237,7 +1204,7 @@ export default {
   font-size: 0.72rem;
   font-weight: 800;
   color: var(--text-primary);
-  background: #22c55e;
+  background: var(--success);
   padding: 2px 7px;
   border-radius: 5px;
 }
@@ -1467,6 +1434,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 3px;
+  margin-top: auto;
 }
 .glr-right {
   display: flex;
@@ -1541,4 +1509,5 @@ export default {
   background: var(--bg-surface);
   color: var(--text-secondary);
 }
+
 </style>

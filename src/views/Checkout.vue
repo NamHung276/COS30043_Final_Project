@@ -201,7 +201,12 @@ export default {
         <!-- Checkout Summary & Fake Payment -->
         <div class="col-lg-5">
           <div class="gd-glass-card p-4 checkout-summary">
-            <h4 class="text-primary-var fw-bold mb-4">Order Summary</h4>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h4 class="text-primary-var fw-bold mb-0">Order Summary</h4>
+              <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-50 px-2 py-1 rounded-pill d-flex align-items-center gap-1">
+                <i class="bi bi-shield-lock-fill"></i> Secure
+              </span>
+            </div>
 
             <div class="d-flex justify-content-between mb-2">
               <span class="text-muted">Subtotal</span>
@@ -224,10 +229,19 @@ export default {
             <div v-if="cart.items.length > 0 && !hasConflict">
               <PayPalCheckout
                 gameId="cart"
+                :items="cart.items.map(i => i.id)"
                 title="GameHub Checkout"
                 :price="cart.totalPrice"
                 @payment-success="handlePaymentSuccess"
               />
+              <div class="mt-3 text-center text-muted small d-flex flex-column gap-2">
+                <div><i class="bi bi-lock-fill me-1"></i>256-bit SSL Encrypted Checkout</div>
+                <div class="d-flex justify-content-center gap-2 text-secondary fs-4">
+                  <i class="bi bi-cc-paypal"></i>
+                  <i class="bi bi-cc-visa"></i>
+                  <i class="bi bi-cc-mastercard"></i>
+                </div>
+              </div>
             </div>
 
             <div v-else-if="hasConflict" class="alert alert-danger mt-3 mb-0" style="font-size: 0.9rem;">

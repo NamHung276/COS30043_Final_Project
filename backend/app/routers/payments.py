@@ -11,6 +11,9 @@ from app.schemas.payments import (
 )
 from app.services.payment_service import payment_service
 from app.services.crypto_service import crypto_service
+from app.utils.dependencies import get_current_user
+from app.models.user import UserContext
+from fastapi import Depends
 import logging
 
 logger = logging.getLogger(__name__)
@@ -19,14 +22,32 @@ router = APIRouter()
 
 
 @router.post("/paypal/create-order", response_model=OrderResponse)
-async def create_paypal_order(request: OrderCreateRequest):
+async def create_paypal_order(
+    request: OrderCreateRequest,
+    user: UserContext = Depends(get_current_user)
+):
     """
-    Creates a new PayPal order with the specified amount.
+    Creates a new PayPal order by calculating the total amount from game IDs.
     Returns the order ID which the frontend uses to render the PayPal button.
     """
     try:
+        # Secure Price Calculation
+        total_amount = 0.0
+        for game_id in request.items:
+            roll = game_id % 4
+            is_sale = roll in (0, 1)
+            base_price = (game_id % 40) + 10 + 0.99
+            discount = 40 if roll == 0 else (25 if roll == 1 else 0)
+            final_price = base_price * (1 - discount / 100) if is_sale else base_price
+            total_amount += final_price
+
+        # Round to 2 decimal places to match PayPal requirements
+        final_total = round(total_amount, 2)
+        if final_total <= 0:
+            raise ValueError("Cart total must be greater than 0")
+
         order_data = await payment_service.create_order(
-            amount=request.amount,
+            amount=final_total,
             currency=request.currency,
             description=request.description,
         )
@@ -43,7 +64,10 @@ async def create_paypal_order(request: OrderCreateRequest):
 
 
 @router.post("/paypal/capture-order", response_model=dict)
-async def capture_paypal_order(request: OrderCaptureRequest):
+async def capture_paypal_order(
+    request: OrderCaptureRequest,
+    user: UserContext = Depends(get_current_user)
+):
     """
     Captures the funds for an approved PayPal order.
     The frontend calls this after the user approves the payment in the PayPal popup.

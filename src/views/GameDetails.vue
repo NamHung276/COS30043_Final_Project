@@ -42,6 +42,8 @@ export default {
       showTrailerModal: false,
       deals: [],
       dealsLoading: false,
+      isZoomed: false,
+      touchStartX: 0,
     };
   },
 
@@ -49,14 +51,6 @@ export default {
     // Auth & wishlist state from centralised stores
     ...mapState(useAuthStore, ["currentUser"]),
     ...mapState(useWishlistStore, ["wishlistedIds"]),
-
-    metacriticClass() {
-      const s = this.game?.metacritic;
-      if (!s) return "mc-grey";
-      if (s >= 75) return "mc-green";
-      if (s >= 50) return "mc-yellow";
-      return "mc-red";
-    },
 
     metacriticLabel() {
       const s = this.game?.metacritic;
@@ -247,6 +241,44 @@ export default {
 
       return groups;
     },
+
+    mockDLCs() {
+      if (!this.game || !this.gameStateInfo.isReleased || this.gameStateInfo.isFree) return [];
+      const basePrice = parseFloat(this.displayPrice) || 29.99;
+      return [
+        {
+          id: 1,
+          name: "Digital Deluxe Edition Upgrade",
+          price: (basePrice * 0.4).toFixed(2),
+          discount: 0
+        },
+        {
+          id: 2,
+          name: "Original Soundtrack",
+          price: "9.99",
+          discount: 0
+        },
+        {
+          id: 3,
+          name: "Season Pass",
+          price: (basePrice * 0.8).toFixed(2),
+          discount: 15
+        }
+      ];
+    },
+
+    mockEngine() {
+      if (!this.game) return "Custom Engine";
+      const id = this.game.id;
+      if (id % 3 === 0) return "Unreal Engine 5";
+      if (id % 5 === 0) return "Unity";
+      if (id % 2 === 0) return "Decima Engine";
+      return "Proprietary Engine";
+    },
+
+    hasMultiplayer() {
+      return this.game?.tags?.some(t => ['multiplayer', 'co-op', 'online'].includes(t.slug));
+    },
   },
 
   watch: {
@@ -261,33 +293,6 @@ export default {
   },
 
   methods: {
-    storeName(id) {
-      return STORE_NAMES[id] || `Store #${id}`;
-    },
-
-    platformIcon(name) {
-      const n = (name || '').toLowerCase();
-      if (n.includes('pc') || n.includes('windows')) return '/game_logo/pc.svg';
-      if (n.includes('playstation')) return '/game_logo/playstation_logo.png';
-      if (n.includes('xbox')) return '/game_logo/xbox_logo.png';
-      if (n.includes('nintendo') || n.includes('switch')) return '/game_logo/nintendo_logo.png';
-      if (n.includes('mac')) return '/game_logo/macos.png';
-      if (n.includes('linux')) return '/game_logo/linux.png';
-      if (n.includes('android') || n.includes('ios') || n.includes('mobile')) return '/game_logo/mobile.svg';
-      return '/logo/gamepad.svg';
-    },
-
-    formatDate(value) {
-      if (!value) return '—';
-      const date = new Date(value);
-      if (Number.isNaN(date.getTime())) return value;
-      return new Intl.DateTimeFormat('en', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      }).format(date);
-    },
-
     showFavStatus(message, type = "success") {
       this.favStatus = { visible: true, message, type };
       clearTimeout(this._favTimer);
@@ -319,10 +324,12 @@ export default {
     openLightbox(src, index) {
       this.lightboxSrc = src;
       this.lightboxIndex = index ?? this.activeShot;
+      this.isZoomed = false;
       this.stopCarousel();
     },
     closeLightbox() {
       this.lightboxSrc = null;
+      this.isZoomed = false;
       this.startCarousel();
     },
     lightboxPrev() {
@@ -332,17 +339,30 @@ export default {
         this.screenshots.length;
       this.lightboxSrc = this.screenshots[this.lightboxIndex].image;
       this.activeShot = this.lightboxIndex;
+      this.isZoomed = false;
     },
     lightboxNext() {
       if (!this.screenshots.length) return;
       this.lightboxIndex = (this.lightboxIndex + 1) % this.screenshots.length;
       this.lightboxSrc = this.screenshots[this.lightboxIndex].image;
       this.activeShot = this.lightboxIndex;
+      this.isZoomed = false;
     },
     onLightboxKey(e) {
       if (e.key === "Escape") this.closeLightbox();
       if (e.key === "ArrowLeft") this.lightboxPrev();
       if (e.key === "ArrowRight") this.lightboxNext();
+    },
+    toggleZoom() {
+      this.isZoomed = !this.isZoomed;
+    },
+    onTouchStart(e) {
+      this.touchStartX = e.changedTouches[0].screenX;
+    },
+    onTouchEnd(e) {
+      const touchEndX = e.changedTouches[0].screenX;
+      if (this.touchStartX - touchEndX > 50) this.lightboxNext();
+      if (this.touchStartX - touchEndX < -50) this.lightboxPrev();
     },
 
     selectShot(i) {
@@ -514,9 +534,15 @@ export default {
 
         <!-- Content -->
         <div class="container gd-hero-content pb-5">
-          <router-link to="/games" class="gd-back-btn mb-4 d-inline-block">
-            ← Back to Games
-          </router-link>
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <router-link to="/games" class="gd-back-btn d-inline-block">
+              ← Back to Games
+            </router-link>
+            <!-- Store-like dynamic particles or badges -->
+            <div v-if="game?.id" class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50 rounded-pill px-3 py-2 shadow-sm d-flex align-items-center gap-2">
+              <i class="bi bi-shield-check"></i> GameHub Verified
+            </div>
+          </div>
 
           <div class="gd-hero-bottom align-items-end">
             <!-- Cover thumbnail -->
@@ -575,7 +601,7 @@ export default {
                   >
                     <div
                       class="gd-metacritic fs-5 d-flex align-items-center justify-content-center"
-                      :class="metacriticClass"
+                      :class="metacriticClass(game?.metacritic)"
                       style="
                         width: 44px;
                         height: 44px;
@@ -1067,7 +1093,7 @@ export default {
                 class="gd-mc-card mb-4 profile-glass-card p-4 rounded-4 d-flex align-items-center gap-3"
                 style="background: var(--bg-surface)"
               >
-                <div class="gd-mc-score" :class="metacriticClass">
+                <div class="gd-mc-score" :class="metacriticClass(game?.metacritic)">
                   {{ game.metacritic }}
                 </div>
                 <div class="gd-mc-info">
@@ -1272,20 +1298,89 @@ export default {
                     }}</span>
                   </div>
                   <div class="gd-meta-row" v-if="game.playtime && gameStateInfo.isReleased">
-                    <span class="gd-meta-label">Playtime</span>
+                    <span class="gd-meta-label">Avg. Playtime</span>
                     <span class="gd-meta-value">~{{ game.playtime }} hrs</span>
                   </div>
                   <div class="gd-meta-row" v-if="game.esrb_rating">
-                    <span class="gd-meta-label">ESRB Rating</span>
+                    <span class="gd-meta-label">Age Rating</span>
                     <span class="gd-meta-value">{{
                       game.esrb_rating.name
                     }}</span>
+                  </div>
+                  <div class="gd-meta-row" v-if="gameStateInfo.isReleased">
+                    <span class="gd-meta-label">Engine</span>
+                    <span class="gd-meta-value">{{ mockEngine }} <span class="text-muted" style="cursor:help" title="Simulated Data">*</span></span>
+                  </div>
+                  <div class="gd-meta-row" v-if="gameStateInfo.isReleased">
+                    <span class="gd-meta-label">Languages</span>
+                    <span class="gd-meta-value">English, French, Spanish <span class="text-muted text-decoration-underline" style="font-size: 0.75rem; cursor: help" title="Simulated Data">+6 more</span></span>
                   </div>
                   <div class="gd-meta-row" v-if="game.ratings_count && gameStateInfo.isReleased">
                     <span class="gd-meta-label">Total Reviews</span>
                     <span class="gd-meta-value">{{
                       game.ratings_count.toLocaleString()
                     }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Features (Trust Signals) -->
+              <div
+                class="gd-features-card mb-4 profile-glass-card p-4 rounded-4"
+                style="background: var(--bg-surface)"
+              >
+                <h5 class="gd-details-heading mb-4">
+                  <i class="bi bi-controller text-primary me-2"></i> Features
+                </h5>
+                <div class="d-flex flex-column gap-3">
+                  <div class="d-flex align-items-center gap-3 gd-feature-item">
+                    <i class="bi bi-person-fill text-muted fs-5"></i>
+                    <span class="fw-semibold">Single-player</span>
+                  </div>
+                  <div class="d-flex align-items-center gap-3 gd-feature-item" v-if="hasMultiplayer">
+                    <i class="bi bi-people-fill text-muted fs-5"></i>
+                    <span class="fw-semibold">Multiplayer</span>
+                  </div>
+                  <div class="d-flex align-items-center gap-3 gd-feature-item">
+                    <i class="bi bi-dpad-fill text-muted fs-5"></i>
+                    <span class="fw-semibold">Full Controller Support</span>
+                  </div>
+                  <div class="d-flex align-items-center gap-3 gd-feature-item">
+                    <i class="bi bi-cloud-check-fill text-muted fs-5"></i>
+                    <span class="fw-semibold">Cloud Saves</span>
+                  </div>
+                  <div class="d-flex align-items-center gap-3 gd-feature-item">
+                    <i class="bi bi-trophy-fill text-muted fs-5"></i>
+                    <span class="fw-semibold">Achievements ({{ game ? (game.id % 50) + 20 : 0 }})</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Packages and DLC -->
+              <div
+                v-if="mockDLCs.length"
+                class="gd-dlc-card profile-glass-card p-4 rounded-4 mt-4 mb-4"
+              >
+                <h5 class="gd-details-heading mb-4">
+                  <i class="bi bi-box-seam-fill text-primary me-2"></i> Packages & DLC
+                </h5>
+                <div class="d-flex flex-column gap-3">
+                  <div
+                    v-for="dlc in mockDLCs"
+                    :key="dlc.id"
+                    class="d-flex justify-content-between align-items-center p-3 rounded-3"
+                    style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass);"
+                  >
+                    <div>
+                      <span class="fw-semibold d-block" style="font-size:0.9rem">{{ dlc.name }}</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                      <span v-if="dlc.discount" class="badge bg-danger rounded-pill">-{{ dlc.discount }}%</span>
+                      <span class="fw-bold">${{ (dlc.price * (1 - dlc.discount/100)).toFixed(2) }}</span>
+                      <button class="btn btn-sm btn-outline-primary px-2 py-1 rounded-3 ms-1" title="Add to Cart">
+                        <i class="bi bi-cart-plus"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1463,6 +1558,8 @@ export default {
         v-if="lightboxSrc"
         class="gd-lightbox"
         @click.self="closeLightbox"
+        @touchstart="onTouchStart"
+        @touchend="onTouchEnd"
         role="dialog"
         aria-modal="true"
         aria-label="Screenshot preview"
@@ -1481,12 +1578,13 @@ export default {
         >
           ‹
         </button>
-        <img
-          :src="lightboxSrc"
-          alt="Screenshot enlarged"
-          class="gd-lb-img"
-          @click.stop
-        />
+        <div class="gd-lb-img-container" :class="{'is-zoomed': isZoomed}" @click.stop="toggleZoom">
+          <img
+            :src="lightboxSrc"
+            alt="Screenshot enlarged"
+            class="gd-lb-img"
+          />
+        </div>
         <button
           class="gd-lb-nav gd-lb-next"
           @click.stop="lightboxNext"
@@ -1497,6 +1595,7 @@ export default {
         <div class="gd-lb-counter" aria-live="polite">
           {{ lightboxIndex + 1 }} / {{ screenshots.length }}
         </div>
+        <div class="gd-lb-hint">Click image to zoom</div>
       </div>
     </transition>
 
@@ -1504,5 +1603,28 @@ export default {
     <div class="gd-footer-transition"></div>
   </div>
 </template>
+
+<style>
+.gd-lb-img-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 90vw;
+  max-height: 90vh;
+  transition: transform 0.3s ease;
+  cursor: zoom-in;
+}
+.gd-lb-img-container.is-zoomed {
+  transform: scale(1.5);
+  cursor: zoom-out;
+}
+.gd-lb-hint {
+  position: absolute;
+  bottom: 60px;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+</style>
 
 

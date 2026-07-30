@@ -34,6 +34,8 @@ export const useWishlistStore = defineStore("wishlist", {
   state: () => ({
     /** @type {Set<string>} — Set of gameId strings for O(1) lookup */
     wishlistedIds: new Set(),
+    /** @type {Set<string>} — Tracks games currently being added to prevent race conditions */
+    pendingAdds: new Set(),
     /** UID of the user whose wishlist is currently loaded */
     loadedForUser: null,
   }),
@@ -82,8 +84,8 @@ export const useWishlistStore = defineStore("wishlist", {
       const gameId = game.id ?? game.gameId;
       const gameIdStr = String(gameId);
 
-      // Local duplicate check (fast path)
-      if (this.wishlistedIds.has(gameIdStr)) return false;
+      // Local duplicate check (fast path) and spam lock
+      if (this.wishlistedIds.has(gameIdStr) || this.pendingAdds.has(gameIdStr)) return false;
 
       // Determine game type for correct routing in Favorites
       const isF2P =
@@ -91,6 +93,8 @@ export const useWishlistStore = defineStore("wishlist", {
         game.source === "freetogame" ||
         // F2P games use `title` field; RAWG games use `name`
         (game.title && !game.name);
+
+      this.pendingAdds.add(gameIdStr);
 
       try {
         // Firestore duplicate check (handles stale local state / cross-device)
@@ -129,6 +133,8 @@ export const useWishlistStore = defineStore("wishlist", {
         console.error("[WishlistStore] addToWishlist failed:", err);
         toast?.show("Failed to add to wishlist", "error");
         return false;
+      } finally {
+        this.pendingAdds.delete(gameIdStr);
       }
     },
 

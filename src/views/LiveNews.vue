@@ -610,7 +610,7 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #ef4444;
+  color: var(--danger);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -620,7 +620,7 @@ export default {
 .live-dot {
   width: 8px;
   height: 8px;
-  background: #ef4444;
+  background: var(--danger);
   border-radius: 50%;
   animation: pulse 2s infinite;
 }
@@ -1015,7 +1015,7 @@ export default {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 .journal-error svg {
-  color: #ef4444;
+  color: var(--danger);
   margin-bottom: 16px;
 }
 /* ── Breaking Ticker ── */
@@ -1030,7 +1030,7 @@ export default {
 }
 .ticker-label {
   background: var(--primary);
-  color: #fff;
+  color: var(--text-primary);
   font-weight: 800;
   font-size: 0.8rem;
   padding: 0 16px;
@@ -1196,7 +1196,7 @@ export default {
   gap: 8px;
 }
 .market-discount {
-  background: #198754;
+  background: var(--success);
   color: white;
   padding: 2px 6px;
   border-radius: 4px;
@@ -1204,7 +1204,7 @@ export default {
   font-weight: 800;
 }
 .market-price {
-  color: #20c997;
+  color: var(--success);
   font-weight: 700;
   font-size: 0.9rem;
 }

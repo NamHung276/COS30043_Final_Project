@@ -278,7 +278,7 @@ export default {
           <div class="lib-stat-divider" v-if="currentlyPlaying"></div>
           <div class="lib-stat lib-stat-playing" v-if="currentlyPlaying">
             <span class="lib-stat-playing-dot"></span>
-            <span class="lib-stat-value" style="color: #10b981">Playing Now</span>
+            <span class="lib-stat-value" style="color: var(--success)">Playing Now</span>
             <span class="lib-stat-label lib-stat-game-name">{{ currentlyPlaying.gameName }}</span>
           </div>
         </div>
@@ -670,7 +670,7 @@ export default {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #10b981;
+  background: var(--success);
   box-shadow: 0 0 10px rgba(16,185,129,0.6);
   animation: pulse-dot 1.5s infinite;
   flex-shrink: 0;
@@ -1000,7 +1000,7 @@ export default {
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: #10b981;
+  background: var(--success);
   color: white;
   border: none;
   display: flex;
@@ -1018,7 +1018,7 @@ export default {
 
 .btn-play-huge:hover {
   background: white;
-  color: #10b981;
+  color: var(--success);
   box-shadow: 0 0 30px var(--overlay-text);
 }
 
@@ -1145,7 +1145,7 @@ export default {
 
 .lib-status-chip.playing {
   background: rgba(16,185,129,0.15);
-  color: #10b981;
+  color: var(--success);
   border: 1px solid rgba(16,185,129,0.3);
 }
 
@@ -1217,7 +1217,7 @@ export default {
 }
 
 .playing-btn {
-  background: #ef4444;
+  background: var(--danger);
   border: none;
 }
 

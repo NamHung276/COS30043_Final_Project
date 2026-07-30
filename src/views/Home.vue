@@ -929,7 +929,7 @@ export default {
             <!-- Card Body -->
             <div class="h-scroll-card-body">
               <h3 class="h-scroll-card-title" style="font-size: 1rem; margin-bottom: 4px;">{{ game.name }}</h3>
-              <div class="game-card-stars mb-2" v-if="game.rating" style="display: flex; gap: 2px; color: #fbbf24; font-size: 0.8rem;">
+              <div class="game-card-stars mb-2" v-if="game.rating" style="display: flex; gap: 2px; color: var(--warning); font-size: 0.8rem;">
                 <span v-for="(star, si) in ratingStars(game.rating)" :key="si" class="star-icon" :class="star">
                   {{ star === "full" ? "★" : star === "half" ? "⯨" : "☆" }}
                 </span>
@@ -1237,7 +1237,7 @@ export default {
             style="
               background: rgba(245, 158, 11, 0.12);
               border: 1px solid rgba(245, 158, 11, 0.3);
-              color: #fbbf24;
+              color: var(--warning);
               font-size: 0.8rem;
               border-radius: 20px;
               padding: 4px 16px;
@@ -1471,15 +1471,15 @@ export default {
 
 <style scoped>
 .mc-green {
-  background: #15803d !important;
+  background: var(--success) !important;
   color: var(--text-primary) !important;
 }
 .mc-yellow {
-  background: #a16207 !important;
+  background: var(--warning) !important;
   color: var(--text-primary) !important;
 }
 .mc-red {
-  background: #b91c1c !important;
+  background: var(--danger) !important;
   color: var(--text-primary) !important;
 }
 .mc-grey {
@@ -1674,7 +1674,7 @@ export default {
 .deal-scroll-sale {
   font-weight: 800;
   font-size: 0.95rem;
-  color: #fbbf24;
+  color: var(--warning);
 }
 /* --- SUMMER SALE HERO --- */
 .summer-sale-hero {
@@ -1720,7 +1720,7 @@ export default {
 .ss-steam {
   font-size: 1.5rem;
   font-weight: 800;
-  color: #bae6fd;
+  color: var(--info);
   display: block;
   margin-bottom: -10px;
 }

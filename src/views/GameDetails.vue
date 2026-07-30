@@ -1223,7 +1223,7 @@ export default {
                     <a
                       v-for="s in game.stores"
                       :key="s.id"
-                      :href="s.url || '#'"
+                      :href="s.url || (s.store?.domain ? 'https://' + s.store.domain : '#')"
                       target="_blank"
                       rel="noopener noreferrer"
                       class="gd-store-link d-flex align-items-center justify-content-between p-3 rounded-3 text-decoration-none"

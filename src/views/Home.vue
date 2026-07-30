@@ -1190,7 +1190,7 @@ export default {
           <span class="section-icon" style="background: linear-gradient(135deg, #10b981, #047857); box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);">
             <i class="bi bi-star-fill" style="color: white; font-size: 1.1rem"></i>
           </span>
-          <h2 class="mb-0">Recommended For You</h2>
+          <h2 class="mb-0">Recommended by our community</h2>
         </div>
         <div class="gd-recommendation-carousel pb-3">
           <router-link

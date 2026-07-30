@@ -503,7 +503,7 @@ export default {
         <!-- Recommended for You -->
         <div v-if="recommendedGames.length > 0 && !searchTerm && selectedGenre === 'All' && selectedPlatform === 'all'" class="mb-5">
         <h2 class="gd-section-title mb-4">
-          <i class="bi bi-stars text-warning me-2"></i> Recommended for You
+          <i class="bi bi-stars text-warning me-2"></i> Recommended by our community
         </h2>
         <div class="games-grid">
           <router-link

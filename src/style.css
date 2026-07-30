@@ -11,39 +11,39 @@
 /* ---- Design Tokens ---- */
 :root {
   /* Background layers */
-  --bg-deep: #0f1116;
-  --bg-base: #151821;
-  --bg-surface: #1a1d24;
-  --bg-glass: rgba(21, 24, 33, 0.7);
-  --bg-glass-hover: rgba(26, 29, 36, 0.85);
+  --bg-deep: #0a0e17;
+  --bg-base: #111520;
+  --bg-surface: #171c28;
+  --bg-glass: rgba(17, 21, 32, 0.7);
+  --bg-glass-hover: rgba(23, 28, 40, 0.85);
 
   /* Borders */
   --border-subtle: rgba(255, 255, 255, 0.05);
   --border-glass: rgba(255, 255, 255, 0.08);
   --border-focus: #0ea5e9;
 
-  /* Primary palette — Electric Blue */
-  --primary: #0ea5e9;
-  --primary-light: #38bdf8;
-  --primary-dark: #0284c7;
+  /* Primary palette — Neon Cyan */
+  --primary: #00f0ff;
+  --primary-light: #66fcf1;
+  --primary-dark: #00c4cc;
 
-  /* Accent — Neon Magenta */
-  --accent: #d946ef;
-  --accent-light: #f0abfc;
-  --accent-dark: #c026d3;
+  /* Accent — Electric Purple */
+  --accent: #8b5cf6;
+  --accent-light: #a78bfa;
+  --accent-dark: #7c3aed;
 
-  /* Accent 2 — Lime/Neon Green */
-  --accent2: #10b981;
-  --accent2-light: #34d399;
+  /* Accent 2 — Neon Green */
+  --accent2: #39ff14;
+  --accent2-light: #70ff5c;
 
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #0ea5e9, #8b5cf6);
-  --gradient-hot: linear-gradient(135deg, #d946ef, #f43f5e);
-  --gradient-hero: linear-gradient(135deg, #0f1116 0%, #1a1d24 100%);
+  --gradient-primary: linear-gradient(135deg, var(--primary), var(--accent));
+  --gradient-hot: linear-gradient(135deg, #ff0055, #f59e0b);
+  --gradient-hero: linear-gradient(135deg, var(--bg-deep) 0%, var(--bg-surface) 100%);
   --gradient-glow: linear-gradient(
     135deg,
-    rgba(14, 165, 233, 0.15),
-    rgba(217, 70, 239, 0.15)
+    rgba(0, 240, 255, 0.15),
+    rgba(139, 92, 246, 0.15)
   );
   --gradient-card-top: linear-gradient(
     180deg,
@@ -79,11 +79,11 @@
 
   /* ---- Card Design System Tokens ---- */
   --card-radius: 14px;
-  --card-hover-lift: translateY(-3px);
-  --card-hover-lift-strong: translateY(-6px);
+  --card-hover-lift: translateY(-6px) scale(1.02);
+  --card-hover-lift-strong: translateY(-8px) scale(1.03);
   --card-hover-shadow:
-    0 16px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(124, 58, 237, 0.18);
-  --card-hover-border: rgba(124, 58, 237, 0.35);
+    0 20px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 240, 255, 0.3);
+  --card-hover-border: rgba(0, 240, 255, 0.5);
   --card-transition:
     transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
     box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s ease;
@@ -93,10 +93,10 @@
   /* Typography */
   --font-display: "Chakra Petch", sans-serif;
   --font-family:
-    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
   /* Glass */
-  --glass-blur: blur(12px);
+  --glass-blur: blur(20px);
 
   /* Overlays (for Light/Dark mode transparency) */
   --overlay-light: rgba(255, 255, 255, 0.03);
@@ -357,8 +357,10 @@ a:hover {
   padding: 8px 0 !important;
   background: var(--bg-glass) !important;
   backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   border-bottom: 1px solid var(--border-glass);
   box-shadow: var(--shadow-sm);
+  transition: background 0.4s ease, box-shadow 0.4s ease, backdrop-filter 0.4s ease;
 }
 
 .navbar-brand {
@@ -2106,8 +2108,7 @@ a:hover {
 
 .steam-hero-fullbleed {
   position: relative;
-  width: 100vw;
-  margin-left: calc(-50vw + 50%);
+  width: 100%;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

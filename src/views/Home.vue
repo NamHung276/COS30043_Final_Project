@@ -6,6 +6,7 @@ import CryptoMarket from "../components/CryptoMarket.vue";
 import { mapState } from "pinia";
 import { useAuthStore } from "../stores/useAuthStore";
 import { useWishlistStore } from "../stores/useWishlistStore";
+import { useRecommendationStore } from "../stores/useRecommendationStore";
 import { metacriticClass, ratingStars, ratingLabel, formatDate, gamePrice, gameDiscount, discountedPrice } from "../composables/useGameUtils";
 
 const GENRES = [
@@ -218,6 +219,9 @@ export default {
   },
 
   async mounted() {
+    // Reset displayed games on mount to prevent stale deduplication on reload
+    useRecommendationStore().reset();
+
     // Load featured carousel + new releases in parallel
     await Promise.allSettled([
       this.loadFeatured(),
@@ -290,9 +294,11 @@ export default {
             displayLink: "/games/" + g.id,
           }));
 
-        this.featuredGames = [...f2pGames, ...rawgGames].sort(
-          () => 0.5 - Math.random(),
-        );
+        const combinedFeatured = [...f2pGames, ...rawgGames].sort(() => 0.5 - Math.random());
+        // Do not filter out the featured games (we always want 10 in the hero), 
+        // but we DO register them so they don't appear in lists below.
+        useRecommendationStore().registerDisplayed(combinedFeatured);
+        this.featuredGames = combinedFeatured;
 
         // Populate trendingFree for the tabbed section
         this.trendingFree = (f2pRes.data?.results || [])
@@ -306,6 +312,7 @@ export default {
             genres: [{ name: g.genre }],
             id: g.id,
           }));
+        this.trendingFree = useRecommendationStore().filterAndRegister(this.trendingFree);
 
         if (this.featuredGames.length) {
           this.fetchDetail(this.featuredGames[0]);
@@ -334,7 +341,8 @@ export default {
             dates: `${pastStr},${today}`,
           },
         });
-        this.newReleases = (data.results || []).filter(g => g.background_image).slice(0, 20);
+        const fetchedReleases = (data.results || []).filter(g => g.background_image);
+        this.newReleases = useRecommendationStore().filterAndRegister(fetchedReleases).slice(0, 20);
       } catch (e) {
         console.error(e);
         this.toast?.show("Could not load new releases right now.", "error");
@@ -357,7 +365,8 @@ export default {
             dates: `${today},${futureStr}`,
           },
         });
-        this.comingSoon = (data.results || []).filter(g => g.background_image).slice(0, 20);
+        const fetchedUpcoming = (data.results || []).filter(g => g.background_image);
+        this.comingSoon = useRecommendationStore().filterAndRegister(fetchedUpcoming).slice(0, 20);
       } catch (e) {
         console.error(e);
         this.toast?.show("Could not load upcoming games right now.", "error");
@@ -385,6 +394,8 @@ export default {
             seenTitles.add(key);
           }
         }
+        // For deals, we filter by dealID in cheapshark but wait, these are cheapshark deals not rawg games. 
+        // We'll leave deals alone or just slice them.
         this.hotDeals = uniqueDeals.slice(0, 8);
       } catch (e) {
         console.error(e);

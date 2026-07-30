@@ -18,6 +18,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional, cast
 
+from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, Query, status
 
 from app.services import rawg_service, cheapshark_service
@@ -260,3 +261,33 @@ async def get_game_trailers(game_id: int):
     except Exception as exc:
         logger.error("get_trailers failed for game %d: %s", game_id, exc)
         raise _rawg_error(exc, game_id)
+
+class SysReqTranslationRequest(BaseModel):
+    text: str
+
+@router.post(
+    "/games/format-sysreq",
+    summary="Format System Requirements",
+    description="Format system requirements text and use AI translation if it is non-English."
+)
+async def format_sysreq(req: SysReqTranslationRequest):
+    from app.services import ai_service
+    prompt = f"""
+    You are a game system requirements formatter. 
+    Analyze the following system requirements text:
+    - If it contains 2 languages (e.g. English and Chinese), create a paragraph gap between them.
+    - If it is 1 language but NOT English, translate it to English.
+    - Format the text to make it easy to read using Markdown bullet points (like 'OS:', 'Processor:', etc).
+    - Do not add any extra commentary or introductory text, just return the formatted requirements as clean HTML (using <ul>, <li>, and <strong> tags).
+    
+    Text:
+    {req.text}
+    """
+    try:
+        formatted = await ai_service.generate_response(prompt)
+        # Gemini sometimes wraps HTML in ```html ... ```, let's strip it.
+        formatted = formatted.replace("```html", "").replace("```", "").strip()
+        return {"formatted_text": formatted}
+    except Exception as e:
+        logger.error(f"Error formatting sysreq: {e}")
+        return {"formatted_text": req.text}

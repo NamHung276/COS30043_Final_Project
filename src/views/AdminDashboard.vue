@@ -16,6 +16,7 @@ import {
   where
 } from "firebase/firestore";
 import { Star, Newspaper, Users, Database } from "@lucide/vue";
+import { backendApi } from "../services/api";
 
 export default {
   name: "AdminDashboard",
@@ -64,6 +65,10 @@ export default {
       hasMoreUsers: false,
       lastPostDoc: null,
       hasMorePosts: false,
+
+      // AI Health
+      aiHealth: null,
+      loadingAiHealth: false,
 
       unsubscribe: null,
     };
@@ -138,7 +143,8 @@ export default {
         this.loadUsers(),
         this.loadPosts(),
         this.loadReviewsCount(),
-        this.loadReports()
+        this.loadReports(),
+        this.loadAiHealth()
       ]);
     });
   },
@@ -169,6 +175,19 @@ export default {
         this.totalReviews = snap.docs.length;
       } catch (e) {
         console.error("Failed to load reviews count", e);
+      }
+    },
+    
+    async loadAiHealth() {
+      this.loadingAiHealth = true;
+      try {
+        const { data } = await backendApi.get("/admin/ai-health");
+        this.aiHealth = data;
+      } catch (e) {
+        console.error("Failed to load AI health data", e);
+        this.aiHealth = { status: "error", analysis: "Could not fetch AI Health Report. Check server connection." };
+      } finally {
+        this.loadingAiHealth = false;
       }
     },
 
@@ -510,8 +529,9 @@ export default {
             </div>
           </div>
 
-          <!-- Middle Row: Reports -->
-          <div class="dashboard-grid mt-4">
+          <!-- Middle Row: Reports & AI Health -->
+          <div class="dashboard-grid mt-4" style="grid-template-columns: 1fr 1fr;">
+            <!-- Moderation Queue Widget -->
             <div class="gh-widget w-reports">
               <div class="widget-header">
                 <div class="d-flex align-items-center gap-3">
@@ -549,18 +569,45 @@ export default {
               </div>
             </div>
 
-            <div class="gh-widget w-quick" v-show="false">
+            <!-- AI Health Widget -->
+            <div class="gh-widget">
               <div class="widget-header">
                 <div class="d-flex align-items-center gap-3">
-                  <h3 class="mb-0"><i class="bi bi-lightning-charge-fill text-primary"></i> Platform Actions</h3>
-                  <span class="gh-badge badge-neutral"><i class="bi bi-cone-striped"></i> V2 Planned</span>
+                  <h3 class="mb-0"><i class="bi bi-cpu-fill text-primary"></i> AI Health Monitor</h3>
+                  <span class="badge bg-primary rounded-pill px-2 py-1" style="font-size: 0.7rem;">Gemini Pro</span>
                 </div>
+                <button class="btn btn-outline-primary btn-sm rounded-pill" @click="loadAiHealth">
+                  <i class="bi bi-arrow-clockwise" :class="{'spin-anim': loadingAiHealth}"></i> Refresh
+                </button>
               </div>
-              <div class="widget-body d-flex flex-column gap-3">
-                <button class="qa-btn" @click="actionComingSoon('Feature Game')"><i class="bi bi-star-fill"></i> Feature Game on Homepage</button>
-                <button class="qa-btn" @click="actionComingSoon('Manage Hero Banners')"><i class="bi bi-images"></i> Manage Hero Banners</button>
-                <button class="qa-btn" @click="actionComingSoon('Global Announcement')"><i class="bi bi-megaphone-fill"></i> Create Global Announcement</button>
-                <button class="qa-btn" @click="actionComingSoon('News Categories')"><i class="bi bi-tags-fill"></i> Manage News Categories</button>
+              <div class="widget-body">
+                <div v-if="loadingAiHealth" class="d-flex flex-column align-items-center justify-content-center p-4">
+                  <div class="spinner-border text-primary mb-3" role="status"></div>
+                  <p class="text-muted small">Gemini is analyzing system metrics...</p>
+                </div>
+                <div v-else-if="aiHealth" class="ai-health-content">
+                  <div class="alert" :class="aiHealth.status === 'healthy' ? 'alert-success border-success' : 'alert-warning border-warning'" style="background: rgba(0,0,0,0.2);">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                      <i class="bi fs-5" :class="aiHealth.status === 'healthy' ? 'bi-check-circle-fill text-success' : 'bi-exclamation-triangle-fill text-warning'"></i>
+                      <strong class="text-white">AI Analysis Report</strong>
+                    </div>
+                    <p class="mb-0 text-muted-light" style="font-size: 0.9rem; line-height: 1.5;">{{ aiHealth.analysis }}</p>
+                  </div>
+                  <div class="metrics-grid mt-3 d-flex gap-3">
+                    <div class="metric-box bg-dark p-2 rounded flex-fill text-center border border-secondary border-opacity-25">
+                      <div class="text-muted" style="font-size: 0.7rem; text-transform: uppercase;">CPU</div>
+                      <div class="fw-bold fs-5 text-white" :class="{'text-danger': aiHealth.metrics?.cpu_usage_percent > 85}">{{ aiHealth.metrics?.cpu_usage_percent || 0 }}%</div>
+                    </div>
+                    <div class="metric-box bg-dark p-2 rounded flex-fill text-center border border-secondary border-opacity-25">
+                      <div class="text-muted" style="font-size: 0.7rem; text-transform: uppercase;">Memory</div>
+                      <div class="fw-bold fs-5 text-white" :class="{'text-danger': aiHealth.metrics?.memory_usage_percent > 85}">{{ aiHealth.metrics?.memory_usage_percent || 0 }}%</div>
+                    </div>
+                    <div class="metric-box bg-dark p-2 rounded flex-fill text-center border border-secondary border-opacity-25">
+                      <div class="text-muted" style="font-size: 0.7rem; text-transform: uppercase;">Error Rate</div>
+                      <div class="fw-bold fs-5 text-white" :class="{'text-danger': aiHealth.metrics?.error_rate_percent > 3}">{{ aiHealth.metrics?.error_rate_percent || 0 }}%</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

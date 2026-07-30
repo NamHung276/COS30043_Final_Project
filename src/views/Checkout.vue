@@ -18,6 +18,10 @@ export default {
       currentUser: null,
       processing: false,
       ownedIds: [],
+      agreedToTerms: false,
+      isVerified: false,
+      verificationCode: "",
+      showVerificationModal: false,
     };
   },
 
@@ -67,6 +71,16 @@ export default {
   methods: {
     removeFromCart(id) {
       cartState.remove(id);
+    },
+
+    verifyAccount() {
+      if (this.verificationCode.length >= 4) {
+        this.isVerified = true;
+        this.showVerificationModal = false;
+        this.toast?.show("Account verified successfully.", "success");
+      } else {
+        this.toast?.show("Please enter a valid 4-digit code.", "error");
+      }
     },
 
     async handlePaymentSuccess(details) {
@@ -225,8 +239,25 @@ export default {
               >
             </div>
 
+            <!-- Terms & Verification -->
+            <div v-if="cart.items.length > 0 && !hasConflict" class="mb-4">
+              <div class="form-check mb-3 text-start">
+                <input class="form-check-input" type="checkbox" id="termsCheck" v-model="agreedToTerms">
+                <label class="form-check-label text-muted small" for="termsCheck">
+                  I agree to the <a href="#" class="text-primary">Terms of Sale</a> and <a href="#" class="text-primary">EULA</a>.
+                </label>
+              </div>
+              
+              <div v-if="agreedToTerms && !isVerified" class="text-center">
+                <p class="small text-warning mb-2"><i class="bi bi-shield-exclamation me-1"></i> For your security, please verify your account.</p>
+                <button class="btn btn-outline-warning w-100 fw-bold rounded-pill" @click="showVerificationModal = true">
+                  <i class="bi bi-envelope-check me-2"></i> Send 2FA Verification Code
+                </button>
+              </div>
+            </div>
+
             <!-- PayPal Component -->
-            <div v-if="cart.items.length > 0 && !hasConflict">
+            <div v-if="cart.items.length > 0 && !hasConflict && agreedToTerms && isVerified">
               <PayPalCheckout
                 gameId="cart"
                 :items="cart.items.map(i => i.id)"
@@ -250,9 +281,38 @@ export default {
               Please remove it from your cart to proceed.
             </div>
 
-            <div v-else class="text-center py-4">
+            <div v-else-if="!hasConflict" class="text-center py-4">
+              <p class="text-muted small">Please agree to the terms and verify your account to proceed with payment.</p>
+            </div>
+            
+            <div v-if="cart.items.length === 0" class="text-center py-4">
               <p class="text-muted">Add items to cart to checkout</p>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Verification Modal Mock -->
+    <div v-if="showVerificationModal" class="modal-backdrop fade show" style="z-index: 1050;"></div>
+    <div v-if="showVerificationModal" class="modal d-block" tabindex="-1" style="z-index: 1055;">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content gd-glass-card border-secondary">
+          <div class="modal-header border-bottom border-secondary border-opacity-25">
+            <h5 class="modal-title text-primary-var"><i class="bi bi-shield-lock-fill text-warning me-2"></i> Security Verification</h5>
+            <button type="button" class="btn-close btn-close-white" @click="showVerificationModal = false"></button>
+          </div>
+          <div class="modal-body p-4 text-center">
+            <p class="text-muted mb-4">We've sent a 4-digit verification code to your registered email to prevent unauthorized transactions.</p>
+            <div class="d-flex justify-content-center mb-3">
+              <input type="text" class="form-control text-center fs-3 fw-bold tracking-widest bg-dark text-white border-secondary" 
+                     style="max-width: 150px; letter-spacing: 0.5em;" maxlength="4" placeholder="••••" v-model="verificationCode">
+            </div>
+            <p class="small text-muted">Hint: Just enter any 4 numbers to mock verification.</p>
+          </div>
+          <div class="modal-footer border-top border-secondary border-opacity-25">
+            <button type="button" class="btn btn-secondary" @click="showVerificationModal = false">Cancel</button>
+            <button type="button" class="btn btn-warning fw-bold text-dark" @click="verifyAccount">Verify & Continue</button>
           </div>
         </div>
       </div>

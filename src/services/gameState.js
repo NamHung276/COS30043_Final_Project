@@ -35,10 +35,22 @@ export function getGameState(game) {
     state = 'COMING_SOON';
   }
 
-  // Compute fake price
+  // Compute real or tiered price
   let price = 0;
   if (!isFree) {
-    price = (game.id % 40) + 10 + 0.99;
+    if (game.cheapest_deal_price) {
+      price = parseFloat(game.cheapest_deal_price);
+    } else {
+      // Create a realistic tier based on rating and release year
+      const year = game.released ? new Date(game.released).getFullYear() : 2020;
+      const score = game.metacritic || (game.rating ? game.rating * 20 : 70);
+      
+      if (year >= 2023 && score >= 80) price = 59.99;
+      else if (year >= 2022 || score >= 85) price = 49.99;
+      else if (year >= 2018 || score >= 75) price = 29.99;
+      else if (year >= 2015) price = 19.99;
+      else price = 9.99;
+    }
   }
 
   // Calculate countdown days if coming soon

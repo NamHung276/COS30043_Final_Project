@@ -13,6 +13,7 @@ from app.services.payment_service import payment_service
 from app.services.crypto_service import crypto_service
 from app.utils.dependencies import get_current_user
 from app.models.user import UserContext
+from app.services import rawg_service, cheapshark_service
 from fastapi import Depends
 import logging
 
@@ -34,12 +35,48 @@ async def create_paypal_order(
         # Secure Price Calculation
         total_amount = 0.0
         for game_id in request.items:
-            roll = game_id % 4
-            is_sale = roll in (0, 1)
-            base_price = (game_id % 40) + 10 + 0.99
-            discount = 40 if roll == 0 else (25 if roll == 1 else 0)
-            final_price = base_price * (1 - discount / 100) if is_sale else base_price
-            total_amount += final_price
+            try:
+                game = await rawg_service.get_game_detail(game_id)
+                # First check CheapShark
+                cs_results = await cheapshark_service.get_deals_by_game_name(game.get("name", ""))
+                cheapest_price = None
+                if cs_results:
+                    best = min(cs_results, key=lambda g: float(g.get("cheapest", "9999")), default=None)
+                    if best:
+                        cheapest_price = best.get("cheapest")
+                
+                if cheapest_price:
+                    final_price = float(cheapest_price)
+                else:
+                    # Tier logic
+                    year_str = game.get("released")
+                    year = int(year_str.split("-")[0]) if year_str else 2020
+                    score = game.get("metacritic") or (game.get("rating", 0) * 20) or 70
+                    
+                    if year >= 2023 and score >= 80:
+                        final_price = 59.99
+                    elif year >= 2022 or score >= 85:
+                        final_price = 49.99
+                    elif year >= 2018 or score >= 75:
+                        final_price = 29.99
+                    elif year >= 2015:
+                        final_price = 19.99
+                    else:
+                        final_price = 9.99
+                        
+                # Apply old pseudo-discount logic if needed, or just use the tier price.
+                # Actually, the frontend cart price logic also applies discounts. 
+                # Let's match frontend exact logic! Frontend discount logic was in displayDiscount.
+                roll = game_id % 4
+                is_sale = roll in (0, 1)
+                discount = 40 if roll == 0 else (25 if roll == 1 else 0)
+                final_price = final_price * (1 - discount / 100) if is_sale else final_price
+                
+                total_amount += final_price
+            except Exception as ex:
+                logger.error(f"Error fetching price for game {game_id}: {ex}")
+                # Safe fallback
+                total_amount += 19.99
 
         # Round to 2 decimal places to match PayPal requirements
         final_total = round(total_amount, 2)

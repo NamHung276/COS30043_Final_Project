@@ -44,6 +44,8 @@ export default {
       dealsLoading: false,
       isZoomed: false,
       touchStartX: 0,
+      formattedMinReq: "",
+      formattedRecReq: "",
     };
   },
 
@@ -461,6 +463,8 @@ export default {
         if (this.currentUser) {
           trackUserActivity("view", this.game);
         }
+        
+        this.processSysReqs();
       } catch (err) {
         console.error(err);
       } finally {
@@ -484,6 +488,49 @@ export default {
         // Silently fail — not critical
       } finally {
         this.dealsLoading = false;
+      }
+    },
+
+    async processSysReqs() {
+      this.formattedMinReq = "";
+      this.formattedRecReq = "";
+      
+      const reqs = this.pcRequirements;
+      if (!reqs) return;
+
+      const formatText = async (text) => {
+        if (!text) return "";
+        const hasNonEnglish = /[^\x00-\x7F]/.test(text);
+        const hasEnglish = /[a-zA-Z]/.test(text);
+
+        if (hasNonEnglish && !hasEnglish) {
+          try {
+            const res = await backendApi.post('/games/format-sysreq', { text });
+            return res.data.formatted_text;
+          } catch (e) {
+            console.error("AI sysreq formatting failed", e);
+          }
+        }
+
+        let formatted = text.replace(/(Minimum:|Recommended:|OS:|Processor:|Memory:|Graphics:|Video Card:|Storage:|Hard Drive:|Sound Card:|DirectX:|Network:|Additional Notes:|Other requirements:|Partner Requirements:)/gi, '\n$1');
+        formatted = formatted.trim().replace(/\r\n/g, '\n').replace(/\n{2,}/g, '\n');
+        formatted = formatted.replace(/([a-zA-Z0-9\s:.,\-+)(]+)\n([^\x00-\x7F]+)/g, '$1<br><br>$2');
+        
+        const lines = formatted.split('\n');
+        const result = lines.map(line => {
+          if (line.trim() === '') return '';
+          line = line.replace(/^([A-Za-z\s]+:|[\u4e00-\u9fa5]+:|[\u0400-\u04FF]+:)/, '<strong>$1</strong>');
+          return `<li style="margin-bottom: 4px;">${line}</li>`;
+        });
+        
+        return `<ul style="list-style-type: none; padding-left: 0; margin-bottom: 0;">${result.join('')}</ul>`;
+      };
+
+      if (reqs.minimum) {
+        this.formattedMinReq = await formatText(reqs.minimum);
+      }
+      if (reqs.recommended) {
+        this.formattedRecReq = await formatText(reqs.recommended);
       }
     },
   },
@@ -804,7 +851,7 @@ export default {
               >
                 <div
                   class="gd-description"
-                  v-html="game.description || 'No description available.'"
+                  v-html="game.description || game.description_raw || game.about || 'No description available.'"
                 ></div>
                 <div class="gd-desc-fade" v-if="!showFullDescription"></div>
               </div>
@@ -850,13 +897,11 @@ export default {
               <div class="gd-sysreq-grid">
                 <div v-if="pcRequirements.minimum" class="gd-sysreq-col">
                   <div class="gd-sysreq-label">Minimum</div>
-                  <pre class="gd-sysreq-text">{{ pcRequirements.minimum }}</pre>
+                  <div class="gd-sysreq-text" v-html="formattedMinReq || pcRequirements.minimum"></div>
                 </div>
                 <div v-if="pcRequirements.recommended" class="gd-sysreq-col">
                   <div class="gd-sysreq-label">Recommended</div>
-                  <pre class="gd-sysreq-text">{{
-                    pcRequirements.recommended
-                  }}</pre>
+                  <div class="gd-sysreq-text" v-html="formattedRecReq || pcRequirements.recommended"></div>
                 </div>
               </div>
             </div>

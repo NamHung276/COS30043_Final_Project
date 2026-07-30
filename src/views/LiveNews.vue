@@ -149,6 +149,18 @@ export default {
   },
 
   methods: {
+    handleImageError(event) {
+      const parent = event.target.parentElement;
+      const placeholder = document.createElement("div");
+      placeholder.className = "w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-dark text-muted border border-secondary border-opacity-25 rounded";
+      placeholder.style.minHeight = "200px";
+      placeholder.innerHTML = `
+        <i class="bi bi-image-fill fs-1 mb-2 opacity-50"></i>
+        <div class="small fw-bold px-3 text-center">Image Unavailable</div>
+        <div class="small px-3 text-center opacity-75" style="font-size: 0.7rem;">(Source Error or Copyright Restriction)</div>
+      `;
+      parent.replaceChild(placeholder, event.target);
+    },
     goToPage(page) {
       if (page >= 1 && page <= this.totalPages) {
         this.currentPage = page;
@@ -348,7 +360,7 @@ export default {
             <!-- Main Featured Story (70%) -->
             <a :href="featuredStory.url" target="_blank" rel="noopener noreferrer" class="ed-featured-card">
               <div class="ed-feat-img-wrap">
-                <img v-if="featuredStory.urlToImage" :src="featuredStory.urlToImage" :alt="featuredStory.title" class="ed-feat-img" />
+                <img v-if="featuredStory.urlToImage" :src="featuredStory.urlToImage" :alt="featuredStory.title" class="ed-feat-img" @error="handleImageError" />
                 <div v-else class="ed-feat-img-placeholder"></div>
               </div>
               <div class="ed-feat-content">
@@ -483,7 +495,7 @@ export default {
             <div class="col-12 col-lg-4" v-for="article in editorsPicks" :key="'pick-'+article.url">
               <a :href="article.url" target="_blank" rel="noopener noreferrer" class="ed-pick-card d-flex flex-column h-100 text-decoration-none">
                 <div class="ed-pick-img-wrap rounded overflow-hidden mb-3" style="aspect-ratio: 16/9;">
-                  <img :src="article.urlToImage" class="w-100 h-100 object-fit-cover" />
+                  <img :src="article.urlToImage" class="w-100 h-100 object-fit-cover" @error="handleImageError" />
                 </div>
                 <div class="ed-pick-body d-flex flex-column flex-grow-1">
                   <span class="text-primary fw-bold text-uppercase small mb-2" style="letter-spacing: 0.05em;">{{ getArticleCategory(article) }}</span>
@@ -518,7 +530,7 @@ export default {
               class="ed-card"
             >
               <div class="ed-card-img-wrap">
-                <img v-if="article.urlToImage" v-lazy-img="article.urlToImage" :alt="article.title" class="ed-card-img" />
+                <img v-if="article.urlToImage" v-lazy-img="article.urlToImage" :alt="article.title" class="ed-card-img" @error="handleImageError" />
                 <div v-else class="ed-card-img-placeholder">
                   <i class="bi bi-newspaper fs-1 opacity-25"></i>
                 </div>

@@ -17,6 +17,10 @@ export default {
 
   data() {
     return {
+      activeTab: "deals",
+      bundles: [],
+      bundlesLoading: false,
+      bundlesError: null,
       deals: [],
       loading: true,
       error: null,
@@ -153,6 +157,20 @@ export default {
         this.loading = false;
       }
     },
+    async fetchBundles() {
+      if (this.bundles.length > 0) return; // Already fetched
+      this.bundlesLoading = true;
+      this.bundlesError = null;
+      try {
+        const { data } = await backendApi.get("/games/bundles/active");
+        this.bundles = data.bundles || [];
+      } catch (err) {
+        console.error(err);
+        this.bundlesError = "Failed to load active bundles.";
+      } finally {
+        this.bundlesLoading = false;
+      }
+    },
   },
 
   async mounted() {
@@ -189,13 +207,19 @@ export default {
             <h1 class="deals-title">Game Deals</h1>
             <p class="deals-subtitle">
               Live discounts on PC games across Steam, Epic, GOG &amp; more
-              <span class="deals-powered">· Powered by CheapShark</span>
+              <span class="deals-powered">· Powered by CheapShark & GG.deals</span>
             </p>
           </div>
         </div>
 
+        <!-- ══ Tabs ══ -->
+        <div class="deals-tabs" style="display: flex; gap: 1rem; margin-top: 1.5rem; margin-bottom: 0.5rem;">
+          <button class="deals-primary-btn" :style="{ opacity: activeTab === 'deals' ? 1 : 0.6 }" @click="activeTab = 'deals'">Game Deals</button>
+          <button class="deals-primary-btn" :style="{ opacity: activeTab === 'bundles' ? 1 : 0.6 }" @click="activeTab = 'bundles'; fetchBundles()">Active Bundles <span style="background: var(--accent); color: white; border-radius: 4px; padding: 2px 6px; font-size: 11px; margin-left: 6px;">GG.deals</span></button>
+        </div>
+
         <!-- ══ Filter Panel ══ -->
-        <div class="deals-filter-panel">
+        <div v-if="activeTab === 'deals'" class="deals-filter-panel">
           <!-- Row 1: Search + Sort + Store -->
           <div class="deals-filter-row">
             <!-- Search -->
@@ -342,6 +366,7 @@ export default {
 
     <!-- ══ Content ══ -->
     <div class="container deals-content">
+      <template v-if="activeTab === 'deals'">
       <!-- Skeleton -->
       <div v-if="loading" class="deals-grid">
         <SkeletonCard v-for="n in 12" :key="n" />
@@ -661,6 +686,44 @@ export default {
           />
         </button>
       </nav>
+      </template>
+
+      <!-- ══ Bundles Content ══ -->
+      <template v-else-if="activeTab === 'bundles'">
+        <div v-if="bundlesLoading" class="games-grid">
+          <SkeletonCard v-for="n in 12" :key="n" />
+        </div>
+        <div v-else-if="bundlesError" class="deals-state">
+          <h3>Failed to load bundles</h3>
+          <p>{{ bundlesError }}</p>
+          <button class="deals-primary-btn" @click="fetchBundles">Try Again</button>
+        </div>
+        <div v-else-if="bundles.length === 0" class="deals-state">
+          <h3>No active bundles found</h3>
+        </div>
+        <div v-else class="games-grid" style="margin-top: 2rem;">
+          <a
+            v-for="(bundle, index) in bundles"
+            :key="bundle.id || index"
+            :href="bundle.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="game-card stagger-item"
+            :style="{ animationDelay: `${(index % 12) * 0.04}s` }"
+          >
+            <div class="game-card-img-wrap" style="padding-top: 56.25%;"> <!-- 16:9 aspect ratio for bundles -->
+               <img v-if="bundle.image" :src="bundle.image" class="game-card-img" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;" />
+               <div class="game-card-hover" aria-hidden="true"><div class="hover-content"><span class="hover-action">View Bundle</span></div></div>
+            </div>
+            <div class="game-card-info">
+              <h3 class="game-card-title">{{ bundle.title }}</h3>
+              <div class="game-card-meta">
+                <span class="game-genre-tag">{{ bundle.shop }}</span>
+              </div>
+            </div>
+          </a>
+        </div>
+      </template>
     </div>
   </div>
 </template>

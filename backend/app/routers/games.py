@@ -325,3 +325,22 @@ async def format_sysreq(req: SysReqTranslationRequest):
     except Exception as e:
         logger.error(f"Error formatting sysreq: {e}")
         return {"formatted_text": req.text}
+
+@router.get(
+    "/games/bundles/active",
+    summary="Get active game bundles from GG.deals",
+    description="Returns a list of currently active bundles across various stores.",
+)
+async def get_active_bundles(
+    region: str = Query("us", description="Region code for pricing"),
+    cursor: Optional[str] = Query(None, description="Pagination cursor"),
+    offset: Optional[int] = Query(None, description="Pagination offset"),
+):
+    try:
+        data = await ggdeals_service.get_active_bundles(region=region, cursor=cursor, offset=offset)
+        if not data:
+            return {"bundles": [], "totalCount": 0}
+        return data
+    except Exception as exc:
+        logger.error(f"Failed to fetch active bundles: {exc}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to fetch active bundles")

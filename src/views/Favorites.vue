@@ -835,6 +835,16 @@ export default {
   gap: 1.5rem;
 }
 
+@media (max-width: 576px) {
+  .fav-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .fav-card-img-wrap {
+    height: 120px;
+  }
+}
+
 /* ===== Card ===== */
 .fav-card {
   background: var(--bg-glass);

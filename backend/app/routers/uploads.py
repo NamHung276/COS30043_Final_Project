@@ -11,11 +11,12 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.post("/uploads", summary="Upload an image file")
 async def upload_image(request: Request, file: UploadFile = File(...)):
-    if not file.content_type.startswith("image/"):
+    content_type = file.content_type or ""
+    if not content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Only image files are allowed")
 
     # Generate a unique filename using timestamp
-    safe_filename = file.filename.replace(" ", "_")
+    safe_filename = (file.filename or "upload").replace(" ", "_")
     unique_filename = f"{int(time.time() * 1000)}_{safe_filename}"
     file_path = os.path.join(UPLOAD_DIR, unique_filename)
 

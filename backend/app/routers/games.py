@@ -20,8 +20,9 @@ from typing import Any, Dict, Optional, cast
 
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, Query, status
+import re
 
-from app.services import rawg_service, cheapshark_service
+from app.services import rawg_service, cheapshark_service, ggdeals_service
 from app.services.recommendation_service import recommendation_service
 from app.schemas.game import GameDetail, GameSummary, Screenshot, Trailer
 from app.schemas.common import RAWGPaginatedResponse
@@ -47,11 +48,20 @@ def _rawg_error(exc: Exception, game_id: Optional[int] = None) -> HTTPException:
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"RAWG API error: {exc.response.status_code}",
         )
-    return HTTPException(
-        status_code=status.HTTP_502_BAD_GATEWAY,
-        detail=f"Failed to reach RAWG: {str(exc)}",
-    )
+    raise HTTPException(status_code=500, detail="Internal server error connecting to game APIs")
 
+def _extract_steam_app_id(game_detail: dict) -> Optional[str]:
+    """Helper to extract Steam App ID from RAWG stores array."""
+    stores = game_detail.get("stores", [])
+    for s in stores:
+        store_info = s.get("store", {})
+        if store_info.get("slug") == "steam" or store_info.get("id") == 1:
+            url = s.get("url", "")
+            if "/app/" in url:
+                match = re.search(r'/app/(\d+)', url)
+                if match:
+                    return match.group(1)
+    return None
 
 # ── Endpoints ──────────────────────────────────────────────────────────────────
 
@@ -216,12 +226,36 @@ async def get_game_detail(game_id: int):
         except Exception as cs_exc:
             logger.warning("CheapShark lookup failed for game %d: %s", game_id, cs_exc)
 
+        # Try to find GG.deals prices and bundles by Steam App ID
+        ggdeals_data = None
+        steam_id = _extract_steam_app_id(detail)
+        if steam_id:
+            try:
+                results = await asyncio.gather(
+                    ggdeals_service.get_prices_by_steam_id(steam_id),
+                    ggdeals_service.get_bundles_by_steam_id(steam_id),
+                    return_exceptions=True
+                )
+                prices_res = results[0] if isinstance(results[0], dict) else None
+                bundles_res = results[1] if isinstance(results[1], dict) else None
+                
+                if prices_res or bundles_res:
+                    fallback_dict = prices_res or bundles_res or {}
+                    ggdeals_data = {
+                        "url": fallback_dict.get("url"),
+                        "prices": prices_res.get("prices") if prices_res else None,
+                        "bundles": bundles_res.get("bundles") if bundles_res else []
+                    }
+            except Exception as gg_exc:
+                logger.warning("GG.deals lookups failed for game %d (steam %s): %s", game_id, steam_id, gg_exc)
+
         # Assemble aggregated response
         return {
             **detail,
             "screenshots": screenshots,
             "trailers": trailers,
             "deals": deals,
+            "ggdeals": ggdeals_data,
             "cheapest_deal_price": cheapest_price,
             "cheapest_deal_store": cheapest_store,
             "rawg_url": f"https://rawg.io/games/{detail.get('slug', game_id)}",

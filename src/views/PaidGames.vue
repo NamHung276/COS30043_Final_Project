@@ -328,7 +328,7 @@ export default {
               <h6 class="gd-rec-title fw-bold mb-1 text-truncate" :title="g.name">{{ g.name }}</h6>
               <div class="d-flex justify-content-between align-items-center mt-2">
                 <span class="gd-rec-genre text-muted small text-truncate" style="max-width: 60%">{{ g.genres?.[0]?.name || 'Game' }}</span>
-                <span class="gd-rec-price fw-bold text-success small">${{ gamePrice(g) }}</span>
+                <span class="gd-rec-price fw-bold text-success small" v-if="gamePrice(g)">${{ gamePrice(g) }}</span>
               </div>
             </div>
           </router-link>
@@ -531,7 +531,7 @@ export default {
                 <span class="price-original">${{ gamePrice(game) }}</span>
                 <span class="price-current">${{ discountedPrice(game) }}</span>
               </template>
-              <template v-else>
+              <template v-else-if="gamePrice(game)">
                 <span class="price-current">${{ gamePrice(game) }}</span>
               </template>
               <span class="game-source-pill">RAWG</span>
@@ -600,7 +600,7 @@ export default {
                 >
                 <span class="price-current">${{ discountedPrice(game) }}</span>
               </template>
-              <template v-else
+              <template v-else-if="gamePrice(game)"
                 ><span class="price-current"
                   >${{ gamePrice(game) }}</span
                 ></template

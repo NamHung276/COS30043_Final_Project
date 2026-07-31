@@ -244,38 +244,32 @@ export default {
       return groups;
     },
 
-    mockDLCs() {
-      if (!this.game || !this.gameStateInfo.isReleased || this.gameStateInfo.isFree) return [];
-      const basePrice = parseFloat(this.displayPrice) || 29.99;
-      return [
-        {
-          id: 1,
-          name: "Digital Deluxe Edition Upgrade",
-          price: (basePrice * 0.4).toFixed(2),
-          discount: 0
-        },
-        {
-          id: 2,
-          name: "Original Soundtrack",
-          price: "9.99",
-          discount: 0
-        },
-        {
-          id: 3,
-          name: "Season Pass",
-          price: (basePrice * 0.8).toFixed(2),
-          discount: 15
-        }
-      ];
-    },
 
-    mockEngine() {
-      if (!this.game) return "Custom Engine";
-      const id = this.game.id;
-      if (id % 3 === 0) return "Unreal Engine 5";
-      if (id % 5 === 0) return "Unity";
-      if (id % 2 === 0) return "Decima Engine";
-      return "Proprietary Engine";
+    featureTags() {
+      if (!this.game?.tags) return [];
+      
+      const features = [];
+      const tagSlugs = this.game.tags.map(t => t.slug);
+      
+      if (tagSlugs.includes('singleplayer')) {
+        features.push({ id: 'sp', name: 'Single-player', icon: 'bi bi-person-fill' });
+      }
+      if (this.hasMultiplayer) {
+        features.push({ id: 'mp', name: 'Multiplayer', icon: 'bi bi-people-fill' });
+      }
+      if (tagSlugs.includes('full-controller-support')) {
+        features.push({ id: 'fcs', name: 'Full Controller Support', icon: 'bi bi-dpad-fill' });
+      } else if (tagSlugs.includes('partial-controller-support')) {
+        features.push({ id: 'pcs', name: 'Partial Controller Support', icon: 'bi bi-dpad' });
+      }
+      if (tagSlugs.includes('cloud-saves')) {
+        features.push({ id: 'cs', name: 'Cloud Saves', icon: 'bi bi-cloud-check-fill' });
+      }
+      if (tagSlugs.includes('steam-achievements') || tagSlugs.includes('achievements')) {
+        features.push({ id: 'ach', name: 'Achievements', icon: 'bi bi-trophy-fill' });
+      }
+      
+      return features;
     },
 
     hasMultiplayer() {
@@ -479,6 +473,7 @@ export default {
         const res = await backendApi.get("/deals", {
           params: {
             title: title.substring(0, 30), // CheapShark title search
+            exact: 1, // Exact match
             page_size: 5,
             sort_by: "Price",
           },
@@ -526,11 +521,35 @@ export default {
         return `<ul style="list-style-type: none; padding-left: 0; margin-bottom: 0;">${result.join('')}</ul>`;
       };
 
-      if (reqs.minimum) {
-        this.formattedMinReq = await formatText(reqs.minimum);
+      let minText = reqs.minimum || "";
+      let recText = reqs.recommended || "";
+
+      // Sometimes RAWG dumps both min and rec into the minimum field
+      if (minText && !recText) {
+        const recMatch = minText.match(/Recommended\s*:/i);
+        if (recMatch) {
+          recText = minText.substring(recMatch.index + recMatch[0].length).trim();
+          minText = minText.substring(0, recMatch.index).trim();
+        }
       }
-      if (reqs.recommended) {
-        this.formattedRecReq = await formatText(reqs.recommended);
+
+      // Clean up "Minimum:" prefix if it exists at the start
+      const minMatch = minText.match(/^Minimum\s*:/i);
+      if (minMatch) {
+         minText = minText.substring(minMatch[0].length).trim();
+      }
+
+      // Clean up "Recommended:" prefix if it exists at the start
+      const recMatch2 = recText.match(/^Recommended\s*:/i);
+      if (recMatch2) {
+         recText = recText.substring(recMatch2[0].length).trim();
+      }
+
+      if (minText) {
+        this.formattedMinReq = await formatText(minText);
+      }
+      if (recText) {
+        this.formattedRecReq = await formatText(recText);
       }
     },
   },
@@ -895,13 +914,13 @@ export default {
                 Requirements
               </h2>
               <div class="gd-sysreq-grid">
-                <div v-if="pcRequirements.minimum" class="gd-sysreq-col">
+                <div v-if="formattedMinReq || pcRequirements?.minimum" class="gd-sysreq-col">
                   <div class="gd-sysreq-label">Minimum</div>
-                  <div class="gd-sysreq-text" v-html="formattedMinReq || pcRequirements.minimum"></div>
+                  <div class="gd-sysreq-text" v-html="formattedMinReq || pcRequirements?.minimum"></div>
                 </div>
-                <div v-if="pcRequirements.recommended" class="gd-sysreq-col">
+                <div v-if="formattedRecReq || pcRequirements?.recommended" class="gd-sysreq-col">
                   <div class="gd-sysreq-label">Recommended</div>
-                  <div class="gd-sysreq-text" v-html="formattedRecReq || pcRequirements.recommended"></div>
+                  <div class="gd-sysreq-text" v-html="formattedRecReq || pcRequirements?.recommended"></div>
                 </div>
               </div>
             </div>
@@ -1315,6 +1334,61 @@ export default {
                     </a>
                   </div>
                 </div>
+
+                <!-- GG.deals Pricing Insights -->
+                <div v-if="game.ggdeals?.prices" class="p-4 bg-black bg-opacity-20 border-top border-secondary border-opacity-25">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <small class="text-muted fw-bold text-uppercase" style="letter-spacing: 0.08em">GG.deals Market</small>
+                    <a :href="game.ggdeals.url" target="_blank" rel="noopener noreferrer" class="badge bg-primary text-decoration-none py-1 px-2" style="font-size: 0.7rem">
+                      View all offers <i class="bi bi-box-arrow-up-right ms-1"></i>
+                    </a>
+                  </div>
+                  
+                  <div class="d-flex flex-column gap-3">
+                    <!-- Retail -->
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div class="d-flex flex-column">
+                        <span class="text-white fw-bold" style="font-size: 0.9rem"><i class="bi bi-shop me-2 text-success"></i>Official Stores</span>
+                        <span class="text-muted small" style="font-size: 0.75rem">Current Lowest</span>
+                      </div>
+                      <span class="fs-5 fw-bold text-success">{{ game.ggdeals.prices.currentRetail ? '$' + game.ggdeals.prices.currentRetail : 'N/A' }}</span>
+                    </div>
+                    
+                    <!-- Keyshops -->
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div class="d-flex flex-column">
+                        <span class="text-white fw-bold" style="font-size: 0.9rem"><i class="bi bi-key-fill me-2 text-warning"></i>Keyshops</span>
+                        <span class="text-muted small" style="font-size: 0.75rem">Current Lowest</span>
+                      </div>
+                      <span class="fs-5 fw-bold text-warning">{{ game.ggdeals.prices.currentKeyshops ? '$' + game.ggdeals.prices.currentKeyshops : 'N/A' }}</span>
+                    </div>
+
+                    <!-- Historical Low -->
+                    <div class="mt-2 pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                      <span class="text-muted small"><i class="bi bi-graph-down me-1"></i>Historical Low</span>
+                      <span class="text-muted fw-bold small">{{ game.ggdeals.prices.historicalRetail || game.ggdeals.prices.historicalKeyshops ? '$' + (game.ggdeals.prices.historicalRetail || game.ggdeals.prices.historicalKeyshops) : 'N/A' }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- GG.deals Bundles -->
+                <div v-if="game.ggdeals?.bundles?.length" class="p-4 bg-black bg-opacity-30 border-top border-secondary border-opacity-25">
+                  <div class="d-flex align-items-center mb-3">
+                    <small class="text-muted fw-bold text-uppercase" style="letter-spacing: 0.08em"><i class="bi bi-box-seam me-2"></i>Featured in Bundles</small>
+                  </div>
+                  
+                  <div class="d-flex flex-column gap-3">
+                    <div v-for="(bundle, index) in game.ggdeals.bundles" :key="index" class="p-3 rounded border border-secondary border-opacity-25 bg-black bg-opacity-25">
+                      <a :href="bundle.url || game.ggdeals.url" target="_blank" rel="noopener noreferrer" class="text-white text-decoration-none fw-bold d-block mb-2" style="font-size: 0.9rem">
+                        {{ bundle.title }} <i class="bi bi-box-arrow-up-right ms-1 text-muted" style="font-size: 0.8rem"></i>
+                      </a>
+                      <div class="d-flex justify-content-between text-muted" style="font-size: 0.8rem">
+                        <span>Ends: {{ bundle.dateTo ? new Date(bundle.dateTo).toLocaleDateString() : 'Unknown' }}</span>
+                        <span class="text-success fw-bold">From {{ bundle.tiers?.[0]?.price ? '$' + bundle.tiers[0].price : 'N/A' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <!-- Details table -->
@@ -1352,14 +1426,6 @@ export default {
                       game.esrb_rating.name
                     }}</span>
                   </div>
-                  <div class="gd-meta-row" v-if="gameStateInfo.isReleased">
-                    <span class="gd-meta-label">Engine</span>
-                    <span class="gd-meta-value">{{ mockEngine }} <span class="text-muted" style="cursor:help" title="Simulated Data">*</span></span>
-                  </div>
-                  <div class="gd-meta-row" v-if="gameStateInfo.isReleased">
-                    <span class="gd-meta-label">Languages</span>
-                    <span class="gd-meta-value">English, French, Spanish <span class="text-muted text-decoration-underline" style="font-size: 0.75rem; cursor: help" title="Simulated Data">+6 more</span></span>
-                  </div>
                   <div class="gd-meta-row" v-if="game.ratings_count && gameStateInfo.isReleased">
                     <span class="gd-meta-label">Total Reviews</span>
                     <span class="gd-meta-value">{{
@@ -1371,6 +1437,7 @@ export default {
 
               <!-- Features (Trust Signals) -->
               <div
+                v-if="featureTags.length"
                 class="gd-features-card mb-4 profile-glass-card p-4 rounded-4"
                 style="background: var(--bg-surface)"
               >
@@ -1378,57 +1445,17 @@ export default {
                   <i class="bi bi-controller text-primary me-2"></i> Features
                 </h5>
                 <div class="d-flex flex-column gap-3">
-                  <div class="d-flex align-items-center gap-3 gd-feature-item">
-                    <i class="bi bi-person-fill text-muted fs-5"></i>
-                    <span class="fw-semibold">Single-player</span>
-                  </div>
-                  <div class="d-flex align-items-center gap-3 gd-feature-item" v-if="hasMultiplayer">
-                    <i class="bi bi-people-fill text-muted fs-5"></i>
-                    <span class="fw-semibold">Multiplayer</span>
-                  </div>
-                  <div class="d-flex align-items-center gap-3 gd-feature-item">
-                    <i class="bi bi-dpad-fill text-muted fs-5"></i>
-                    <span class="fw-semibold">Full Controller Support</span>
-                  </div>
-                  <div class="d-flex align-items-center gap-3 gd-feature-item">
-                    <i class="bi bi-cloud-check-fill text-muted fs-5"></i>
-                    <span class="fw-semibold">Cloud Saves</span>
-                  </div>
-                  <div class="d-flex align-items-center gap-3 gd-feature-item">
-                    <i class="bi bi-trophy-fill text-muted fs-5"></i>
-                    <span class="fw-semibold">Achievements ({{ game ? (game.id % 50) + 20 : 0 }})</span>
+                  <div
+                    v-for="feature in featureTags"
+                    :key="feature.id"
+                    class="d-flex align-items-center gap-3 gd-feature-item"
+                  >
+                    <i :class="feature.icon + ' text-muted fs-5'"></i>
+                    <span class="fw-semibold">{{ feature.name }}</span>
                   </div>
                 </div>
               </div>
 
-              <!-- Packages and DLC -->
-              <div
-                v-if="mockDLCs.length"
-                class="gd-dlc-card profile-glass-card p-4 rounded-4 mt-4 mb-4"
-              >
-                <h5 class="gd-details-heading mb-4">
-                  <i class="bi bi-box-seam-fill text-primary me-2"></i> Packages & DLC
-                </h5>
-                <div class="d-flex flex-column gap-3">
-                  <div
-                    v-for="dlc in mockDLCs"
-                    :key="dlc.id"
-                    class="d-flex justify-content-between align-items-center p-3 rounded-3"
-                    style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-glass);"
-                  >
-                    <div>
-                      <span class="fw-semibold d-block" style="font-size:0.9rem">{{ dlc.name }}</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                      <span v-if="dlc.discount" class="badge bg-danger rounded-pill">-{{ dlc.discount }}%</span>
-                      <span class="fw-bold">${{ (dlc.price * (1 - dlc.discount/100)).toFixed(2) }}</span>
-                      <button class="btn btn-sm btn-outline-primary px-2 py-1 rounded-3 ms-1" title="Add to Cart">
-                        <i class="bi bi-cart-plus"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
               <!-- CheapShark Deals -->
               <div

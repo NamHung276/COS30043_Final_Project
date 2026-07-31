@@ -568,7 +568,7 @@ export default {
           </div>
 
           <!-- Middle Row: Reports & AI Health -->
-          <div class="dashboard-grid mt-4" style="grid-template-columns: 1fr 1fr;">
+          <div class="dashboard-grid mt-4">
             <!-- Moderation Queue Widget -->
             <div class="gh-widget w-reports">
               <div class="widget-header">

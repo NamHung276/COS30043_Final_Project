@@ -75,6 +75,8 @@ async def get_deals(
     min_savings: Optional[int] = None,
     store_id: Optional[str] = None,
     aaa: Optional[int] = None,
+    title: Optional[str] = None,
+    exact: Optional[int] = None,
 ) -> List[Dict]:
     """
     Fetch game deals from CheapShark.
@@ -92,6 +94,8 @@ async def get_deals(
         min_savings or "",
         store_id or "",
         aaa or "",
+        title or "",
+        exact or 0,
     )
 
     async def _fetch():
@@ -110,6 +114,10 @@ async def get_deals(
             params["storeID"] = store_id
         if aaa is not None:
             params["AAA"] = aaa
+        if title:
+            params["title"] = title
+        if exact:
+            params["exact"] = exact
 
         deals = await _get("/deals", params)
         return [_enrich_deal(d) for d in deals]

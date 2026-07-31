@@ -117,7 +117,7 @@ async def generate_response(prompt: str) -> str:
             model="gemini-flash-latest",
             contents=prompt,
         )
-        return response.text
+        return response.text or ""
     except Exception as e:
         logger.error(f"Error calling Gemini API for generation: {e}", exc_info=True)
         return "Error generating response."

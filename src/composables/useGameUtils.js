@@ -112,30 +112,21 @@ export function formatDate(value) {
  * Generates a deterministic fake base price from a game's ID.
  */
 export function gamePrice(game) {
-  if (game.itemType === "f2p") return 0;
-  const base = (game.id % 40) + 10;
-  return (base + 0.99).toFixed(2);
+  return null;
 }
 
 /**
  * Generates a deterministic fake discount percentage from a game's ID.
  */
 export function gameDiscount(game) {
-  if (game.itemType === "f2p") return 0;
-  const roll = game.id % 4;
-  if (roll === 0) return 40;
-  if (roll === 1) return 25;
-  return 0;
+  return null;
 }
 
 /**
  * Calculates the final price after the fake discount.
  */
 export function discountedPrice(game) {
-  const price = parseFloat(gamePrice(game));
-  const disc = gameDiscount(game);
-  if (!disc) return null;
-  return (price * (1 - disc / 100)).toFixed(2);
+  return null;
 }
 
 // ── Platform Icons ────────────────────────────────────────────────────────────

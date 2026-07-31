@@ -129,6 +129,9 @@ class GameDetail(BaseModel):
     cheapest_deal_price: Optional[str] = None
     cheapest_deal_store: Optional[str] = None
 
+    # ── GG.deals ─────────────────────────────────────────────────────────────────
+    ggdeals: Optional[Dict[str, Any]] = None
+
     # ── Meta ─────────────────────────────────────────────────────────────────────
     rawg_url: Optional[str] = None
     aggregated_at: Optional[str] = None  # ISO timestamp of when data was fetched

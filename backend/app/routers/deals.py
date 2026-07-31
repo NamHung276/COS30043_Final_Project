@@ -53,6 +53,12 @@ async def get_deals(
     store_id: Optional[str] = Query(
         default=None, description="Filter to a specific store ID"
     ),
+    title: Optional[str] = Query(
+        default=None, description="Search deals by game title"
+    ),
+    exact: Optional[int] = Query(
+        default=0, description="Exact match for title (1 = true, 0 = false)"
+    ),
 ):
     try:
         deals = await cheapshark_service.get_deals(
@@ -63,6 +69,8 @@ async def get_deals(
             lower_price=lower_price,
             min_savings=min_savings,
             store_id=store_id,
+            title=title,
+            exact=exact,
         )
         return {
             "results": deals,

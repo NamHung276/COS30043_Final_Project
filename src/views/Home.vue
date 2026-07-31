@@ -945,7 +945,7 @@ export default {
                   {{ star === "full" ? "★" : star === "half" ? "⯨" : "☆" }}
                 </span>
               </div>
-              <div class="sso-price-row mt-2" style="display: flex; align-items: center; gap: 8px;">
+              <div class="sso-price-row mt-2" v-if="gamePrice(game)" style="display: flex; align-items: center; gap: 8px;">
                 <template v-if="gameDiscount(game) > 0">
                   <span class="sso-discount">-{{ gameDiscount(game) }}%</span>
                   <div class="sso-prices" style="display: flex; flex-direction: column; align-items: flex-end;">
@@ -1217,7 +1217,7 @@ export default {
               <h6 class="gd-rec-title fw-bold mb-1 text-truncate" :title="g.name || g.title">{{ g.name || g.title }}</h6>
               <div class="d-flex justify-content-between align-items-center mt-2">
                 <span class="gd-rec-genre text-muted small text-truncate" style="max-width: 60%">{{ (g.genres?.[0]?.name || g.genre) || 'Game' }}</span>
-                <span class="gd-rec-price fw-bold text-success small">${{ gamePrice(g) }}</span>
+                <span v-if="gamePrice(g)" class="gd-rec-price fw-bold text-success small">${{ gamePrice(g) }}</span>
               </div>
             </div>
           </router-link>
@@ -1534,13 +1534,24 @@ export default {
   display: flex;
   gap: 16px;
   overflow-x: auto;
-  padding-bottom: 8px;
+  padding-bottom: 12px;
   scroll-snap-type: x mandatory;
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(124, 58, 237, 0.6) transparent;
 }
 .h-scroll-strip::-webkit-scrollbar {
-  display: none;
+  height: 8px;
+}
+.h-scroll-strip::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+.h-scroll-strip::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.6);
+  border-radius: 4px;
+}
+.h-scroll-strip::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.9);
 }
 .h-scroll-card {
   width: 220px;
@@ -1773,9 +1784,17 @@ export default {
   display: flex;
   background: var(--bg-deep);
   border-bottom: 1px solid var(--border-subtle);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.steam-tabs-header::-webkit-scrollbar {
+  display: none;
 }
 .steam-tab-btn {
   flex: 1;
+  min-width: fit-content;
+  white-space: nowrap;
   background: transparent;
   border: none;
   color: var(--text-muted);
@@ -2011,11 +2030,45 @@ export default {
 
 /* --- STEAM GENRE CARDS --- */
 .steam-genre-explorer {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  display: flex;
   gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 16px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 58, 237, 0.6) transparent;
+}
+.steam-genre-explorer::-webkit-scrollbar {
+  height: 8px;
+}
+.steam-genre-explorer::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+.steam-genre-explorer::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.6);
+  border-radius: 4px;
+}
+.steam-genre-explorer::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.9);
+}
+
+@media (max-width: 576px) {
+  .steam-genre-card {
+    flex: 0 0 160px;
+    height: 100px;
+  }
+  .sgc-label {
+    font-size: 0.95rem;
+  }
+  .sgc-icon {
+    width: 40px;
+    height: 40px;
+  }
 }
 .steam-genre-card {
+  flex: 0 0 220px;
+  scroll-snap-align: start;
   position: relative;
   height: 140px;
   border-radius: 8px;

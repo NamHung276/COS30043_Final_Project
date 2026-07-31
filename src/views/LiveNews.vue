@@ -225,24 +225,6 @@ export default {
       return false;
     },
     
-    // ── Mock Metadata Generators ──
-    getMockAuthor(article) {
-      const badges = ["✔ Senior Reporter", "Gaming Editor", "Lead Reviewer", "Community Writer", "News Editor"];
-      const names = ["Ryan Dinsdale", "Rebekah Valentine", "Tom Marks", "Kat Bailey", "Matt Kim", "Taylor Lyles", "Phil Spencer", "Todd Howard"];
-      
-      const seed = article.title ? article.title.length : 0;
-      const name = names[seed % names.length];
-      const badge = badges[(seed * 2) % badges.length];
-      
-      return { name, badge };
-    },
-    getMockViews(article) {
-      const seed = article.title ? article.title.length : 0;
-      return (seed * 1234) % 95000 + 5000;
-    },
-    getMockComments(article) {
-      return Math.floor(this.getMockViews(article) / 100);
-    },
     formatNumber(num) {
       return new Intl.NumberFormat('en-US').format(num);
     },
@@ -377,16 +359,12 @@ export default {
                 
                 <div class="ed-rich-meta">
                   <div class="ed-author-block">
-                    <div class="author-avatar"><i class="bi bi-person-fill"></i></div>
-                    <div class="author-info">
-                      <span class="author-name">By {{ getMockAuthor(featuredStory).name }} <span class="badge bg-primary bg-opacity-25 text-primary ms-1"><i class="bi bi-check-circle-fill me-1"></i>{{ getMockAuthor(featuredStory).badge }}</span></span>
-                      <span class="author-source">{{ featuredStory.source?.name }}</span>
+                    <div class="author-info" style="margin-left: 0;">
+                      <span class="author-source fw-bold text-light"><i class="bi bi-building me-2"></i>{{ featuredStory.source?.name }}</span>
                     </div>
                   </div>
                   <div class="ed-stats-block">
                     <span><i class="bi bi-clock"></i> {{ getReadingTime(featuredStory.description) }}</span>
-                    <span><i class="bi bi-eye"></i> {{ formatNumber(getMockViews(featuredStory)) }} Views</span>
-                    <span><i class="bi bi-chat-text"></i> {{ getMockComments(featuredStory) }}</span>
                   </div>
                 </div>
               </div>
@@ -410,8 +388,7 @@ export default {
                   </div>
                   <h4 class="ed-side-title">{{ article.title }}</h4>
                   <div class="ed-side-author d-flex align-items-center">
-                    By {{ getMockAuthor(article).name }} 
-                    <i class="bi bi-patch-check-fill text-primary ms-1" :title="getMockAuthor(article).badge"></i>
+                    {{ article.source?.name }} 
                   </div>
                 </a>
               </div>
@@ -545,10 +522,9 @@ export default {
                 <p class="ed-card-desc">{{ article.description?.slice(0, 100) }}...</p>
                 <div class="ed-card-footer mt-auto pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
                   <div class="d-flex align-items-center">
-                    <span class="ed-source"><i class="bi bi-person me-1"></i> {{ getMockAuthor(article).name }}</span>
+                    <span class="ed-source"><i class="bi bi-building me-1"></i> {{ article.source?.name }}</span>
                   </div>
                   <div class="d-flex gap-2 align-items-center">
-                    <span class="ed-stats me-2" title="Comments"><i class="bi bi-chat-text me-1"></i>{{ getMockComments(article) }}</span>
                     <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-1 border-0" @click.prevent><i class="bi bi-bookmark"></i></button>
                     <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-1 border-0" @click.prevent><i class="bi bi-share"></i></button>
                   </div>

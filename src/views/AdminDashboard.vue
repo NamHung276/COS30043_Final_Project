@@ -14,9 +14,9 @@ import {
   startAfter,
   getCountFromServer,
   where
-} from "firebase/firestore";
 import { Star, Newspaper, Users, Database } from "@lucide/vue";
 import { backendApi } from "../services/api";
+import { useNotificationStore } from "../stores/useNotificationStore";
 
 export default {
   name: "AdminDashboard",
@@ -188,6 +188,43 @@ export default {
         this.aiHealth = { status: "error", analysis: "Could not fetch AI Health Report. Check server connection." };
       } finally {
         this.loadingAiHealth = false;
+      }
+    },
+    
+    async testSendNotification(type) {
+      if (!this.currentUser) return;
+      const store = useNotificationStore();
+      
+      try {
+        if (type === 'wishlist') {
+          await store.createNotification(
+            this.currentUser.uid,
+            'Wishlist Alert!',
+            'A game on your wishlist is now on sale for 50% off.',
+            'wishlist',
+            '/favorites'
+          );
+        } else if (type === 'system') {
+          await store.createNotification(
+            this.currentUser.uid,
+            'System Maintenance',
+            'GameHub will undergo scheduled maintenance at 2 AM PST.',
+            'system',
+            '/'
+          );
+        } else if (type === 'social') {
+          await store.createNotification(
+            this.currentUser.uid,
+            'New Friend Request',
+            'GamerGirl99 wants to be your friend.',
+            'social',
+            '/profile'
+          );
+        }
+        this.toast.show(`Sent test ${type} notification to yourself!`, "success");
+      } catch (err) {
+        console.error(err);
+        this.toast.show("Failed to send notification.", "error");
       }
     },
 
@@ -608,6 +645,30 @@ export default {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Test Notifications Widget -->
+          <div class="gh-widget mt-4">
+            <div class="widget-header">
+              <div class="d-flex align-items-center gap-3">
+                <h3 class="mb-0"><i class="bi bi-bell-fill text-info"></i> Notification System (Test)</h3>
+                <span class="gh-badge badge-neutral">V2 Planned</span>
+              </div>
+            </div>
+            <div class="widget-body">
+              <p class="text-muted small mb-3">Trigger mock notifications to test the navbar bell integration. These will be sent to your own account.</p>
+              <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-outline-danger btn-sm" @click="testSendNotification('wishlist')">
+                  <i class="bi bi-heart-fill me-1"></i> Trigger Wishlist Alert
+                </button>
+                <button class="btn btn-outline-primary btn-sm" @click="testSendNotification('social')">
+                  <i class="bi bi-people-fill me-1"></i> Trigger Social Alert
+                </button>
+                <button class="btn btn-outline-info btn-sm" @click="testSendNotification('system')">
+                  <i class="bi bi-info-circle-fill me-1"></i> Trigger System Alert
+                </button>
               </div>
             </div>
           </div>

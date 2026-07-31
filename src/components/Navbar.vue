@@ -228,17 +228,62 @@
           </div>
           <!-- ── /Search Bar ─────────────────────────── -->
 
-          <!-- Notification Bell (Coming Soon) -->
-          <button
-            class="nav-link position-relative me-2 d-none d-lg-flex"
-            disabled
-            aria-disabled="true"
-            aria-label="Notifications (coming soon)"
-            title="Notifications — coming soon"
-            style="cursor: default; opacity: 0.5;"
-          >
-            <i class="bi bi-bell fs-5" aria-hidden="true"></i>
-          </button>
+          <!-- Notification Bell -->
+          <li class="nav-item dropdown d-none d-lg-flex me-2">
+            <a
+              class="nav-link position-relative d-flex align-items-center"
+              href="#"
+              role="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+              @click="onBellClick"
+            >
+              <i class="bi bi-bell fs-5" aria-hidden="true"></i>
+              <span
+                v-if="notificationStore?.unreadCount > 0"
+                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                style="font-size: 0.6rem; transform: translate(-30%, 10%) !important;"
+              >
+                {{ notificationStore.unreadCount }}
+              </span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 notification-dropdown-menu mt-2 p-0">
+              <li class="px-3 py-2 d-flex justify-content-between align-items-center border-bottom border-secondary border-opacity-25 bg-dark text-white rounded-top">
+                <span class="fw-bold">Notifications</span>
+                <button v-if="notificationStore?.unreadCount > 0" class="btn btn-sm btn-link text-decoration-none p-0 text-info" @click.stop="notificationStore.markAllAsRead()">Mark all as read</button>
+              </li>
+              <div class="notification-list custom-scrollbar">
+                <div v-if="!notificationStore?.sortedNotifications.length" class="p-4 text-center text-muted">
+                  <i class="bi bi-bell-slash fs-1 d-block mb-2"></i>
+                  No notifications yet.
+                </div>
+                <template v-else>
+                  <li v-for="notif in notificationStore.sortedNotifications" :key="notif.id" class="notification-item border-bottom border-secondary border-opacity-25" :class="{ 'unread': !notif.read }">
+                    <div class="p-3 d-flex gap-3 align-items-start" @click="handleNotificationClick(notif)">
+                      <div class="notif-icon mt-1" :class="getNotifIconClass(notif.type)">
+                        <i class="bi" :class="getNotifIcon(notif.type)"></i>
+                      </div>
+                      <div class="notif-content flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                          <strong class="notif-title" :class="{'text-white': !notif.read, 'text-muted-light': notif.read}">{{ notif.title }}</strong>
+                          <small class="text-muted" style="font-size:0.7rem;">{{ formatTimeAgo(notif.createdAt) }}</small>
+                        </div>
+                        <p class="mb-0 notif-message" :class="{'text-white-50': !notif.read, 'text-muted': notif.read}">{{ notif.message }}</p>
+                      </div>
+                      <div class="notif-actions d-flex flex-column gap-2">
+                        <button v-if="!notif.read" class="btn btn-sm btn-link p-0 text-success" @click.stop="notificationStore.markAsRead(notif.id)" title="Mark as read">
+                          <i class="bi bi-check-circle-fill"></i>
+                        </button>
+                        <button class="btn btn-sm btn-link p-0 text-danger" @click.stop="notificationStore.deleteNotification(notif.id)" title="Delete">
+                          <i class="bi bi-trash-fill"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                </template>
+              </div>
+            </ul>
+          </li>
 
           <!-- Cart Link -->
           <router-link
@@ -410,6 +455,7 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { cartState } from "../services/cart";
 import { backendApi } from "../services/api";
+import { useNotificationStore } from "../stores/useNotificationStore";
 
 export default {
   data() {
@@ -426,6 +472,7 @@ export default {
       searchLoading: false,
       searchDebounce: null,
       highlightedIndex: -1,
+      notificationStore: null,
     };
   },
 
@@ -450,7 +497,13 @@ export default {
     this.unsubscribe = onAuthStateChanged(auth, async (user) => {
       this.currentUser = user;
       this.authReady = true;
+      
+      if (!this.notificationStore) {
+        this.notificationStore = useNotificationStore();
+      }
+      
       if (user) {
+        this.notificationStore.init();
         try {
           const snap = await getDoc(doc(db, "users", user.uid));
           this.isAdmin = snap.exists() && snap.data().role === "admin";
@@ -458,6 +511,7 @@ export default {
           this.isAdmin = false;
         }
       } else {
+        this.notificationStore.stopListening();
         this.isAdmin = false;
       }
     });
@@ -593,6 +647,50 @@ export default {
       const n = parseInt(score);
       return n >= 75 ? "mc-green" : n >= 50 ? "mc-yellow" : "mc-red";
     },
+
+    // ── Notifications ───────────────────────────────────
+    onBellClick() {
+      // Optional: Logic when bell is clicked
+    },
+    
+    handleNotificationClick(notif) {
+      if (!notif.read) {
+        this.notificationStore.markAsRead(notif.id);
+      }
+      if (notif.link) {
+        this.$router.push(notif.link);
+      }
+    },
+    
+    getNotifIcon(type) {
+      switch (type) {
+        case 'wishlist': return 'bi-heart-fill';
+        case 'social': return 'bi-people-fill';
+        case 'system': return 'bi-info-circle-fill';
+        default: return 'bi-bell-fill';
+      }
+    },
+    
+    getNotifIconClass(type) {
+      switch (type) {
+        case 'wishlist': return 'text-danger bg-danger bg-opacity-10';
+        case 'social': return 'text-primary bg-primary bg-opacity-10';
+        case 'system': return 'text-info bg-info bg-opacity-10';
+        default: return 'text-secondary bg-secondary bg-opacity-10';
+      }
+    },
+    
+    formatTimeAgo(timestamp) {
+      if (!timestamp?.seconds) return 'Just now';
+      const seconds = Math.floor(Date.now() / 1000 - timestamp.seconds);
+      if (seconds < 60) return 'Just now';
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return `${minutes}m ago`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours}h ago`;
+      const days = Math.floor(hours / 24);
+      return `${days}d ago`;
+    }
   },
 };
 </script>
@@ -652,6 +750,62 @@ export default {
 .nav-search-container.active .nav-search-icon,
 .nav-search-container:focus-within .nav-search-icon {
   color: var(--primary);
+}
+
+/* ── Notifications Dropdown ─────────────────────────── */
+.notification-dropdown-menu {
+  width: 320px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-glass);
+  border-radius: 14px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--overlay-light);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow: hidden;
+  animation: searchDropIn 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.notification-list {
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  transition: background 0.15s ease;
+  cursor: pointer;
+}
+
+.notification-item:hover {
+  background: rgba(14, 165, 233, 0.08);
+}
+
+.notification-item.unread {
+  background: rgba(14, 165, 233, 0.04);
+}
+.notification-item.unread:hover {
+  background: rgba(14, 165, 233, 0.12);
+}
+
+.notif-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.1rem;
+}
+
+.notif-message {
+  font-size: 0.82rem;
+  line-height: 1.3;
+}
+
+[data-theme="light"] .notification-dropdown-menu {
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.1);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
 }
 
 .nav-search-input {

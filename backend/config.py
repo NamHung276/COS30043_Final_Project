@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     newsdata_api_key: str = Field(default="", description="NewsData.io API key")
     coingecko_api_key: str = Field(default="", description="CoinGecko API key")
     gemini_api_key: str = Field(default="", description="Google Gemini API key")
+    gg_deals_api_key: str = Field(default="", description="GG.deals API key")
     
     # ── Payments (PayPal) ────────────────────────────────────────────────────────
     paypal_client_id: str = Field(default="", description="PayPal REST API Client ID")

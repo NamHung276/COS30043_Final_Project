@@ -7,6 +7,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 import ReviewSection from "../components/ReviewSection.vue";
 import TrailerModal from "../components/TrailerModal.vue";
+import CurrencyConverter from "../components/CurrencyConverter.vue";
 import { cartState } from "../services/cart";
 import { getGameState } from "../services/gameState";
 import { mapState } from "pinia";
@@ -17,7 +18,7 @@ import { STORE_NAMES, storeName, metacriticClass, formatDate, platformIcon } fro
 // STORE_NAMES is now imported from useGameUtils — single source of truth.
 
 export default {
-  components: { ReviewSection, TrailerModal },
+  components: { ReviewSection, TrailerModal, CurrencyConverter },
 
   setup() {
     const toast = inject("toast");
@@ -46,6 +47,7 @@ export default {
       touchStartX: 0,
       formattedMinReq: "",
       formattedRecReq: "",
+      showConverter: false,
     };
   },
 
@@ -726,6 +728,24 @@ export default {
                   >
                     <i class="bi bi-cart-plus-fill me-2"></i> Add to Cart
                   </button>
+
+                  <button
+                    class="btn btn-outline-light btn-lg shadow-sm"
+                    @click="showConverter = !showConverter"
+                    title="Convert Currency"
+                    aria-label="Convert Currency"
+                    style="border-color: rgba(255,255,255,0.2)"
+                  >
+                    <i class="bi bi-currency-exchange"></i>
+                  </button>
+                  
+                  <div v-if="showConverter" class="position-absolute z-3 mt-2" style="top: 100%; left: 0;">
+                    <CurrencyConverter 
+                      :initialAmount="parseFloat(discountedPrice || displayPrice || 0)" 
+                      :inline="false" 
+                      @close="showConverter = false"
+                    />
+                  </div>
                 </template>
 
                 <!-- FREE -->

@@ -119,6 +119,12 @@
           </li>
 
           <li class="nav-item">
+            <router-link class="nav-link" to="/converter" @click="closeMenu">
+              Converter
+            </router-link>
+          </li>
+
+          <li class="nav-item">
             <router-link class="nav-link" to="/about" @click="closeMenu">
               About
             </router-link>

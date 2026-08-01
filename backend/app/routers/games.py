@@ -208,27 +208,38 @@ async def get_game_detail(game_id: int):
         deals = []
         cheapest_price = None
         cheapest_store = None
+        
+        steam_id = _extract_steam_app_id(detail)
+        
         try:
             game_name = detail.get("name", "")
             cs_results = await cheapshark_service.get_deals_by_game_name(game_name)
             if cs_results:
-                # cs_results is a list of {gameID, cheapest, cheapestDealID, external, ...}
-                best = min(
-                    cs_results,
-                    key=lambda g: float(g.get("cheapest", "9999")),
-                    default=None,
-                )
-                if best:
-                    cheapest_price = best.get("cheapest")
-                    # No easy storeID mapping from /games CheapShark endpoint
-                    cheapest_store = None
-                deals = cs_results
+                # Filter results to ensure we don't pick up the wrong game
+                valid_results = []
+                if steam_id:
+                    valid_results = [g for g in cs_results if g.get("steamAppID") == steam_id]
+                
+                # Fallback to exact name matching if no steam ID match (e.g. Epic exclusives)
+                if not valid_results:
+                    valid_results = [g for g in cs_results if g.get("external", "").lower() == game_name.lower()]
+                
+                if valid_results:
+                    # Pick the best exact match (if multiple, e.g. different editions)
+                    best = min(
+                        valid_results,
+                        key=lambda g: float(g.get("cheapest", "9999")),
+                        default=None,
+                    )
+                    if best:
+                        cheapest_price = best.get("cheapest")
+                        cheapest_store = None
+                    deals = valid_results
         except Exception as cs_exc:
             logger.warning("CheapShark lookup failed for game %d: %s", game_id, cs_exc)
 
         # Try to find GG.deals prices and bundles by Steam App ID
         ggdeals_data = None
-        steam_id = _extract_steam_app_id(detail)
         if steam_id:
             try:
                 results = await asyncio.gather(

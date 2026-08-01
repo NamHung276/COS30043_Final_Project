@@ -37,11 +37,30 @@ async def create_paypal_order(
         for game_id in request.items:
             try:
                 game = await rawg_service.get_game_detail(game_id)
+                import re
+                steam_id = None
+                stores = game.get("stores", [])
+                for s in stores:
+                    store_info = s.get("store", {})
+                    if store_info.get("slug") == "steam" or store_info.get("id") == 1:
+                        url = s.get("url", "")
+                        if "/app/" in url:
+                            match = re.search(r'/app/(\d+)', url)
+                            if match:
+                                steam_id = match.group(1)
+                                break
+                
                 # First check CheapShark
                 cs_results = await cheapshark_service.get_deals_by_game_name(game.get("name", ""))
                 cheapest_price = None
                 if cs_results:
-                    best = min(cs_results, key=lambda g: float(g.get("cheapest", "9999")), default=None)
+                    valid_results = []
+                    if steam_id:
+                        valid_results = [g for g in cs_results if g.get("steamAppID") == steam_id]
+                    if not valid_results:
+                        valid_results = [g for g in cs_results if g.get("external", "").lower() == game.get("name", "").lower()]
+                        
+                    best = min(valid_results, key=lambda g: float(g.get("cheapest", "9999")), default=None)
                     if best:
                         cheapest_price = best.get("cheapest")
                 

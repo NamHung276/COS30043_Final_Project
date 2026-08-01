@@ -49,6 +49,11 @@ const routes = [
     component: About,
   },
   {
+    path: "/converter",
+    name: "CurrencyConverter",
+    component: () => import("../views/ConverterView.vue"),
+  },
+  {
     path: "/games",
     name: "Games",
     component: Games,

@@ -5,6 +5,7 @@ from typing import Dict, Any, Optional
 
 from app.cache.memory_cache import cache
 from app.utils.helpers import build_cache_key
+from config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ async def get_prices_by_steam_id(steam_id: str, region: str = "us") -> Optional[
     Fetch exact retail and keyshop pricing data for a game using its Steam App ID.
     Returns the GamePrices object for the given ID, or None.
     """
-    api_key = os.getenv("GG_DEALS_API_KEY")
+    api_key = settings.gg_deals_api_key
     if not api_key:
         logger.warning("GG_DEALS_API_KEY is not set. Skipping GG.deals lookup.")
         return None

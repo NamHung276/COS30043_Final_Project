@@ -21,7 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from pythonjsonlogger import json as jsonlogger
 
 from config import settings
-from app.routers import health, games, deals, news, free_games, chatbot, payments, paypal, coingecko, uploads, admin_ai
+from app.routers import health, games, deals, news, free_games, chatbot, payments, paypal, coingecko, uploads, admin_ai, currency
 from app.middleware.logging_middleware import RequestLoggingMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
 
@@ -144,6 +144,7 @@ app.include_router(paypal.router, prefix="/api/paypal", tags=["PayPal Webhooks"]
 app.include_router(coingecko.router, prefix="/api/crypto", tags=["Crypto"])
 app.include_router(uploads.router, prefix="/api", tags=["Uploads"])
 app.include_router(admin_ai.router, prefix="/api/admin", tags=["Admin AI"])
+app.include_router(currency.router, prefix=API_PREFIX, tags=["Currency"])
 
 # ── Serve Static Avatars ───────────────────────────────────────────────────────
 

@@ -129,6 +129,28 @@ export default {
       return (price * (1 - disc / 100)).toFixed(2);
     },
 
+    historicalLowData() {
+      if (!this.game || !this.game.ggdeals || !this.game.ggdeals.prices) return null;
+      const prices = this.game.ggdeals.prices;
+      
+      const current = parseFloat(this.discountedPrice || this.displayPrice);
+      if (isNaN(current) || current <= 0) return null;
+
+      const histRetail = parseFloat(prices.historicalRetail) || 9999;
+      const histKeyshop = parseFloat(prices.historicalKeyshops) || 9999;
+      const absoluteLow = Math.min(histRetail, histKeyshop);
+      
+      if (absoluteLow >= 9999 || absoluteLow === 0) return null;
+
+      // Check if current price is within 10 cents of historical low (leeway for rounding)
+      const isMatchingLow = current <= absoluteLow + 0.10;
+
+      return {
+        lowestPrice: absoluteLow.toFixed(2),
+        isMatchingLow
+      };
+    },
+
     trailerYoutubeId() {
       // Try RAWG movies first (clip url)
       if (this.trailers.length > 0) {
@@ -708,7 +730,7 @@ export default {
               </div>
 
               <!-- Quick Actions in Hero -->
-              <div v-if="gameStateInfo.state !== 'UNKNOWN'" class="d-flex flex-wrap gap-3 mt-4">
+              <div v-if="gameStateInfo.state !== 'UNKNOWN'" class="d-flex flex-wrap gap-3 mt-4 position-relative">
                 <!-- RELEASED -->
                 <template v-if="gameStateInfo.isReleased">
                   <button
@@ -796,6 +818,17 @@ export default {
                   <i class="bi bi-heart me-2"></i> Wishlist
                 </button>
               </div>
+
+              <!-- Historical Low Badges -->
+              <div v-if="gameStateInfo.isReleased && historicalLowData" class="mt-3">
+                <div v-if="historicalLowData.isMatchingLow" class="badge bg-success bg-opacity-25 border border-success text-success px-3 py-2 fs-6 shadow-sm d-inline-flex align-items-center gap-2">
+                  <i class="bi bi-fire text-warning"></i> Matching Historical Low! (Best time to buy)
+                </div>
+                <div v-else class="badge bg-warning bg-opacity-10 border border-warning text-warning px-3 py-2 fs-6 shadow-sm d-inline-flex align-items-center gap-2">
+                  <i class="bi bi-graph-down-arrow"></i> Historical Low was ${{ historicalLowData.lowestPrice }}
+                </div>
+              </div>
+
             </div>
           </div>
         </div>

@@ -185,7 +185,7 @@ onMounted(() => {
   position: absolute;
   top: -10px;
   right: -5px;
-  z-index: 10000;
+  z-index: 10001; /* Ensure this is above the toggle button */
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
@@ -203,6 +203,8 @@ onMounted(() => {
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
+  position: relative; /* Add relative position to apply z-index */
+  z-index: 10000;     /* Keep below dismiss btn */
   box-shadow: 0 4px 20px rgba(255, 51, 102, 0.4);
   transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
   display: flex;

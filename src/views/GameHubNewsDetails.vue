@@ -6,6 +6,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { collection, query, where, getDocs, doc, getDoc, deleteDoc, addDoc, serverTimestamp } from "firebase/firestore";
 import { MdPreview } from 'md-editor-v3';
 import 'md-editor-v3/lib/preview.css';
+import DOMPurify from 'dompurify';
 
 export default {
   components: { LikeButton, MdPreview },
@@ -55,6 +56,9 @@ export default {
   },
 
   methods: {
+    sanitizeHtml(html) {
+      return DOMPurify.sanitize(html);
+    },
     async deleteArticle() {
       if (!confirm("Are you sure you want to delete this article? This cannot be undone.")) return;
       try {
@@ -262,7 +266,7 @@ export default {
 
         <!-- Article Body -->
         <div class="news-article-body">
-          <MdPreview :modelValue="article.content" theme="dark" language="en-US" class="news-markdown-preview" />
+          <MdPreview :modelValue="article.content" theme="dark" language="en-US" class="news-markdown-preview" :sanitize="sanitizeHtml" />
           <div class="news-article-footer">
             <p>This article is part of the GameHub News archive. Stay updated with the latest gaming news, reviews, esports events, and industry announcements.</p>
           </div>

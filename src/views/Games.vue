@@ -687,12 +687,11 @@ export default {
 
           <!-- Card Body -->
           <div class="game-card-body">
-            <div class="game-card-header">
-              <h3 class="game-card-title">{{ game.name }}</h3>
-              <span v-if="game.itemType === 'f2p'" class="game-type free"
-                >FREE</span
+            <div class="game-card-header d-flex justify-content-between align-items-center w-100 mb-1">
+              <h3 class="game-card-title text-truncate me-2" :title="game.name">{{ game.name }}</h3>
+              <span v-if="game.itemType === 'f2p'" class="badge bg-success rounded-pill"
+                >Free</span
               >
-              <span v-else class="game-type premium">PREMIUM</span>
             </div>
 
             <!-- Genre tags -->

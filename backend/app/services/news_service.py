@@ -52,7 +52,7 @@ async def _fetch_newsapi(query: str = DEFAULT_QUERY, page_size: int = 50) -> Lis
     }
 
     try:
-        async with httpx.AsyncClient(timeout=12.0) as client:
+        async with httpx.AsyncClient(timeout=3.0) as client:
             resp = await client.get("https://newsapi.org/v2/everything", params=params)
             resp.raise_for_status()
             data = resp.json()
@@ -77,7 +77,7 @@ async def _fetch_newsdata(query: str = "gaming", page_size: int = 50) -> List[Di
     }
 
     try:
-        async with httpx.AsyncClient(timeout=12.0) as client:
+        async with httpx.AsyncClient(timeout=3.0) as client:
             resp = await client.get("https://newsdata.io/api/1/news", params=params)
             resp.raise_for_status()
             data = resp.json()

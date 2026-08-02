@@ -53,7 +53,10 @@ async def get_news(
         return result
     except Exception as exc:
         logger.error("get_news failed: %s", exc)
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"News aggregation error: {str(exc)}",
-        )
+        # Return empty news response instead of failing
+        return {
+            "articles": [],
+            "total_results": 0,
+            "sources": [],
+            "fetched_at": None,
+        }

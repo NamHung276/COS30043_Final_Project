@@ -1,6 +1,6 @@
 <script>
 import { auth, db } from "../firebase";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 export default {
@@ -143,7 +143,14 @@ export default {
           );
         }
 
-        this.success = "Registration successful! Redirecting to login...";
+        // Send Email Verification
+        try {
+          await sendEmailVerification(userCredential.user);
+        } catch (emailErr) {
+          console.warn("Failed to send verification email:", emailErr);
+        }
+
+        this.success = "Registration successful! Please check your email to verify your account. Redirecting to login...";
 
         setTimeout(() => {
           this.$router.push("/login");

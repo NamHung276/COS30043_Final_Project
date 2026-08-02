@@ -38,6 +38,10 @@ def _rawg_error(exc: Exception, game_id: Optional[int] = None) -> HTTPException:
     """Convert an httpx error into a FastAPI HTTPException with a clear message."""
     import httpx
 
+    # If it's already an HTTPException (e.g. 504 timeout from rawg_service), bubble it up
+    if isinstance(exc, HTTPException):
+        return exc
+
     if isinstance(exc, httpx.HTTPStatusError):
         if exc.response.status_code == 404:
             return HTTPException(
@@ -114,7 +118,13 @@ async def list_games(
         return data
     except Exception as exc:
         logger.error("list_games failed: %s", exc)
-        raise _rawg_error(exc)
+        # Return empty paginated response instead of failing
+        return {
+            "count": 0,
+            "next": None,
+            "previous": None,
+            "results": [],
+        }
 
 
 @router.get(
@@ -132,7 +142,13 @@ async def search_games(
         return await rawg_service.search_games(query=q, page=page, page_size=page_size)
     except Exception as exc:
         logger.error("search_games failed for query '%s': %s", q, exc)
-        raise _rawg_error(exc)
+        # Return empty paginated response instead of failing
+        return {
+            "count": 0,
+            "next": None,
+            "previous": None,
+            "results": [],
+        }
 
 
 @router.get(
@@ -150,7 +166,13 @@ async def get_recommendations(
         return await recommendation_service.get_recommendations(user_id)
     except Exception as exc:
         logger.error("get_recommendations failed for user %s: %s", user_id, exc)
-        raise _rawg_error(exc)
+        # Return empty list instead of failing
+        return {
+            "count": 0,
+            "next": None,
+            "previous": None,
+            "results": [],
+        }
 
 
 @router.get(
@@ -273,11 +295,23 @@ async def get_game_detail(game_id: int):
             "aggregated_at": datetime.now(timezone.utc).isoformat(),
         }
 
-    except HTTPException:
-        raise
     except Exception as exc:
         logger.error("get_game_detail failed for game %d: %s", game_id, exc)
-        raise _rawg_error(exc, game_id)
+        # Return a minimal fallback response instead of failing
+        return {
+            "id": game_id,
+            "name": f"Game #{game_id}",
+            "slug": str(game_id),
+            "description": "Unable to load game details. Please try again later.",
+            "screenshots": [],
+            "trailers": [],
+            "deals": [],
+            "ggdeals": None,
+            "cheapest_deal_price": None,
+            "cheapest_deal_store": None,
+            "rawg_url": f"https://rawg.io/games/{game_id}",
+            "aggregated_at": datetime.now(timezone.utc).isoformat(),
+        }
 
 
 @router.get(

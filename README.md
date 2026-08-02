@@ -34,8 +34,11 @@ GameHub aggregates data from multiple powerful gaming and news APIs to deliver a
 *   **[RAWG Video Games Database API](https://rawg.io/apidocs):** Powers the main Games section with a massive library of 500,000+ games, rich metadata, ratings, genres, screenshots, and release information spanning all major gaming platforms.
 *   **[FreeToGame API](https://www.freetogame.com/api-doc):** Provides access to 500+ free-to-play games with detailed information, genres, screenshots, system requirements, and platform availability. Drives the Free-to-Play section.
 *   **[CheapShark Deals API](https://apidocs.cheapshark.com/):** Aggregates PC game deals and price comparisons from major stores like Steam, Epic, GOG, and more. Powers the Deals section to help gamers find the best prices on their favourite titles.
+*   **[GG.deals API](https://gg.deals/api/):** Provides comprehensive PC game deals, historical pricing data, and discount information across multiple storefronts.
 *   **[NewsAPI](https://newsapi.org/):** Delivers real-time gaming news and industry updates from multiple major gaming news outlets. Powers the Live News section with continuously updated articles from top gaming publications.
+*   **[NewsData.io API](https://newsdata.io/):** Supplemental news source for expanded coverage of global gaming and technology news.
 *   **[CoinGecko API](https://www.coingecko.com/en/api):** Provides live market data, prices, and 24-hour changes for top gaming and metaverse cryptocurrencies (e.g., FLOKI, Axie Infinity, Decentraland).
+*   **[Google Gemini API](https://aistudio.google.com/):** Powers the AI chatbot features and intelligent game recommendations across the platform.
 
 ## 🚀 Future Roadmap
 

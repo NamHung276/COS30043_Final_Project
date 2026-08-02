@@ -7,6 +7,7 @@ import { backendApi } from "../services/api";
 import { MdEditor, MdPreview } from 'md-editor-v3';
 import 'md-editor-v3/lib/style.css';
 import 'md-editor-v3/lib/preview.css';
+import DOMPurify from 'dompurify';
 
 export default {
   components: { MdEditor, MdPreview },
@@ -71,6 +72,9 @@ export default {
     image: 'triggerAutosave'
   },
   methods: {
+    sanitizeHtml(html) {
+      return DOMPurify.sanitize(html);
+    },
     async loadArticle() {
       this.articleId = this.$route.params.id;
       try {
@@ -347,6 +351,7 @@ export default {
               :preview="false" 
               :toolbars="editorToolbars"
               :footers="[]"
+              :sanitize="sanitizeHtml"
             />
           </div>
           

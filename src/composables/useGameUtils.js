@@ -112,21 +112,33 @@ export function formatDate(value) {
  * Generates a deterministic fake base price from a game's ID.
  */
 export function gamePrice(game) {
-  return null;
+  if (!game || (!game.id && !game.gameId)) return null;
+  const id = parseInt(game.id || game.gameId) || 0;
+  const prices = [19.99, 29.99, 39.99, 49.99, 59.99, 69.99];
+  return prices[id % prices.length].toFixed(2);
 }
 
 /**
  * Generates a deterministic fake discount percentage from a game's ID.
  */
 export function gameDiscount(game) {
-  return null;
+  if (!game || (!game.id && !game.gameId)) return 0;
+  const id = parseInt(game.id || game.gameId) || 0;
+  if (id % 3 !== 0) return 0; // 1/3 chance of discount
+  const discounts = [10, 20, 25, 33, 50, 75];
+  return discounts[id % discounts.length];
 }
 
 /**
  * Calculates the final price after the fake discount.
  */
 export function discountedPrice(game) {
-  return null;
+  const priceStr = gamePrice(game);
+  if (!priceStr) return null;
+  const price = parseFloat(priceStr);
+  const disc = gameDiscount(game);
+  if (!disc) return price.toFixed(2);
+  return (price * (1 - disc / 100)).toFixed(2);
 }
 
 // ── Platform Icons ────────────────────────────────────────────────────────────

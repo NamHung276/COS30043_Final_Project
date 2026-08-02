@@ -530,14 +530,20 @@ export default {
     <div
       class="steam-hero-fullbleed"
       :key="currentGame?.id"
-      :style="{ backgroundImage: `url(${currentGame?.displayThumb || ''})` }"
+      :style="{ 
+        backgroundImage: `url(${currentGame?.displayThumb || ''})`,
+        backgroundAttachment: 'fixed',
+        backgroundPosition: 'center',
+        backgroundSize: 'cover'
+      }"
     >
       <div class="steam-hero-blur-overlay"></div>
       <div class="container py-5" style="position: relative; z-index: 2">
         <div class="hero-heading mb-4">
-          <h1 class="hero-title">Find Your Next Favorite Game</h1>
+          <span class="badge bg-primary mb-2 px-3 py-2" style="font-weight: 800; letter-spacing: 1px;">FEATURED TODAY</span>
+          <h1 class="hero-title" style="text-shadow: 0 2px 10px rgba(0,0,0,0.5);">Find Your Next Favorite Game</h1>
 
-          <p class="hero-subtitle">
+          <p class="hero-subtitle" style="text-shadow: 0 1px 5px rgba(0,0,0,0.5);">
             Explore curated games, read community reviews, discover the latest
             gaming news, and find the best deals—all in one place.
           </p>

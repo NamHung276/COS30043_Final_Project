@@ -5,10 +5,12 @@ All values are read from environment variables (loaded from .env by python-doten
 Import `settings` from this module anywhere in the app — never read os.environ directly.
 """
 
+import os
 from functools import lru_cache
+from pathlib import Path
 from typing import List
 
-from pydantic import Field, field_validator
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,6 +23,34 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",
     )
+
+    def __init__(self, **values):
+        super().__init__(**values)
+        repo_root = Path(__file__).resolve().parent.parent
+        env_path = repo_root / ".env"
+        if env_path.exists():
+            from dotenv import dotenv_values
+
+            env_values = dotenv_values(env_path)
+
+            def resolve_value(*names):
+                for name in names:
+                    value = os.getenv(name)
+                    if value:
+                        return value
+                for name in names:
+                    value = env_values.get(name)
+                    if value:
+                        return value
+                return ""
+
+            self.rawg_api_key = resolve_value("RAWG_API_KEY", "VITE_RAWG_API_KEY") or self.rawg_api_key
+            self.news_api_key = resolve_value("NEWS_API_KEY", "VITE_NEWS_API_KEY") or self.news_api_key
+            self.newsdata_api_key = resolve_value("NEWSDATA_API_KEY", "VITE_NEWSDATA_API_KEY") or self.newsdata_api_key
+            self.coingecko_api_key = resolve_value("COINGECKO_API_KEY", "VITE_COINGECKO_API_KEY") or self.coingecko_api_key
+            self.gemini_api_key = resolve_value("GEMINI_API_KEY", "VITE_GEMINI_API_KEY") or self.gemini_api_key
+            self.gg_deals_api_key = resolve_value("GG_DEALS_API_KEY", "VITE_GG_DEALS_API_KEY") or self.gg_deals_api_key
+            self.paypal_client_id = resolve_value("PAYPAL_CLIENT_ID", "VITE_PAYPAL_CLIENT_ID") or self.paypal_client_id
 
     # ── Application ─────────────────────────────────────────────────────────────
     app_env: str = Field(default="development", description="Environment: development | production")

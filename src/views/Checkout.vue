@@ -251,7 +251,13 @@ export default {
                 </label>
               </div>
               
-              <div v-if="agreedToTerms && !isVerified" class="text-center">
+              <div v-if="agreedToTerms && currentUser && !currentUser.emailVerified" class="text-center">
+                <p class="small text-danger mb-2"><i class="bi bi-shield-exclamation me-1"></i> You must verify your email address to make purchases.</p>
+                <button class="btn btn-outline-danger w-100 fw-bold rounded-pill" disabled>
+                  <i class="bi bi-envelope-x me-2"></i> Email Verification Required
+                </button>
+              </div>
+              <div v-else-if="agreedToTerms && !isVerified" class="text-center">
                 <p class="small text-warning mb-2"><i class="bi bi-shield-exclamation me-1"></i> For your security, please verify your account.</p>
                 <button class="btn btn-outline-warning w-100 fw-bold rounded-pill" @click="showVerificationModal = true">
                   <i class="bi bi-envelope-check me-2"></i> Send 2FA Verification Code

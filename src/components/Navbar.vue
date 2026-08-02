@@ -1,4 +1,14 @@
 <template>
+  <div class="navbar-wrapper">
+    <!-- Email Verification Banner -->
+    <div v-if="currentUser && !currentUser.emailVerified" class="alert alert-warning text-center rounded-0 mb-0 py-2 border-0" style="z-index: 1050; position: relative;">
+      <small>
+        <strong>Action Required:</strong> Please verify your email address ({{ currentUser.email }}) to unlock purchasing. 
+        <button @click="resendVerification" class="btn btn-sm btn-link p-0 fw-bold ms-2 text-dark" :disabled="resendingEmail">
+          {{ resendingEmail ? 'Sending...' : 'Resend Email' }}
+        </button>
+      </small>
+    </div>
   <nav
     class="navbar navbar-expand-lg"
     :class="theme === 'dark' ? 'navbar-dark' : 'navbar-light'"
@@ -453,11 +463,12 @@
       </div>
     </div>
   </nav>
+  </div>
 </template>
 
 <script>
 import { auth, db } from "../firebase";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { onAuthStateChanged, signOut, sendEmailVerification } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { cartState } from "../services/cart";
 import { backendApi } from "../services/api";
@@ -481,6 +492,7 @@ export default {
       searchDebounce: null,
       highlightedIndex: -1,
       notificationStore: null,
+      resendingEmail: false,
     };
   },
 
@@ -537,6 +549,19 @@ export default {
   },
 
   methods: {
+    async resendVerification() {
+      if (!this.currentUser || this.resendingEmail) return;
+      this.resendingEmail = true;
+      try {
+        await sendEmailVerification(this.currentUser);
+        alert("Verification email sent! Please check your inbox.");
+      } catch (err) {
+        console.error("Error resending email:", err);
+        alert("Failed to send verification email. Please try again later.");
+      } finally {
+        this.resendingEmail = false;
+      }
+    },
     toggleTheme() {
       this.theme = this.theme === "dark" ? "light" : "dark";
       document.documentElement.setAttribute("data-theme", this.theme);

@@ -55,6 +55,8 @@ export default {
     return {
       games: [],
       loading: true,
+      loadTimedOut: false,
+      loadingTimer: null,
       error: null,
       searchTerm: "",
       selectedGenre: "All",
@@ -231,7 +233,19 @@ export default {
 
     async fetchGames() {
       this.loading = true;
+      this.loadTimedOut = false;
       this.error = null;
+
+      // Hard timeout: stop skeleton and show retry after 15s
+      if (this.loadingTimer) clearTimeout(this.loadingTimer);
+      this.loadingTimer = setTimeout(() => {
+        if (this.loading) {
+          this.loading = false;
+          this.loadTimedOut = true;
+          this.error = "Games are taking too long to load. Please check your connection and try again.";
+        }
+      }, 15_000);
+
       try {
         const params = {
           page_size: 40,
@@ -321,6 +335,7 @@ export default {
         console.error(err);
         this.error = "Failed to load games. Please try again.";
       } finally {
+        clearTimeout(this.loadingTimer);
         this.loading = false;
       }
     },
@@ -348,6 +363,7 @@ export default {
 
   beforeUnmount() {
     clearTimeout(this.searchTimeout);
+    clearTimeout(this.loadingTimer);
   },
 
   async mounted() {
@@ -483,7 +499,16 @@ export default {
         <SkeletonCard v-for="n in 12" :key="n" />
       </div>
 
-      <div v-else-if="error" class="alert alert-danger">{{ error }}</div>
+      <div v-else-if="error" class="games-empty-state py-5">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.5; color: var(--accent-coral);" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <h3 class="mt-3">Could not load games</h3>
+        <p class="text-muted mb-4">{{ error }}</p>
+        <button class="btn btn-primary px-4 py-2 rounded-pill" @click="fetchGames">
+          <i class="bi bi-arrow-clockwise me-2"></i>Try Again
+        </button>
+      </div>
 
       <!-- Empty State -->
       <div v-else-if="filteredGames.length === 0" class="games-empty-state">

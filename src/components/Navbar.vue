@@ -38,7 +38,7 @@
         <!-- Left Side: Public Navigation -->
         <ul class="navbar-nav me-auto align-items-center mb-0 ps-0" style="list-style:none">
           <li class="nav-item">
-            <router-link class="nav-link" to="/" @click="closeMenu">
+            <router-link class="nav-link" to="/" @click="closeMenu" :exact-active-class="'nav-link-active'" active-class="">
               Home
             </router-link>
           </li>
@@ -107,25 +107,25 @@
           </li>
 
           <li class="nav-item">
-            <router-link class="nav-link" to="/live-news" @click="closeMenu">
+            <router-link class="nav-link" to="/live-news" @click="closeMenu" active-class="nav-link-active">
               News
             </router-link>
           </li>
 
           <li class="nav-item">
-            <router-link class="nav-link" to="/gamehub-news" @click="closeMenu">
+            <router-link class="nav-link" to="/gamehub-news" @click="closeMenu" active-class="nav-link-active">
               Community
             </router-link>
           </li>
 
           <li class="nav-item">
-            <router-link class="nav-link" to="/converter" @click="closeMenu">
+            <router-link class="nav-link" to="/converter" @click="closeMenu" :exact-active-class="'nav-link-active'" active-class="">
               Converter
             </router-link>
           </li>
 
           <li class="nav-item">
-            <router-link class="nav-link" to="/about" @click="closeMenu">
+            <router-link class="nav-link" to="/about" @click="closeMenu" :exact-active-class="'nav-link-active'" active-class="">
               About
             </router-link>
           </li>
@@ -462,6 +462,8 @@ import { doc, getDoc } from "firebase/firestore";
 import { cartState } from "../services/cart";
 import { backendApi } from "../services/api";
 import { useNotificationStore } from "../stores/useNotificationStore";
+import { useLibraryStore } from "../stores/useLibraryStore";
+import { useWishlistStore } from "../stores/useWishlistStore";
 
 export default {
   data() {
@@ -543,6 +545,12 @@ export default {
 
     async logout() {
       try {
+        // Clear user-specific stores BEFORE signing out so they are
+        // wiped regardless of whether signOut() succeeds.
+        cartState.clear();
+        useLibraryStore().clearStore();
+        useWishlistStore().reset();
+
         await signOut(auth);
         this.closeMenu();
         this.$router.push("/");

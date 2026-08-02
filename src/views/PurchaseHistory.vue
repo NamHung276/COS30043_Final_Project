@@ -85,7 +85,7 @@ export default {
 
       <div v-else class="gd-glass-card overflow-hidden">
         <div class="table-responsive">
-          <table class="table gd-table table-hover mb-0 align-middle gd-table">
+          <table class="table gd-table table-hover mb-0 align-middle">
             <thead>
               <tr>
                 <th scope="col" class="text-uppercase text-muted fw-bold small py-3 ps-4">Game</th>
@@ -99,7 +99,7 @@ export default {
                 <td class="ps-4 py-3">
                   <div class="d-flex align-items-center gap-3">
                     <img :src="purchase.thumbnail || '/placeholder.png'" class="game-thumbnail rounded" alt="Thumbnail" />
-                    <span class="fw-bold text-primary-var">{{ purchase.title }}</span>
+                    <span class="fw-bold text-primary-var">{{ purchase.gameName || purchase.title || 'Unknown Game' }}</span>
                   </div>
                 </td>
                 <td class="py-3 text-secondary-var">{{ formatDate(purchase.createdAt) }}</td>

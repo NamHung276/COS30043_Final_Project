@@ -69,16 +69,26 @@ export const useAuthStore = defineStore("auth", {
     
     /**
      * Waits until the initial auth state is resolved.
+     * Hard timeout of 10 s — resolves (never rejects) so navigation
+     * always continues even when Firebase is slow or offline.
      */
-    async waitForReady() {
-      if (this.ready) return;
+    waitForReady() {
+      if (this.ready) return Promise.resolve();
       return new Promise((resolve) => {
-        const check = setInterval(() => {
-          if (this.ready) {
-            clearInterval(check);
+        const TIMEOUT_MS = 10_000;
+        const POLL_MS = 50;
+        let elapsed = 0;
+
+        const poll = () => {
+          if (this.ready || elapsed >= TIMEOUT_MS) {
             resolve();
+            return;
           }
-        }, 50);
+          elapsed += POLL_MS;
+          setTimeout(poll, POLL_MS);
+        };
+
+        setTimeout(poll, POLL_MS);
       });
     }
   },

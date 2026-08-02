@@ -29,7 +29,7 @@ const GENRES = [
     icon: "/game_icon/battle_royale.png",
     color: "gold",
     cat: "battle-royale",
-    link: "/games?genre=Battle Royale",
+    link: "/games?genre=Battle%20Royale",
   },
   {
     label: "MOBA",
@@ -282,8 +282,11 @@ export default {
             displayLink: "/free-to-play/" + g.id,
           }));
 
+        const f2pTitles = new Set(f2pGames.map(g => (g.displayTitle || "").toLowerCase().trim()));
+
         const rawgGames = (rawgRes.data.results || [])
           .sort(() => 0.5 - Math.random())
+          .filter(g => !f2pTitles.has((g.name || "").toLowerCase().trim()))
           .slice(0, 5)
           .map((g) => ({
             ...g,
@@ -889,6 +892,25 @@ export default {
           </span>
           <span class="shortcut-title">My Library</span>
           <small>Your games</small>
+        </router-link>
+
+        <router-link to="/converter" class="hero-shortcut-card">
+          <span class="shortcut-icon">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <line x1="12" y1="1" x2="12" y2="23"></line>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+          </span>
+          <span class="shortcut-title">Converter</span>
+          <small>Exchange rates</small>
         </router-link>
       </div>
     </section>

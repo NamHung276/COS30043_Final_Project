@@ -24,7 +24,7 @@ export default {
       imageMode: "upload",
       submitting: false,
       error: "",
-      saveStatus: "✓ Saved",
+      saveStatus: "Draft",
       saveTimeout: null,
       editorToolbars: [
         'bold', 'italic', 'underline', '-',
@@ -73,8 +73,47 @@ export default {
       this.saveStatus = "Saving...";
       if (this.saveTimeout) clearTimeout(this.saveTimeout);
       this.saveTimeout = setTimeout(() => {
-        this.saveStatus = "✓ Saved";
+        this.saveDraft();
+        this.saveStatus = "✓ Draft saved";
       }, 1000);
+    },
+    saveDraft() {
+      try {
+        const draft = {
+          title: this.title,
+          subtitle: this.subtitle,
+          category: this.category,
+          tags: this.tags,
+          content: this.content,
+          image: this.coverImageFile ? "" : this.image, // don't persist blob URLs
+          savedAt: new Date().toISOString(),
+        };
+        localStorage.setItem("gamehub_article_draft", JSON.stringify(draft));
+      } catch (e) {
+        console.warn("Draft save failed:", e);
+      }
+    },
+    restoreDraft() {
+      try {
+        const raw = localStorage.getItem("gamehub_article_draft");
+        if (!raw) return;
+        const draft = JSON.parse(raw);
+        if (draft.title) this.title = draft.title;
+        if (draft.subtitle) this.subtitle = draft.subtitle;
+        if (draft.category) this.category = draft.category;
+        if (draft.tags?.length) this.tags = draft.tags;
+        if (draft.content && draft.content.trim() !== this.content.trim()) {
+          this.content = draft.content;
+        }
+        if (draft.image) this.image = draft.image;
+        const savedAt = draft.savedAt ? new Date(draft.savedAt).toLocaleTimeString() : '';
+        this.saveStatus = savedAt ? `✓ Draft restored (${savedAt})` : "✓ Draft restored";
+      } catch (e) {
+        console.warn("Draft restore failed:", e);
+      }
+    },
+    clearDraft() {
+      localStorage.removeItem("gamehub_article_draft");
     },
     addTag(e) {
       const val = this.tagInput.trim();
@@ -177,6 +216,8 @@ export default {
           createdAt: serverTimestamp(),
         });
 
+        // Clear the local draft on successful publish
+        this.clearDraft();
         this.$router.push(`/gamehub-news/${docRef.id}`);
       } catch (error) {
         console.error("Failed to submit article:", error);
@@ -195,6 +236,8 @@ export default {
     this.unsubscribe = onAuthStateChanged(auth, (user) => {
       this.currentUser = user;
     });
+    // Restore any previously saved draft
+    this.restoreDraft();
   },
 };
 </script>

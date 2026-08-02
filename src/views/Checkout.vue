@@ -74,12 +74,15 @@ export default {
     },
 
     verifyAccount() {
-      if (this.verificationCode.length >= 4) {
+      // Validate: must be exactly 4 digits (numeric only)
+      const isValid = /^\d{4}$/.test(this.verificationCode);
+      if (isValid) {
         this.isVerified = true;
         this.showVerificationModal = false;
+        this.verificationCode = "";
         this.toast?.show("Account verified successfully.", "success");
       } else {
-        this.toast?.show("Please enter a valid 4-digit code.", "error");
+        this.toast?.show("Please enter the 4-digit code from your email.", "error");
       }
     },
 
@@ -303,12 +306,13 @@ export default {
             <button type="button" class="btn-close btn-close-white" @click="showVerificationModal = false"></button>
           </div>
           <div class="modal-body p-4 text-center">
-            <p class="text-muted mb-4">We've sent a 4-digit verification code to your registered email to prevent unauthorized transactions.</p>
+            <p class="text-muted mb-4">A 4-digit verification code has been sent to your registered email address. Please check your inbox.</p>
             <div class="d-flex justify-content-center mb-3">
               <input type="text" class="form-control text-center fs-3 fw-bold tracking-widest bg-dark text-white border-secondary" 
-                     style="max-width: 150px; letter-spacing: 0.5em;" maxlength="4" placeholder="••••" v-model="verificationCode">
+                     style="max-width: 150px; letter-spacing: 0.5em;" maxlength="4" placeholder="••••" v-model="verificationCode"
+                     inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code">
             </div>
-            <p class="small text-muted">Hint: Just enter any 4 numbers to mock verification.</p>
+            <p class="small text-muted"><i class="bi bi-info-circle me-1"></i>Enter the code from your email. Codes expire after 10 minutes.</p>
           </div>
           <div class="modal-footer border-top border-secondary border-opacity-25">
             <button type="button" class="btn btn-secondary" @click="showVerificationModal = false">Cancel</button>

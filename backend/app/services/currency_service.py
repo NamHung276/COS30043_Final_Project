@@ -1,13 +1,14 @@
 import logging
 import httpx
 from typing import Dict, Any, Optional
+from datetime import datetime, timedelta
 
 from app.cache.memory_cache import cache
 from app.utils.helpers import build_cache_key
 
 logger = logging.getLogger(__name__)
 
-FRANKFURTER_BASE_URL = "https://api.frankfurter.app"
+FRANKFURTER_BASE_URL = "https://api.frankfurter.dev/v1"
 
 async def get_currencies() -> Optional[Dict[str, str]]:
     """
@@ -73,4 +74,40 @@ async def convert_currency(from_curr: str, to_curr: str, amount: float = 1.0) ->
         return None
     except Exception as exc:
         logger.warning(f"Error converting {from_curr} to {to_curr}: {exc}")
+        return None
+
+async def get_currency_history(from_curr: str, to_curr: str, days: int = 30) -> Optional[Dict[str, Any]]:
+    """
+    Fetch historical exchange rates for a currency pair.
+    """
+    from_curr = from_curr.upper()
+    to_curr = to_curr.upper()
+    
+    if from_curr == to_curr:
+        return None
+        
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=days)
+    
+    start_str = start_date.strftime("%Y-%m-%d")
+    end_str = end_date.strftime("%Y-%m-%d")
+    
+    cache_key = build_cache_key("frankfurter", "history", from_curr, to_curr, start_str, end_str)
+    
+    async def _fetch():
+        params = {
+            "from": from_curr,
+            "to": to_curr
+        }
+        headers = {"Accept": "application/json"}
+        async with httpx.AsyncClient(timeout=10.0, headers=headers) as client:
+            resp = await client.get(f"{FRANKFURTER_BASE_URL}/{start_str}..{end_str}", params=params)
+            resp.raise_for_status()
+            return resp.json()
+
+    try:
+        # Cache for 12 hours since historical data for past dates doesn't change often
+        return await cache.get_or_set(cache_key, _fetch, ttl=43200)
+    except Exception as exc:
+        logger.warning(f"Error fetching history {from_curr} to {to_curr}: {exc}")
         return None

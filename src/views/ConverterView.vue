@@ -1,5 +1,17 @@
 <script setup>
+import { ref } from 'vue';
 import CurrencyConverter from '../components/CurrencyConverter.vue';
+import CurrencyChart from '../components/CurrencyChart.vue';
+
+const currentFrom = ref('USD');
+const currentTo = ref('EUR');
+
+const handleCurrencyChange = (data) => {
+  if (data && data.from && data.to) {
+    currentFrom.value = data.from;
+    currentTo.value = data.to;
+  }
+};
 </script>
 
 <template>
@@ -16,7 +28,17 @@ import CurrencyConverter from '../components/CurrencyConverter.vue';
       </div>
 
       <div class="converter-wrapper">
-        <CurrencyConverter :initialAmount="1.0" :inline="false" />
+        <div class="converter-col">
+          <CurrencyConverter 
+            :initialAmount="1.0" 
+            :inline="false" 
+            @currency-change="handleCurrencyChange"
+          />
+          <CurrencyChart 
+            :from="currentFrom" 
+            :to="currentTo" 
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -43,12 +65,18 @@ import CurrencyConverter from '../components/CurrencyConverter.vue';
 .converter-wrapper {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+}
+
+.converter-col {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
 }
 
 .converter-wrapper :deep(.currency-converter) {
   width: 100%;
-  max-width: 500px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.05);
 }

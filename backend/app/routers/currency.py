@@ -44,3 +44,24 @@ async def convert_currency(
     except Exception as exc:
         logger.error(f"Failed to convert currency: {exc}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to convert currency")
+
+@router.get(
+    "/currency/history",
+    summary="Get currency history",
+    description="Fetch historical exchange rates for a currency pair.",
+)
+async def get_currency_history(
+    from_curr: str = Query("USD", description="Currency to convert from (e.g. USD)"),
+    to_curr: str = Query(..., description="Currency to convert to (e.g. EUR)"),
+    days: int = Query(30, description="Number of days of history"),
+) -> Dict[str, Any]:
+    try:
+        data = await currency_service.get_currency_history(from_curr, to_curr, days)
+        if not data:
+            raise HTTPException(status_code=400, detail=f"Failed to fetch history for {from_curr} -> {to_curr}")
+        return data
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error(f"Failed to fetch currency history: {exc}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to fetch currency history")

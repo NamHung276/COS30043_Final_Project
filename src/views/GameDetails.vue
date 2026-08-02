@@ -761,13 +761,13 @@ export default {
                     <i class="bi bi-currency-exchange"></i>
                   </button>
                   
-                  <div v-if="showConverter" class="position-absolute z-3 mt-2" style="top: 100%; left: 0;">
-                    <CurrencyConverter 
-                      :initialAmount="parseFloat(discountedPrice || displayPrice || 0)" 
-                      :inline="false" 
-                      @close="showConverter = false"
-                    />
-                  </div>
+                  <CurrencyConverter 
+                    v-if="showConverter"
+                    :initialAmount="parseFloat(discountedPrice || displayPrice || 0)"
+                    :asModal="true"
+                    :fixedFrom="true"
+                    @close="showConverter = false"
+                  />
                 </template>
 
                 <!-- FREE -->

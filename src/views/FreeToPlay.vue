@@ -693,4 +693,95 @@ export default {
   </div>
 </template>
 
+<style scoped>
+/* ── Free-To-Play Specific Styles ── */
 
+.ftg-primary-btn {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-glass);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.ftg-primary-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+}
+
+.ftg-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2rem;
+  padding: 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+}
+.ftg-page-btn {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-glass);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ftg-page-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.05);
+}
+.ftg-page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ftg-page-numbers {
+  display: flex;
+  gap: 6px;
+}
+.ftg-page-num-btn {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.ftg-page-num-btn:hover:not(.active) {
+  background: rgba(255,255,255,0.05);
+}
+.ftg-page-num-btn.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.4);
+}
+.ftg-page-ellipsis {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+}
+.ftg-page-info {
+  text-align: center;
+  margin-top: 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+</style>

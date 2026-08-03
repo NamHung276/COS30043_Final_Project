@@ -1,7 +1,7 @@
 <script>
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, query, where, getDocs, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { collection, query, where, getDocs, updateDoc, setDoc, deleteDoc, doc } from "firebase/firestore";
 import SkeletonCard from "../components/SkeletonCard.vue";
 import { useLibraryStore } from "../stores/useLibraryStore";
 import { mapState } from "pinia";
@@ -158,9 +158,19 @@ export default {
           game.installProgress = 100;
           clearInterval(interval);
           setTimeout(async () => {
-            game.isInstalling = false;
-            game.status = 'installed';
-            await updateDoc(doc(db, "purchases", game.id), { status: 'installed' });
+            try {
+              await setDoc(doc(db, "purchases", game.docId), { 
+                status: 'installed',
+                userId: this.currentUser.uid 
+              }, { merge: true });
+              game.status = 'installed'; // Update UI only after saving
+              game.isInstalling = false;
+              console.log("Successfully updated install status in Firestore");
+            } catch (err) {
+              game.isInstalling = false;
+              console.error("Failed to update Firestore:", err);
+              alert("Failed to save install status to database: " + err.message);
+            }
           }, 500);
         }
       }, 200);
@@ -169,7 +179,16 @@ export default {
     async uninstallGame(game) {
       if (confirm(`Are you sure you want to uninstall ${game.gameName}?`)) {
         game.status = 'not_installed';
-        await updateDoc(doc(db, "purchases", game.id), { status: 'not_installed' });
+        try {
+          await setDoc(doc(db, "purchases", game.docId), { 
+            status: 'not_installed',
+            userId: this.currentUser.uid 
+          }, { merge: true });
+          game.status = 'not_installed'; // Update UI only after saving
+        } catch (err) {
+          console.error("Failed to uninstall:", err);
+          alert("Failed to uninstall from database: " + err.message);
+        }
       }
     },
 
@@ -180,9 +199,18 @@ export default {
           await this.stopGame(p);
         }
       }
-      game.status = 'playing';
-      game.sessionStart = Date.now();
-      await updateDoc(doc(db, "purchases", game.id), { status: 'playing', lastPlayed: new Date() });
+      try {
+        await setDoc(doc(db, "purchases", game.docId), { 
+          status: 'playing', 
+          lastPlayed: new Date(),
+          userId: this.currentUser.uid 
+        }, { merge: true });
+        game.status = 'playing';
+        game.sessionStart = Date.now();
+      } catch (err) {
+        console.error("Failed to start game:", err);
+        alert("Failed to launch game: " + err.message);
+      }
     },
 
     async stopGame(game) {
@@ -198,16 +226,21 @@ export default {
       const sessions = game.sessions || [];
       sessions.unshift(newSession);
 
-      game.status = 'installed';
-      game.playtime = newPlaytime;
-      game.sessionStart = null;
-      game.sessions = sessions;
-
-      await updateDoc(doc(db, "purchases", game.id), {
-        status: 'installed',
-        playtime: newPlaytime,
-        sessions: sessions
-      });
+      try {
+        await setDoc(doc(db, "purchases", game.docId), {
+          status: 'installed',
+          playtime: newPlaytime,
+          sessions: sessions,
+          userId: this.currentUser.uid
+        }, { merge: true });
+        
+        game.status = 'installed';
+        game.playtime = newPlaytime;
+        game.sessionStart = null;
+        game.sessions = sessions;
+      } catch (err) {
+        console.error("Failed to stop game:", err);
+      }
     },
 
     async refundGame(game) {
@@ -447,7 +480,9 @@ export default {
                   <div class="library-card-body p-3 d-flex flex-column" style="flex: 1;">
                     <h5 class="text-truncate mb-1" style="color: var(--text-primary)" :title="game.gameName">
                       <router-link :to="`/library/${game.id}`" class="text-decoration-none text-reset">{{ game.gameName }}</router-link>
+                      <span v-if="game.source === 'freetogame' && game.price === 0" class="badge ms-2 rounded-pill" style="font-size: 0.6rem; background: linear-gradient(135deg, #22c55e, #16a34a); vertical-align: middle;">FREE</span>
                     </h5>
+
                     <p class="text-muted small mb-3 d-flex justify-content-between align-items-center">
                       <span>
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px; margin-right:3px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -481,8 +516,8 @@ export default {
                           Play
                         </button>
                         <div class="dropdown">
-                          <button class="btn btn-outline-secondary btn-sm rounded-circle dropdown-toggle no-caret d-flex align-items-center justify-content-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width:31px; height:31px;" aria-label="Game options">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+                          <button class="btn btn-secondary text-white btn-sm rounded-circle dropdown-toggle no-caret d-flex align-items-center justify-content-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width:31px; height:31px;" aria-label="Game options">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="#ffffff"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
                           </button>
                           <ul class="dropdown-menu dropdown-menu-end shadow border-secondary">
                             <li><a class="dropdown-item text-danger" href="#" @click.prevent="uninstallGame(game)">
@@ -534,6 +569,7 @@ export default {
                 <div class="lib-list-info">
                   <span class="lib-list-name" :title="game.gameName">
                     <router-link :to="`/library/${game.id}`" class="text-decoration-none text-reset">{{ game.gameName }}</router-link>
+                    <span v-if="game.source === 'freetogame' && game.price === 0" class="badge ms-2 rounded-pill" style="font-size: 0.6rem; background: linear-gradient(135deg, #22c55e, #16a34a); vertical-align: middle;">FREE</span>
                   </span>
                   <span class="lib-list-playtime">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px; margin-right:3px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>

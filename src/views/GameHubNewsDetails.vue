@@ -7,9 +7,10 @@ import { collection, query, where, getDocs, doc, getDoc, deleteDoc, addDoc, serv
 import { MdPreview } from 'md-editor-v3';
 import 'md-editor-v3/lib/preview.css';
 import DOMPurify from 'dompurify';
+import ReportModal from "../components/ReportModal.vue";
 
 export default {
-  components: { LikeButton, MdPreview },
+  components: { LikeButton, MdPreview, ReportModal },
 
   data() {
     return {
@@ -17,6 +18,7 @@ export default {
       article: null,
       relatedArticles: [],
       copyFeedback: false,
+      showReportModal: false,
     };
   },
 
@@ -68,21 +70,21 @@ export default {
         console.error("Error deleting article:", err);
       }
     },
-    
-    async reportArticle() {
+    reportArticle() {
       if (!this.currentUser) {
         this.$router.push("/login");
         return;
       }
-      const reason = prompt("Please provide a reason for reporting this article:");
-      if (!reason || !reason.trim()) return;
+      this.showReportModal = true;
+    },
 
+    async submitReport(reason) {
       try {
         await addDoc(collection(db, "reports"), {
           type: "Article",
           target: this.article.title,
           targetId: this.article.id,
-          reason: reason.trim(),
+          reason: reason,
           user: this.currentUser.displayName || this.currentUser.email,
           userId: this.currentUser.uid,
           severity: "Medium",
@@ -91,9 +93,11 @@ export default {
           status: "Pending"
         });
         alert("Report submitted successfully. Thank you.");
+        this.showReportModal = false;
       } catch (error) {
         console.error("Failed to submit report:", error);
-        alert("Failed to submit report.");
+        alert("Failed to submit report. Ensure your permissions are correct.");
+        throw error; // Let the modal show the error
       }
     },
 
@@ -316,6 +320,14 @@ export default {
       <p>This article may have been removed or the link is incorrect.</p>
       <router-link to="/gamehub-news" class="btn btn-primary">← Back to News</router-link>
     </div>
+    <ReportModal 
+      :show="showReportModal"
+      :targetName="article?.title"
+      targetType="Article"
+      @close="showReportModal = false"
+      @submit="submitReport"
+    />
+
   </div>
 </template>
 

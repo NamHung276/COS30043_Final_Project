@@ -247,7 +247,7 @@ export default {
       this.loadTimedOut = false;
       this.error = null;
 
-      // Hard timeout: stop skeleton and show retry after 15s
+      // Hard timeout: stop skeleton and show retry after 20s
       if (this.loadingTimer) clearTimeout(this.loadingTimer);
       this.loadingTimer = setTimeout(() => {
         if (this.loading) {
@@ -255,7 +255,7 @@ export default {
           this.loadTimedOut = true;
           this.error = "Games are taking too long to load. Please check your connection and try again.";
         }
-      }, 15_000);
+      }, 20_000);
 
       try {
         const params = {
@@ -915,4 +915,75 @@ export default {
   </div>
 </template>
 
-
+<style scoped>
+/* ── Pagination ── */
+.games-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2rem;
+  padding: 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+}
+.page-btn {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-glass);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.page-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.05);
+}
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.page-numbers {
+  display: flex;
+  gap: 6px;
+}
+.page-num-btn {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.page-num-btn:hover:not(.active) {
+  background: rgba(255,255,255,0.05);
+}
+.page-num-btn.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.4);
+}
+.page-ellipsis {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+}
+.games-page-info {
+  text-align: center;
+  margin-top: 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+</style>

@@ -234,7 +234,7 @@ export default {
         <!-- ══ Tabs ══ -->
         <div class="deals-tabs" style="display: flex; gap: 1rem; margin-top: 1.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
           <button class="deals-primary-btn" :style="{ opacity: activeTab === 'deals' ? 1 : 0.6 }" @click="activeTab = 'deals'">
-            CheapShark Deals
+            All Deals (CheapShark)
           </button>
           <button class="deals-primary-btn" :style="{ opacity: activeTab === 'itad' ? 1 : 0.6 }" @click="activeTab = 'itad'; fetchITADDeals()">
             <i class="bi bi-fire me-1 text-warning"></i> ITAD Trends
@@ -737,14 +737,20 @@ export default {
             rel="noopener noreferrer"
             class="game-card text-decoration-none"
           >
-            <div class="game-card-media" style="background: #111422; display: flex; align-items: center; justify-content: center; height: 160px; padding: 1.5rem; text-align: center; position: relative;">
-              <div style="font-weight: 800; font-size: 1.1rem; color: #ffc107;">
-                <i class="bi bi-tags-fill me-2"></i>{{ deal.title }}
+            <div class="game-card-media" style="background: #111422; display: flex; align-items: center; justify-content: center; height: 160px; text-align: center; position: relative; overflow: hidden;">
+              <!-- ITAD Image with fallback -->
+              <img :src="`https://isthereanydeal.com/cdn/game/box_250x334/${deal.id}.jpg`" class="w-100 h-100 object-fit-cover position-absolute top-0 start-0 opacity-50" @error="(e) => { e.target.src = '/logo/gamepad.svg'; e.target.style.opacity = '0.2'; e.target.style.objectFit = 'contain'; e.target.style.padding = '2rem'; }" alt="Game cover" />
+              
+              <div class="position-relative z-1 p-3 w-100">
+                <div style="font-weight: 800; font-size: 1.1rem; color: #ffc107; text-shadow: 0 2px 10px rgba(0,0,0,0.8); word-wrap: break-word;">
+                  <i class="bi bi-tags-fill me-2"></i>{{ deal.title }}
+                </div>
+                <div class="genre-ribbon mt-2 mx-auto" style="background: rgba(255, 193, 7, 0.9); border-color: rgba(255, 193, 7, 1); color: #000; font-weight: bold; width: fit-content;">
+                  {{ deal.store_name }}
+                </div>
               </div>
-              <div class="genre-ribbon" style="background: rgba(255, 193, 7, 0.2); border-color: rgba(255, 193, 7, 0.4); color: #ffc107;">
-                {{ deal.store_name }}
-              </div>
-              <span v-if="deal.is_historical_low" class="mc-badge mc-green" title="All-Time Historical Low Price Recorded!">
+              
+              <span v-if="deal.is_historical_low" class="mc-badge mc-green z-2" title="All-Time Historical Low Price Recorded!" style="position: absolute; top: 10px; right: 10px; box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);">
                 🔥 LOW
               </span>
             </div>
@@ -782,7 +788,9 @@ export default {
           <button class="deals-primary-btn" @click="fetchBundles">Try Again</button>
         </div>
         <div v-else-if="bundles.length === 0" class="deals-state">
-          <h3>No active bundles found</h3>
+          <i class="bi bi-box-seam fs-1 d-block mb-3 opacity-50"></i>
+          <h3>No Active Bundles found</h3>
+          <p class="text-muted" style="max-width: 400px; margin: 0 auto;">There are currently no active bundles available at the moment. Please check back later.</p>
         </div>
         <div v-else class="games-grid" style="margin-top: 2rem;">
           <a
@@ -1614,5 +1622,95 @@ export default {
 .view-btn:hover:not(.active) {
   background: var(--bg-surface);
   color: var(--text-secondary);
+}
+
+/* Tab Buttons */
+.deals-primary-btn {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-glass);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.deals-primary-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-2px);
+}
+.deals-primary-btn[style*="opacity: 1"] {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Pagination */
+.deals-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2rem;
+  padding: 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+}
+.deals-page-btn {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-glass);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.deals-page-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.05);
+}
+.deals-page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.deals-page-numbers {
+  display: flex;
+  gap: 6px;
+}
+.deals-page-num {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.deals-page-num:hover:not(.active) {
+  background: rgba(255,255,255,0.05);
+}
+.deals-page-num.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(109, 40, 217, 0.4);
+}
+.deals-page-ellipsis {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
 }
 </style>

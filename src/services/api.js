@@ -11,7 +11,7 @@ const BACKEND_BASE_URL = import.meta.env.PROD
 
 export const backendApi = axios.create({
   baseURL: BACKEND_BASE_URL,
-  timeout: 12000,
+  timeout: 60000,
 });
 
 const cache = new Map();

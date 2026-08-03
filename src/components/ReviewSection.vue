@@ -14,9 +14,12 @@ import {
   arrayUnion,
   arrayRemove
 } from "firebase/firestore";
+import ReportModal from "./ReportModal.vue";
 
 export default {
   name: "ReviewSection",
+
+  components: { ReportModal },
 
   inject: ["toast"],
 
@@ -56,6 +59,9 @@ export default {
       
       // Track pending votes to prevent spam clicks
       votingRequests: [],
+      
+      showReportModal: false,
+      reportTargetReview: null,
     };
   },
 
@@ -265,20 +271,23 @@ export default {
       }
     },
 
-    async reportReview(review) {
+    reportReview(review) {
       if (!this.currentUser) {
         this.$router.push("/login");
         return;
       }
-      const reason = prompt("Please provide a reason for reporting this review:");
-      if (!reason || !reason.trim()) return;
+      this.reportTargetReview = review;
+      this.showReportModal = true;
+    },
 
+    async submitReport(reason) {
+      if (!this.reportTargetReview) return;
       try {
         await addDoc(collection(db, "reports"), {
           type: "Review",
-          target: review.gameName || this.gameTitle || "Game",
-          targetId: review.id,
-          reason: reason.trim(),
+          target: this.reportTargetReview.gameName || this.gameTitle || "Game",
+          targetId: this.reportTargetReview.id,
+          reason: reason,
           user: this.currentUser.displayName || this.currentUser.email,
           userId: this.currentUser.uid,
           severity: "Medium",
@@ -287,9 +296,12 @@ export default {
           status: "Pending"
         });
         this.toast?.show("Report submitted successfully. Thank you.", "success");
+        this.showReportModal = false;
+        this.reportTargetReview = null;
       } catch (error) {
         console.error("Failed to submit report:", error);
-        this.toast?.show("Failed to submit report.", "error");
+        this.toast?.show("Failed to submit report. Ensure permissions are correct.", "error");
+        throw error; // Let the modal show the error
       }
     },
 
@@ -812,6 +824,14 @@ export default {
         </div>
       </div>
     </div>
+    
+    <ReportModal 
+      :show="showReportModal"
+      :targetName="reportTargetReview?.gameName || gameTitle || 'Game Review'"
+      targetType="Review"
+      @close="showReportModal = false"
+      @submit="submitReport"
+    />
   </div>
 </template>
 

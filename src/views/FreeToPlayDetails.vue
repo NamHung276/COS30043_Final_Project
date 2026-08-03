@@ -11,6 +11,9 @@ import {
   addDoc,
   serverTimestamp,
 } from "firebase/firestore";
+import { mapState } from "pinia";
+import { useLibraryStore } from "../stores/useLibraryStore";
+import { useAuthStore } from "../stores/useAuthStore";
 import ReviewSection from "../components/ReviewSection.vue";
 
 export default {
@@ -21,21 +24,27 @@ export default {
     return { toast };
   },
 
-  data() {
-    return {
-      game: null,
-      loading: true,
-      currentUser: null,
-      activeShot: 0,
-      lightboxSrc: null,
-      favStatus: { visible: false, message: "", type: "success" },
-      discoverMoreGames: [],
-      recentGames: [],
-      carouselInterval: null,
-    };
-  },
-
   computed: {
+    ...mapState(useAuthStore, ["currentUser"]),
+    ...mapState(useLibraryStore, ["purchases"]),
+
+    isClaimed() {
+      if (!this.game || !this.currentUser) return false;
+      return this.purchases.some(
+        (p) =>
+          String(p.gameId) === String(this.game.id) &&
+          p.source === "freetogame",
+      );
+    },
+
+    genrePills() {
+      if (!this.game?.genre) return [];
+      return this.game.genre
+        .split(",")
+        .map((g) => g.trim())
+        .filter(Boolean);
+    },
+
     heroImage() {
       if (
         this.game?.screenshots?.length &&
@@ -72,15 +81,18 @@ export default {
     },
   },
 
-  watch: {
-    "$route.params.id": {
-      immediate: true,
-      handler(newId) {
-        if (newId) {
-          this.fetchData(newId);
-        }
-      },
-    },
+  data() {
+    return {
+      game: null,
+      loading: true,
+      activeShot: 0,
+      lightboxSrc: null,
+      favStatus: { visible: false, message: "", type: "success" },
+      discoverMoreGames: [],
+      recentGames: [],
+      carouselInterval: null,
+      claimStatus: "idle", // idle | claiming | claimed
+    };
   },
 
   methods: {
@@ -143,6 +155,51 @@ export default {
       } catch (err) {
         console.error(err);
         this.showFavStatus("Something went wrong. Please try again.", "error");
+      }
+    },
+
+    async claimFree() {
+      if (!this.currentUser) {
+        this.$router.push("/login");
+        return;
+      }
+      if (this.isClaimed) {
+        this.$router.push("/library");
+        return;
+      }
+      this.claimStatus = "claiming";
+      try {
+        const libraryStore = useLibraryStore();
+        await libraryStore.fetchPurchases();
+        // Double-check to avoid duplicates from rapid clicks
+        const alreadyOwned = libraryStore.purchases.some(
+          (p) =>
+            String(p.gameId) === String(this.game.id) &&
+            p.source === "freetogame",
+        );
+        if (!alreadyOwned) {
+          await addDoc(collection(db, "purchases"), {
+            userId: this.currentUser.uid,
+            gameId: String(this.game.id),
+            gameName: this.game.title,
+            thumbnail: this.game.thumbnail || "",
+            price: 0,
+            currency: "USD",
+            source: "freetogame",
+            gameUrl: this.game.game_url || "",
+            transactionId: "FREE",
+            payerName: this.currentUser.displayName || "Anonymous",
+            createdAt: serverTimestamp(),
+            status: "not_installed",
+          });
+          await libraryStore.fetchPurchases(true);
+        }
+        this.claimStatus = "claimed";
+        this.toast?.show(`${this.game.title} added to your library!`, "success");
+      } catch (err) {
+        console.error("claimFree failed:", err);
+        this.claimStatus = "idle";
+        this.toast?.show("Something went wrong. Please try again.", "error");
       }
     },
 
@@ -239,13 +296,13 @@ export default {
   },
 
   mounted() {
-    this.unsubscribe = onAuthStateChanged(auth, (user) => {
-      this.currentUser = user;
-    });
+    const libraryStore = useLibraryStore();
+    if (this.currentUser) {
+      libraryStore.fetchPurchases();
+    }
   },
 
   beforeUnmount() {
-    if (this.unsubscribe) this.unsubscribe();
     this.stopCarousel();
   },
 };
@@ -360,17 +417,38 @@ export default {
               </div>
 
               <!-- Quick Actions in Hero -->
-              <div class="d-flex flex-wrap gap-3 mt-4">
-                <a
-                  v-if="game.game_url"
-                  :href="game.game_url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="gd-hero-btn-primary btn btn-primary btn-lg fw-bold px-5 shadow-sm text-primary-var text-decoration-none"
-                  aria-label="Play Now"
+              <div class="d-flex flex-wrap gap-3 mt-4 align-items-center">
+                <!-- State: Already Claimed → Download -->
+                <button
+                  v-if="isClaimed || claimStatus === 'claimed'"
+                  class="ftg-claim-btn ftg-claim-btn--download btn btn-lg fw-bold px-5 shadow"
+                  @click="$router.push('/library')"
+                  aria-label="Go to library to download"
                 >
-                  <i class="bi bi-controller me-2"></i> Play Now (FreeToGame)
-                </a>
+                  <i class="bi bi-download me-2"></i> Download
+                </button>
+
+                <!-- State: Claiming in progress -->
+                <button
+                  v-else-if="claimStatus === 'claiming'"
+                  class="ftg-claim-btn ftg-claim-btn--loading btn btn-lg fw-bold px-5"
+                  disabled
+                  aria-label="Claiming"
+                >
+                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Claiming...
+                </button>
+
+                <!-- State: Not yet claimed → Claim Free -->
+                <button
+                  v-else
+                  class="ftg-claim-btn ftg-claim-btn--free btn btn-lg fw-bold px-5 shadow"
+                  @click="claimFree"
+                  aria-label="Claim this game for free"
+                >
+                  <i class="bi bi-gift-fill me-2"></i>
+                  {{ currentUser ? 'Claim Free' : 'Sign In to Claim' }}
+                </button>
 
                 <button
                   class="gd-hero-btn-tertiary btn btn-lg px-4"
@@ -379,7 +457,19 @@ export default {
                 >
                   <i class="bi bi-heart me-2"></i> Wishlist
                 </button>
+
+                <a
+                  v-if="game.game_url"
+                  :href="game.game_url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn btn-outline-secondary btn-lg px-4 text-decoration-none"
+                  aria-label="Open official page"
+                >
+                  <i class="bi bi-box-arrow-up-right me-1"></i> Official Site
+                </a>
               </div>
+
 
             </div>
           </div>
@@ -435,12 +525,18 @@ export default {
             </div>
 
             <!-- Tags -->
-            <div v-if="game.genre" class="gd-section" style="margin-bottom: var(--section-gap);">
+            <div v-if="genrePills.length" class="gd-section" style="margin-bottom: var(--section-gap);">
               <h2 class="gd-section-title mb-4"><i class="bi bi-tags-fill me-2 text-primary"></i> Tags</h2>
               <div class="gd-tags d-flex flex-wrap gap-2">
-                <span class="gd-tag text-decoration-none bg-surface-var text-primary-var border-0 opacity-75" style="cursor: default;">{{ game.genre }}</span>
+                <span
+                  v-for="pill in genrePills"
+                  :key="pill"
+                  class="gd-tag text-decoration-none bg-surface-var text-primary-var border-0 opacity-75"
+                  style="cursor: default;"
+                >{{ pill }}</span>
               </div>
             </div>
+
 
             <!-- System Requirements -->
             <div class="gd-section" style="margin-bottom: var(--section-gap);">
@@ -566,6 +662,45 @@ export default {
                 </div>
               </transition>
 
+              <!-- ── FREE Pricing Panel ── -->
+              <div class="ftg-price-panel gd-details-card mb-4">
+                <div class="ftg-price-free-label">FREE</div>
+                <p class="ftg-price-subtitle">No purchase required</p>
+
+                <!-- Claim / Download CTA (mirrored in sidebar) -->
+                <button
+                  v-if="isClaimed || claimStatus === 'claimed'"
+                  class="ftg-claim-btn ftg-claim-btn--download btn btn-lg fw-bold w-100 shadow mb-3"
+                  @click="$router.push('/library')"
+                >
+                  <i class="bi bi-download me-2"></i> Download
+                </button>
+                <button
+                  v-else-if="claimStatus === 'claiming'"
+                  class="ftg-claim-btn ftg-claim-btn--loading btn btn-lg fw-bold w-100 mb-3"
+                  disabled
+                >
+                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Claiming...
+                </button>
+                <button
+                  v-else
+                  class="ftg-claim-btn ftg-claim-btn--free btn btn-lg fw-bold w-100 shadow mb-3"
+                  @click="claimFree"
+                >
+                  <i class="bi bi-gift-fill me-2"></i>
+                  {{ currentUser ? 'Claim Free' : 'Sign In to Claim' }}
+                </button>
+
+                <div class="ftg-price-trust d-flex flex-column gap-2 mt-1">
+                  <span class="ftg-trust-item"><i class="bi bi-shield-check-fill text-success me-2"></i>No credit card required</span>
+                  <span class="ftg-trust-item"><i class="bi bi-infinity text-primary me-2"></i>Free to keep forever</span>
+                  <span v-if="game.platform" class="ftg-trust-item">
+                    <i class="bi bi-display text-muted me-2"></i>{{ game.platform }}
+                  </span>
+                </div>
+              </div>
+
               <!-- Details table -->
               <div class="gd-details-card">
                 <h5 class="gd-details-heading">Game Info</h5>
@@ -585,12 +720,21 @@ export default {
                   }}</span>
                 </div>
                 <div class="gd-detail-row">
+                  <span class="gd-detail-label">Genre</span>
+                  <span class="gd-detail-value">{{ game.genre || '—' }}</span>
+                </div>
+                <div class="gd-detail-row">
                   <span class="gd-detail-label">Platform</span>
                   <span class="gd-detail-value">{{ game.platform }}</span>
+                </div>
+                <div class="gd-detail-row" v-if="game.status">
+                  <span class="gd-detail-label">Status</span>
+                  <span class="gd-detail-value" style="color: #4ade80;">{{ game.status }}</span>
                 </div>
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>
@@ -623,4 +767,74 @@ export default {
   </div>
 </template>
 
+<style scoped>
+/* ── FREE Pricing Panel ────────────────────────────────────────── */
+.ftg-price-panel {
+  text-align: center;
+  padding: 1.75rem 1.5rem 1.5rem;
+}
 
+.ftg-price-free-label {
+  font-size: 3rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -1px;
+  background: linear-gradient(135deg, #4ade80 0%, #22d3ee 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.25rem;
+}
+
+.ftg-price-subtitle {
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.ftg-trust-item {
+  font-size: 0.82rem;
+  color: var(--text-secondary, #cbd5e1);
+}
+
+/* ── Claim Button States ───────────────────────────────────────── */
+.ftg-claim-btn {
+  border: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s;
+}
+.ftg-claim-btn:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+.ftg-claim-btn:not(:disabled):active {
+  transform: translateY(0);
+}
+
+/* Green gradient — "Claim Free" */
+.ftg-claim-btn--free {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.35);
+}
+.ftg-claim-btn--free:hover {
+  box-shadow: 0 6px 28px rgba(34, 197, 94, 0.55);
+  color: #fff;
+}
+
+/* Teal gradient — "Download" */
+.ftg-claim-btn--download {
+  background: linear-gradient(135deg, #06b6d4 0%, #0284c7 100%);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.35);
+}
+.ftg-claim-btn--download:hover {
+  box-shadow: 0 6px 28px rgba(6, 182, 212, 0.55);
+  color: #fff;
+}
+
+/* Muted — "Claiming..." spinner */
+.ftg-claim-btn--loading {
+  background: rgba(255,255,255,0.08);
+  color: var(--text-muted, #94a3b8);
+  cursor: not-allowed;
+}
+</style>

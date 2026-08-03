@@ -45,7 +45,7 @@ async def _get(path: str, params: Dict[str, Any]) -> Dict:
     import asyncio as _asyncio
 
     async def _request() -> Dict:
-        async with httpx.AsyncClient(base_url=RAWG_BASE_URL, timeout=8.0) as client:
+        async with httpx.AsyncClient(base_url=RAWG_BASE_URL, timeout=6.0) as client:
             response = await client.get(path, params=params)
             response.raise_for_status()
             return response.json()

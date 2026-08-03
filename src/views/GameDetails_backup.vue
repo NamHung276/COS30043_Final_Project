@@ -51,7 +51,14 @@ export default {
       formattedMinReq: "",
       formattedRecReq: "",
       showConverter: false,
-
+      // ── Gen 3 enrichment state ────────────────────────────────────────────
+      steamData: null,
+      steamLoading: false,
+      steamchartsData: null,
+      steamchartsLoading: false,
+      youtubeTrailerId: null,
+      itadDeals: null,
+      itadLoading: false,
       _abortController: null,
     };
   },
@@ -77,8 +84,8 @@ export default {
 
     platforms() {
       const allPlatforms = (this.game?.platforms || []).map((p) => ({
-        name: p,
-        icon: this.platformIcon(p),
+        name: p.platform.name,
+        icon: this.platformIcon(p.platform.name),
       }));
       const unique = [];
       const seen = new Set();
@@ -92,15 +99,15 @@ export default {
     },
 
     developerNames() {
-      return (this.game?.developers || []).join(", ") || "—";
+      return (this.game?.developers || []).map((d) => d.name).join(", ") || "—";
     },
 
     publisherNames() {
-      return (this.game?.publishers || []).join(", ") || "—";
+      return (this.game?.publishers || []).map((p) => p.name).join(", ") || "—";
     },
 
     genreNames() {
-      return this.game?.genres || [];
+      return (this.game?.genres || []).map((g) => g.name);
     },
 
     heroImage() {
@@ -233,7 +240,7 @@ export default {
       };
 
       this.game.platforms.forEach((p) => {
-        const name = p || "";
+        const name = p.platform?.name || "";
         if (!name) return;
 
         const lowerName = name.toLowerCase();
@@ -434,12 +441,12 @@ export default {
       const finalPrice = this.discountedPrice || this.displayPrice;
       cartState.add({
         id: this.game.id,
-        name: this.game.title,
+        name: this.game.name,
         price: finalPrice,
         originalPrice: this.displayPrice,
-        thumbnail: this.game.cover_image,
+        thumbnail: this.game.background_image,
       });
-      this.toast?.show(`${this.game.title} added to cart`, "success");
+      this.toast?.show(`${this.game.name} added to cart`, "success");
     },
 
     buyNow() {
@@ -459,7 +466,8 @@ export default {
       this.similarGames = [];
       this.activeShot = 0;
       // Reset Gen 3 state
-      this.game = null;
+      this.steamData = null;
+      this.steamchartsData = null;
       this.youtubeTrailerId = null;
       this.steamLoading = false;
       this.steamchartsLoading = false;
@@ -500,13 +508,13 @@ export default {
         this.discoverMoreGames = allDiscover.slice(6, 12);
         this.recentGames = recentRes.data.results || [];
 
-        document.title = `${this.game.title} | GameHub`;
+        document.title = `${this.game.name} | GameHub`;
         window.scrollTo({ top: 0, behavior: "smooth" });
         this.startCarousel();
 
         // Fetch CheapShark deals (non-blocking) if game is released and paid
         if (this.gameStateInfo.isReleased && !this.gameStateInfo.isFree) {
-          this.fetchDeals(this.game.title);
+          this.fetchDeals(this.game.name);
         }
 
         // Track user path for recommendations
@@ -529,16 +537,16 @@ export default {
      */
     processSteamData(game) {
       // Steam Store data (price, languages, categories, achievements)
-      this.game = game.steam_data || null;
+      this.steamData = game.steam_data || null;
 
       // SteamCharts (live player counts)
-      this.game.players = game.steamcharts || null;
+      this.steamchartsData = game.steamcharts || null;
 
       // YouTube trailer fallback — only populated when RAWG has no trailer
       this.youtubeTrailerId = game.youtube_trailer_id || null;
 
       // IsThereAnyDeal (ITAD deals, historical low, & store comparison)
-      this.game = game.itad_deals || null;
+      this.itadDeals = game.itad_deals || null;
     },
 
     async fetchDeals(title) {
@@ -683,7 +691,7 @@ export default {
       <div class="gd-hero">
         <!-- Blurred background art -->
         <div class="gd-hero-bg" aria-hidden="true">
-          <img :src="heroImage || game.cover_image" alt="" />
+          <img :src="heroImage || game.background_image" alt="" />
         </div>
 
         <!-- Gradient overlay -->
@@ -704,10 +712,10 @@ export default {
           <div class="gd-hero-bottom align-items-end">
             <!-- Cover thumbnail -->
             <img
-              v-if="game.cover_image"
-              v-lazy-img="game.cover_image"
+              v-if="game.background_image"
+              v-lazy-img="game.background_image"
               class="gd-cover shadow-lg"
-              :alt="`${game.title} cover`"
+              :alt="`${game.name} cover`"
             />
 
             <!-- Title + meta -->
@@ -729,7 +737,7 @@ export default {
               </div>
 
               <h1 class="gd-title display-3 fw-bold mb-3 text-primary-var">
-                {{ game.title }}
+                {{ game.name }}
               </h1>
 
               <!-- Rating bar & Platforms -->
@@ -923,8 +931,8 @@ export default {
                 aria-label="Play trailer"
               >
                 <img
-                  :src="trailerPoster || game.cover_image"
-                  :alt="`${game.title} trailer thumbnail`"
+                  :src="trailerPoster || game.background_image"
+                  :alt="`${game.name} trailer thumbnail`"
                   class="gd-trailer-thumb-img"
                 />
                 <div class="gd-trailer-play-btn" aria-hidden="true">
@@ -938,7 +946,7 @@ export default {
                 :youtube-id="trailerYoutubeId"
                 :video-url="trailerVideoUrl"
                 :poster-url="trailerPoster"
-                :title="game.title"
+                :title="game.name"
                 :is-youtube-fallback="false"
                 @close="showTrailerModal = false"
               />
@@ -966,7 +974,7 @@ export default {
               >
                 <img
                   :src="`https://img.youtube.com/vi/${effectiveYoutubeId}/maxresdefault.jpg`"
-                  :alt="`${game.title} official trailer thumbnail`"
+                  :alt="`${game.name} official trailer thumbnail`"
                   class="gd-trailer-thumb-img"
                 />
                 <div class="gd-trailer-play-btn" aria-hidden="true">
@@ -980,7 +988,7 @@ export default {
                 :youtube-id="effectiveYoutubeId"
                 :video-url="null"
                 :poster-url="`https://img.youtube.com/vi/${effectiveYoutubeId}/maxresdefault.jpg`"
-                :title="game.title"
+                :title="game.name"
                 :is-youtube-fallback="true"
                 @close="showTrailerModal = false"
               />
@@ -995,7 +1003,7 @@ export default {
               >
                 <img
                   v-lazy-img="screenshots[activeShot].image"
-                  :alt="`${game.title} screenshot ${activeShot + 1}`"
+                  :alt="`${game.name} screenshot ${activeShot + 1}`"
                   class="gd-shot-main-img"
                 />
                 <div class="gd-shot-zoom-hint">
@@ -1016,7 +1024,7 @@ export default {
                   role="tab"
                   :aria-selected="i === activeShot"
                 >
-                  <img v-lazy-img="shot" :alt="`Screenshot ${i + 1}`" />
+                  <img v-lazy-img="shot.image" :alt="`Screenshot ${i + 1}`" />
                 </button>
               </div>
             </div>
@@ -1033,7 +1041,7 @@ export default {
               >
                 <div
                   class="gd-description"
-                  v-html="game.description || game.description || game.about || 'No description available.'"
+                  v-html="game.description || game.description_raw || game.about || 'No description available.'"
                 ></div>
                 <div class="gd-desc-fade" v-if="!showFullDescription"></div>
               </div>
@@ -1197,7 +1205,7 @@ export default {
                   </p>
                 </div>
               </div>
-              <ReviewSection v-if="gameStateInfo.isReleased" :game-id="game.id" :game-title="game.title" />
+              <ReviewSection v-if="gameStateInfo.isReleased" :game-id="game.id" :game-title="game.name" />
               <div v-else class="text-center p-5 bg-black bg-opacity-25 rounded-4 border border-secondary border-opacity-25">
                 <i class="bi bi-lock-fill text-muted fs-1 mb-3"></i>
                 <h4 class="text-primary-var fw-bold">Coming after release</h4>
@@ -1556,19 +1564,19 @@ export default {
 
               <!-- ── Gen 3: Steam Store Panel (additive, never replaces RAWG) ── -->
               <SteamDataPanel
-                :steam-data="game"
+                :steam-data="steamData"
                 :loading="steamLoading"
               />
 
               <!-- ── Gen 3: IsThereAnyDeal Prices & Historical Low ── -->
               <ITADDealsPanel
-                :itad-deals="game"
+                :itad-deals="itadDeals"
                 :loading="itadLoading"
               />
 
               <!-- ── Gen 3: SteamCharts Live Player Counts (additive) ── -->
               <SteamChartsPanel
-                :steamcharts-data="game.players"
+                :steamcharts-data="steamchartsData"
                 :loading="steamchartsLoading"
               />
 

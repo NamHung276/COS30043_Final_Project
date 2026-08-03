@@ -40,28 +40,46 @@ async def _get(path: str, params: Dict[str, Any]) -> Dict:
     """
     Perform a GET request against the RAWG API.
     Raises httpx.HTTPStatusError on non-2xx responses.
+    Includes up to 2 retry attempts for transient connection / timeout errors.
     """
+    import asyncio as _asyncio
+
     async def _request() -> Dict:
-        async with httpx.AsyncClient(base_url=RAWG_BASE_URL, timeout=1.0) as client:
+        async with httpx.AsyncClient(base_url=RAWG_BASE_URL, timeout=8.0) as client:
             response = await client.get(path, params=params)
             response.raise_for_status()
             return response.json()
 
-    try:
-        # No retries - fail fast and let the fallback handle it
-        return await _request()
-    except (httpx.ReadTimeout, httpx.ConnectTimeout, httpx.TimeoutException) as exc:
-        logger.error("RAWG API timeout on %s", path)
-        from fastapi import HTTPException
-        raise HTTPException(status_code=504, detail="RAWG API unavailable") from None
-    except httpx.HTTPStatusError as exc:
-        logger.error("RAWG API returned %s on %s", exc.response.status_code, path)
-        from fastapi import HTTPException
-        raise HTTPException(status_code=502, detail="RAWG API error") from exc
-    except Exception as exc:
-        logger.error("RAWG API error on %s: %s", path, exc)
-        from fastapi import HTTPException
-        raise HTTPException(status_code=502, detail="RAWG API error") from exc
+    last_exc: Exception | None = None
+    for attempt in range(2):  # 2 attempts total
+        try:
+            return await _request()
+        except (httpx.ReadTimeout, httpx.ConnectTimeout, httpx.TimeoutException) as exc:
+            last_exc = exc
+            if attempt == 0:
+                logger.warning("RAWG API timeout on %s (attempt %d), retrying…", path, attempt + 1)
+                await _asyncio.sleep(1.0)
+            else:
+                logger.error("RAWG API timeout on %s after %d attempts", path, attempt + 1)
+        except httpx.ConnectError as exc:
+            last_exc = exc
+            if attempt == 0:
+                logger.warning("RAWG connect error on %s (attempt %d), retrying…", path, attempt + 1)
+                await _asyncio.sleep(1.0)
+            else:
+                logger.error("RAWG connect error on %s after %d attempts", path, attempt + 1)
+        except httpx.HTTPStatusError as exc:
+            # Don't retry on HTTP error status codes (4xx/5xx)
+            logger.error("RAWG API returned %s on %s", exc.response.status_code, path)
+            from fastapi import HTTPException
+            raise HTTPException(status_code=502, detail="RAWG API error") from exc
+        except Exception as exc:
+            logger.error("RAWG API error on %s: %s", path, exc)
+            from fastapi import HTTPException
+            raise HTTPException(status_code=502, detail="RAWG API error") from exc
+
+    from fastapi import HTTPException
+    raise HTTPException(status_code=504, detail="RAWG API unavailable") from last_exc
 
 
 # ── Public Service Functions ───────────────────────────────────────────────────

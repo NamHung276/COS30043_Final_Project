@@ -50,6 +50,8 @@ class Settings(BaseSettings):
             self.coingecko_api_key = resolve_value("COINGECKO_API_KEY", "VITE_COINGECKO_API_KEY") or self.coingecko_api_key
             self.gemini_api_key = resolve_value("GEMINI_API_KEY", "VITE_GEMINI_API_KEY") or self.gemini_api_key
             self.gg_deals_api_key = resolve_value("GG_DEALS_API_KEY", "VITE_GG_DEALS_API_KEY") or self.gg_deals_api_key
+            self.youtube_api_key = resolve_value("YOUTUBE_API_KEY", "VITE_YOUTUBE_API_KEY") or self.youtube_api_key
+            self.itad_api_key = resolve_value("ITAD_API_KEY", "VITE_ITAD_API_KEY") or self.itad_api_key
             self.paypal_client_id = resolve_value("PAYPAL_CLIENT_ID", "VITE_PAYPAL_CLIENT_ID") or self.paypal_client_id
 
     # ── Application ─────────────────────────────────────────────────────────────
@@ -65,6 +67,8 @@ class Settings(BaseSettings):
     coingecko_api_key: str = Field(default="", description="CoinGecko API key")
     gemini_api_key: str = Field(default="", description="Google Gemini API key")
     gg_deals_api_key: str = Field(default="", description="GG.deals API key")
+    youtube_api_key: str = Field(default="", description="YouTube Data API v3 key (optional — enables trailer fallback)")
+    itad_api_key: str = Field(default="", description="IsThereAnyDeal (ITAD) API key (optional — enables ITAD deal comparison)")
     
     # ── Payments (PayPal) ────────────────────────────────────────────────────────
     paypal_client_id: str = Field(default="", description="PayPal REST API Client ID")

@@ -90,48 +90,75 @@ class GameSummary(BaseModel):
     short_screenshots: Optional[List[Dict[str, Any]]] = []
 
 
-class GameDetail(BaseModel):
+class UnifiedPrice(BaseModel):
+    currency: str = "USD"
+    initial: float = 0.0
+    final: float = 0.0
+    discount_percent: int = 0
+    store_name: Optional[str] = None
+    url: Optional[str] = None
+    source: str
+
+class UnifiedHistoricalLow(BaseModel):
+    amount: float = 0.0
+    store_name: str
+    date: str
+    url: Optional[str] = None
+    source: str
+
+class UnifiedPlayers(BaseModel):
+    live: int = 0
+    peak_24h: int = 0
+    peak_all_time: int = 0
+    source: str = "SteamCharts"
+
+class UnifiedTrailer(BaseModel):
+    url: str
+    poster: Optional[str] = None
+    is_youtube_fallback: bool = False
+
+class UnifiedGameDetail(BaseModel):
     """
-    Aggregated game detail — combines RAWG + CheapShark into one response.
-    This is what GET /api/games/{id} returns.
+    Unified game detail — gracefully merged from RAWG, Steam, ITAD, CheapShark, etc.
+    This is what GET /api/games/{id} returns to the frontend.
     """
 
-    # ── RAWG Fields ──────────────────────────────────────────────────────────────
     id: int
-    name: str
+    title: str
     slug: str
-    description_raw: Optional[str] = None
-    background_image: Optional[str] = None
-    background_image_additional: Optional[str] = None
+    description: str
+    hero_image: Optional[str] = None
+    cover_image: Optional[str] = None
+
+    # Meta
     released: Optional[str] = None
-    tba: Optional[bool] = None
     metacritic: Optional[int] = None
-    metacritic_url: Optional[str] = None
-    rating: Optional[float] = None
-    rating_top: Optional[int] = None
-    ratings_count: Optional[int] = None
-    playtime: Optional[int] = None
     website: Optional[str] = None
-
-    genres: Optional[List[Genre]] = []
-    platforms: Optional[List[Dict[str, Any]]] = []
-    developers: Optional[List[Developer]] = []
-    publishers: Optional[List[Publisher]] = []
-    stores: Optional[List[Dict[str, Any]]] = []
-    tags: Optional[List[Dict[str, Any]]] = []
-
-    # ── Aggregated Media ─────────────────────────────────────────────────────────
-    screenshots: List[Screenshot] = []
-    trailers: List[Trailer] = []
-
-    # ── CheapShark Deals ─────────────────────────────────────────────────────────
-    deals: Optional[List[Dict[str, Any]]] = []
-    cheapest_deal_price: Optional[str] = None
-    cheapest_deal_store: Optional[str] = None
-
-    # ── GG.deals ─────────────────────────────────────────────────────────────────
-    ggdeals: Optional[Dict[str, Any]] = None
-
-    # ── Meta ─────────────────────────────────────────────────────────────────────
+    esrb_rating: Optional[Dict[str, Any]] = None
+    
+    # Collections
+    screenshots: List[str] = []
+    genres: List[str] = []
+    developers: List[str] = []
+    publishers: List[str] = []
+    platforms: List[str] = []
+    
+    # Enrichment from Steam
+    languages: List[str] = []
+    categories: List[str] = []
+    achievements_total: int = 0
+    
+    # Fallback-Prioritized Blocks
+    price: Optional[UnifiedPrice] = None
+    historical_low: Optional[UnifiedHistoricalLow] = None
+    players: Optional[UnifiedPlayers] = None
+    trailer: Optional[UnifiedTrailer] = None
+    
+    # Extra data arrays
+    store_deals: List[Dict[str, Any]] = []
+    bundles: List[Dict[str, Any]] = []
+    
+    # Metadata
     rawg_url: Optional[str] = None
-    aggregated_at: Optional[str] = None  # ISO timestamp of when data was fetched
+    steam_url: Optional[str] = None
+    aggregated_at: str

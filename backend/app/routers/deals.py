@@ -12,7 +12,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Query, status
 from typing import List
 
-from app.services import cheapshark_service
+from app.services import cheapshark_service, itad_service
 from app.schemas.game import Deal, Store
 from app.schemas.common import PaginatedResponse
 
@@ -101,3 +101,29 @@ async def get_stores():
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"CheapShark stores error: {str(exc)}",
         )
+
+
+@router.get(
+    "/deals/itad",
+    summary="IsThereAnyDeal trending deals",
+    description="Returns trending game deals directly from IsThereAnyDeal.",
+)
+async def get_itad_deals(
+    limit: int = Query(default=30, ge=1, le=50, description="Max number of deals"),
+    sort: str = Query(default="trending", description="Sort by: trending | cut | price"),
+):
+    try:
+        deals = await itad_service.get_itad_trending_deals(limit=limit, sort=sort)
+        return {
+            "results": deals,
+            "count": len(deals),
+            "engine": "IsThereAnyDeal",
+        }
+    except Exception as exc:
+        logger.error("get_itad_deals failed: %s", exc)
+        return {
+            "results": [],
+            "count": 0,
+            "engine": "IsThereAnyDeal",
+            "error": str(exc),
+        }

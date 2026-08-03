@@ -11,7 +11,7 @@ const BACKEND_BASE_URL = import.meta.env.PROD
 
 export const backendApi = axios.create({
   baseURL: BACKEND_BASE_URL,
-  timeout: 15000,
+  timeout: 12000,
 });
 
 const cache = new Map();
@@ -28,11 +28,11 @@ const CACHE_TTL = 3 * 60 * 1000; // 3 minutes
     
     const cached = cache.get(key);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-      return Promise.resolve(cached.data);
+      return Promise.resolve({ data: cached.data, status: 200, statusText: "OK", headers: {}, config });
     }
     
     const response = await originalGet.call(this, url, config);
-    cache.set(key, { timestamp: Date.now(), data: response });
+    cache.set(key, { timestamp: Date.now(), data: response.data });
     return response;
   };
 

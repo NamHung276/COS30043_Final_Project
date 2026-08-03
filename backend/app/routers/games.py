@@ -22,9 +22,10 @@ from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, Query, status
 import re
 
-from app.services import rawg_service, cheapshark_service, ggdeals_service
+from app.services import rawg_service, cheapshark_service, ggdeals_service, steam_service, steamcharts_service, youtube_service, itad_service
 from app.services.recommendation_service import recommendation_service
-from app.schemas.game import GameDetail, GameSummary, Screenshot, Trailer
+from app.cache.memory_cache import cache
+from app.schemas.game import UnifiedGameDetail, GameSummary, Screenshot, Trailer
 from app.schemas.common import RAWGPaginatedResponse
 
 logger = logging.getLogger(__name__)
@@ -118,13 +119,7 @@ async def list_games(
         return data
     except Exception as exc:
         logger.error("list_games failed: %s", exc)
-        # Return empty paginated response instead of failing
-        return {
-            "count": 0,
-            "next": None,
-            "previous": None,
-            "results": [],
-        }
+        raise _rawg_error(exc)
 
 
 @router.get(
@@ -142,13 +137,7 @@ async def search_games(
         return await rawg_service.search_games(query=q, page=page, page_size=page_size)
     except Exception as exc:
         logger.error("search_games failed for query '%s': %s", q, exc)
-        # Return empty paginated response instead of failing
-        return {
-            "count": 0,
-            "next": None,
-            "previous": None,
-            "results": [],
-        }
+        raise _rawg_error(exc)
 
 
 @router.get(
@@ -177,16 +166,9 @@ async def get_recommendations(
 
 @router.get(
     "/games/{game_id}",
-    response_model=GameDetail,
-    summary="Aggregated game detail",
-    description=(
-        "**Aggregated endpoint.** Returns a single JSON object combining:\n"
-        "- RAWG game detail (description, genres, platforms, developers, publishers)\n"
-        "- RAWG screenshots\n"
-        "- RAWG trailers\n"
-        "- CheapShark deals (current sale prices across stores)\n\n"
-        "Replaces 4 separate frontend API calls. Cached 10 minutes."
-    ),
+    response_model=UnifiedGameDetail,
+    summary="Unified game detail",
+    description="Returns a single unified JSON object combining RAWG, Steam, ITAD, CheapShark, and SteamCharts.",
 )
 async def get_game_detail(game_id: int):
     try:
@@ -195,124 +177,241 @@ async def get_game_detail(game_id: int):
         screenshots_task = rawg_service.get_screenshots(game_id)
         trailers_task = rawg_service.get_trailers(game_id)
 
-        detail, screenshots_data, trailers_data = await asyncio.gather(
+        detail_res, screenshots_res, trailers_res = await asyncio.gather(
             detail_task,
             screenshots_task,
             trailers_task,
             return_exceptions=True,
         )
 
-        # If the main detail call fails, surface the error
-        if isinstance(detail, Exception):
-            raise detail
+        detail = detail_res if not isinstance(detail_res, BaseException) else {}
+        if not detail and isinstance(detail_res, BaseException):
+            logger.warning(f"RAWG failed completely for {game_id}")
+            
+        screenshots_data = screenshots_res if not isinstance(screenshots_res, BaseException) else {}
+        trailers_data = trailers_res if not isinstance(trailers_res, BaseException) else {}
 
-        # Narrow type: detail is guaranteed to be a dict at this point
-        detail = cast(Dict[str, Any], detail)
+        rawg_screenshots = screenshots_data.get("results", []) if isinstance(screenshots_data, dict) else []
+        rawg_trailers = trailers_data.get("results", []) if isinstance(trailers_data, dict) else []
 
-        # Non-fatal failures for supplementary data
-        screenshots = []
-        if not isinstance(screenshots_data, Exception):
-            screenshots = cast(Dict[str, Any], screenshots_data).get("results", [])
-        else:
-            logger.warning(
-                "Screenshots fetch failed for game %d: %s", game_id, screenshots_data
-            )
-
-        trailers = []
-        if not isinstance(trailers_data, Exception):
-            trailers = cast(Dict[str, Any], trailers_data).get("results", [])
-        else:
-            logger.warning(
-                "Trailers fetch failed for game %d: %s", game_id, trailers_data
-            )
-
-        # Try to find CheapShark deals by game name (non-fatal)
-        deals = []
-        cheapest_price = None
-        cheapest_store = None
+        # Fallback ID cache
+        fallback_key = f"rawg_fallback_{game_id}"
         
         steam_id = _extract_steam_app_id(detail)
+        game_name = detail.get("name")
         
-        try:
-            game_name = detail.get("name", "")
-            cs_results = await cheapshark_service.get_deals_by_game_name(game_name)
-            if cs_results:
-                # Filter results to ensure we don't pick up the wrong game
-                valid_results = []
-                if steam_id:
-                    valid_results = [g for g in cs_results if g.get("steamAppID") == steam_id]
-                
-                # Fallback to exact name matching if no steam ID match (e.g. Epic exclusives)
-                if not valid_results:
-                    valid_results = [g for g in cs_results if g.get("external", "").lower() == game_name.lower()]
-                
-                if valid_results:
-                    # Pick the best exact match (if multiple, e.g. different editions)
-                    best = min(
-                        valid_results,
-                        key=lambda g: float(g.get("cheapest", "9999")),
-                        default=None,
-                    )
-                    if best:
-                        cheapest_price = best.get("cheapest")
-                        cheapest_store = None
-                    deals = valid_results
-        except Exception as cs_exc:
-            logger.warning("CheapShark lookup failed for game %d: %s", game_id, cs_exc)
+        if steam_id and game_name:
+            # Cache the successful mapping for 7 days
+            cache.set(fallback_key, {"steam_id": steam_id, "name": game_name}, ttl=604800)
+        elif not detail:
+            # RAWG failed completely. Attempt to recover IDs from cache.
+            cached_fallback = cache.get(fallback_key)
+            if cached_fallback:
+                steam_id = cached_fallback.get("steam_id")
+                game_name = cached_fallback.get("name")
+                logger.info(f"Recovered missing RAWG data from cache for {game_id}")
+            else:
+                game_name = f"Game #{game_id}"
+        else:
+            game_name = game_name or f"Game #{game_id}"
 
-        # Try to find GG.deals prices and bundles by Steam App ID
-        ggdeals_data = None
-        if steam_id:
-            try:
-                results = await asyncio.gather(
-                    ggdeals_service.get_prices_by_steam_id(steam_id),
-                    ggdeals_service.get_bundles_by_steam_id(steam_id),
-                    return_exceptions=True
-                )
-                prices_res = results[0] if isinstance(results[0], dict) else None
-                bundles_res = results[1] if isinstance(results[1], dict) else None
-                
-                if prices_res or bundles_res:
-                    fallback_dict = prices_res or bundles_res or {}
-                    ggdeals_data = {
-                        "url": fallback_dict.get("url"),
-                        "prices": prices_res.get("prices") if prices_res else None,
-                        "bundles": bundles_res.get("bundles") if bundles_res else []
-                    }
-            except Exception as gg_exc:
-                logger.warning("GG.deals lookups failed for game %d (steam %s): %s", game_id, steam_id, gg_exc)
+        # Now fetch secondary sources concurrently
+        cs_task = cheapshark_service.get_deals_by_game_name(game_name)
+        gg_bundles_task = ggdeals_service.get_bundles_by_steam_id(steam_id) if steam_id else asyncio.sleep(0)
+        steam_task = steam_service.get_steam_app_details(steam_id) if steam_id else asyncio.sleep(0)
+        charts_task = steamcharts_service.get_player_counts(steam_id) if steam_id else asyncio.sleep(0)
+        itad_task = itad_service.get_itad_deals(steam_id=steam_id, title=game_name)
+        
+        has_rawg_trailer = bool(rawg_trailers) or bool(detail.get("clip"))
+        yt_task = youtube_service.search_game_trailer(game_name) if not has_rawg_trailer else asyncio.sleep(0)
 
-        # Assemble aggregated response
+        secondary_results = await asyncio.gather(
+            cs_task,
+            gg_bundles_task,
+            steam_task,
+            charts_task,
+            itad_task,
+            yt_task,
+            return_exceptions=True
+        )
+
+        cs_res = secondary_results[0] if not isinstance(secondary_results[0], BaseException) else []
+        gg_bundles = secondary_results[1] if not isinstance(secondary_results[1], BaseException) and secondary_results[1] else {}
+        steam_data = secondary_results[2] if not isinstance(secondary_results[2], BaseException) and secondary_results[2] else {}
+        charts_data = secondary_results[3] if not isinstance(secondary_results[3], BaseException) and secondary_results[3] else {}
+        itad_data = secondary_results[4] if not isinstance(secondary_results[4], BaseException) and secondary_results[4] else {}
+        yt_trailer = secondary_results[5] if not isinstance(secondary_results[5], BaseException) else None
+
+        # -- GAP FILLING LOGIC --
+
+        # Title
+        final_title = steam_data.get("title") or detail.get("name", f"Game #{game_id}")
+
+        # Description
+        final_desc = detail.get("description_raw") or steam_data.get("short_description") or "Description unavailable."
+
+        # Hero Image
+        final_hero = detail.get("background_image_additional") or detail.get("background_image") or steam_data.get("header_image")
+        
+        # Cover Image
+        final_cover = detail.get("background_image") or steam_data.get("header_image")
+
+        # Screenshots
+        final_screenshots = [s.get("image") for s in rawg_screenshots if s.get("image")]
+        if not final_screenshots and steam_data.get("screenshots"):
+            final_screenshots = steam_data.get("screenshots")
+
+        # Trailer
+        final_trailer = None
+        if rawg_trailers and rawg_trailers[0].get("data"):
+            trailer_data = rawg_trailers[0].get("data", {})
+            final_trailer = {
+                "url": trailer_data.get("max") or trailer_data.get("480"),
+                "poster": rawg_trailers[0].get("preview"),
+                "is_youtube_fallback": False
+            }
+        elif detail.get("clip") and detail["clip"].get("clip"):
+            final_trailer = {
+                "url": detail["clip"]["clip"],
+                "poster": detail["clip"].get("preview"),
+                "is_youtube_fallback": False
+            }
+        elif yt_trailer:
+            final_trailer = {
+                "url": f"https://www.youtube.com/embed/{yt_trailer}",
+                "poster": None,
+                "is_youtube_fallback": True
+            }
+
+        # Price
+        final_price = None
+        itad_current = itad_data.get("current_best")
+        
+        cs_best = None
+        if cs_res:
+            valid_cs = []
+            if steam_id:
+                valid_cs = [g for g in cs_res if g.get("steamAppID") == steam_id]
+            if not valid_cs:
+                valid_cs = [g for g in cs_res if g.get("external", "").lower() == final_title.lower()]
+            if valid_cs:
+                cs_best = min(valid_cs, key=lambda g: float(g.get("cheapest", "9999")), default=None)
+
+        if cs_best and itad_current:
+            cs_val = float(cs_best.get("cheapest", 0))
+            itad_val = float(itad_current.get("price", {}).get("amount", 9999))
+            if cs_val <= itad_val:
+                final_price = {
+                    "currency": "USD",
+                    "initial": float(cs_best.get("normalPrice") or cs_val),
+                    "final": cs_val,
+                    "discount_percent": 0,
+                    "store_name": "CheapShark",
+                    "url": f"https://www.cheapshark.com/redirect?dealID={cs_best.get('dealID')}",
+                    "source": "CheapShark"
+                }
+            else:
+                final_price = {
+                    "currency": itad_current.get("price", {}).get("currency", "USD"),
+                    "initial": itad_current.get("regular", {}).get("amount", itad_val),
+                    "final": itad_val,
+                    "discount_percent": itad_current.get("cut", 0),
+                    "store_name": itad_current.get("store", {}).get("name", "Unknown Store"),
+                    "url": itad_current.get("url"),
+                    "source": "ITAD"
+                }
+        elif itad_current:
+            final_price = {
+                "currency": itad_current.get("price", {}).get("currency", "USD"),
+                "initial": itad_current.get("regular", {}).get("amount", itad_current.get("price", {}).get("amount", 0)),
+                "final": itad_current.get("price", {}).get("amount", 0),
+                "discount_percent": itad_current.get("cut", 0),
+                "store_name": itad_current.get("store", {}).get("name", "Unknown Store"),
+                "url": itad_current.get("url"),
+                "source": "ITAD"
+            }
+        elif cs_best:
+            final_price = {
+                "currency": "USD",
+                "initial": float(cs_best.get("normalPrice") or cs_best.get("cheapest", 0)),
+                "final": float(cs_best.get("cheapest", 0)),
+                "discount_percent": 0,
+                "store_name": "CheapShark",
+                "url": f"https://www.cheapshark.com/redirect?dealID={cs_best.get('dealID')}",
+                "source": "CheapShark"
+            }
+        elif steam_data and steam_data.get("price"):
+            final_price = {
+                "currency": steam_data["price"].get("currency", "USD"),
+                "initial": steam_data["price"].get("initial", 0.0),
+                "final": steam_data["price"].get("final", 0.0),
+                "discount_percent": steam_data["price"].get("discount_percent", 0),
+                "store_name": "Steam",
+                "url": steam_data.get("steam_url"),
+                "source": "Steam"
+            }
+
+        # Historical Low
+        final_hist = None
+        itad_hist = itad_data.get("historical_low")
+        if itad_hist:
+            final_hist = {
+                "amount": itad_hist.get("price", {}).get("amount", 0),
+                "store_name": itad_hist.get("store", {}).get("name", "Unknown Store"),
+                "date": itad_hist.get("timestamp", ""),
+                "url": None,
+                "source": "ITAD"
+            }
+
+        # Players
+        final_players = None
+        if charts_data:
+            final_players = {
+                "live": charts_data.get("live_players", 0),
+                "peak_24h": charts_data.get("peak_24h", 0),
+                "peak_all_time": charts_data.get("peak_all_time", 0),
+                "source": "SteamCharts"
+            }
+
         return {
-            **detail,
-            "screenshots": screenshots,
-            "trailers": trailers,
-            "deals": deals,
-            "ggdeals": ggdeals_data,
-            "cheapest_deal_price": cheapest_price,
-            "cheapest_deal_store": cheapest_store,
+            "id": game_id,
+            "title": final_title,
+            "slug": detail.get("slug", str(game_id)),
+            "description": final_desc,
+            "hero_image": final_hero,
+            "cover_image": final_cover,
+            "released": detail.get("released"),
+            "metacritic": detail.get("metacritic"),
+            "website": detail.get("website"),
+            "esrb_rating": detail.get("esrb_rating"),
+            "screenshots": final_screenshots,
+            "genres": [g.get("name") for g in detail.get("genres", []) if g.get("name")],
+            "developers": [d.get("name") for d in detail.get("developers", []) if d.get("name")],
+            "publishers": [p.get("name") for p in detail.get("publishers", []) if p.get("name")],
+            "platforms": [p.get("platform", {}).get("name") for p in detail.get("platforms", []) if p.get("platform", {}).get("name")],
+            "languages": steam_data.get("supported_languages", []),
+            "categories": steam_data.get("categories", []),
+            "achievements_total": steam_data.get("achievements_total", 0),
+            "price": final_price,
+            "historical_low": final_hist,
+            "players": final_players,
+            "trailer": final_trailer,
+            "store_deals": itad_data.get("store_deals", []),
+            "bundles": gg_bundles.get("bundles", []),
             "rawg_url": f"https://rawg.io/games/{detail.get('slug', game_id)}",
+            "steam_url": steam_data.get("steam_url") if steam_data else None,
             "aggregated_at": datetime.now(timezone.utc).isoformat(),
         }
 
     except Exception as exc:
         logger.error("get_game_detail failed for game %d: %s", game_id, exc)
-        # Return a minimal fallback response instead of failing
         return {
             "id": game_id,
-            "name": f"Game #{game_id}",
+            "title": f"Game #{game_id}",
             "slug": str(game_id),
             "description": "Unable to load game details. Please try again later.",
-            "screenshots": [],
-            "trailers": [],
-            "deals": [],
-            "ggdeals": None,
-            "cheapest_deal_price": None,
-            "cheapest_deal_store": None,
-            "rawg_url": f"https://rawg.io/games/{game_id}",
             "aggregated_at": datetime.now(timezone.utc).isoformat(),
         }
-
 
 @router.get(
     "/games/{game_id}/screenshots",

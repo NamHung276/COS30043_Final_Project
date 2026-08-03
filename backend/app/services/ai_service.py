@@ -67,10 +67,21 @@ async def chat(
                     )
                 )
 
+        # Fetch free games to inject into context
+        from app.services import free_games_service
+        try:
+            free_games = await free_games_service.get_free_games(sort_by="popularity")
+            free_games_context = "\n\nCURRENT FREE GAMES ON FREETOGAME (Use these if the user asks for free games):\n"
+            for fg in free_games[:10]:
+                free_games_context += f"- {fg.get('title')} ({fg.get('genre')}): {fg.get('short_description')} [Link: {fg.get('game_url')}]\n"
+        except Exception as e:
+            logger.error(f"Failed to fetch free games for AI context: {e}")
+            free_games_context = ""
+
         chat_session = client.chats.create(
             model="gemini-flash-latest",
             config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_INSTRUCTION,
+                system_instruction=SYSTEM_INSTRUCTION + free_games_context,
             ),
             history=gemini_history,
         )

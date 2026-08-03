@@ -21,6 +21,9 @@ export default {
       bundles: [],
       bundlesLoading: false,
       bundlesError: null,
+      itadDeals: [],
+      itadLoading: false,
+      itadError: null,
       deals: [],
       loading: true,
       error: null,
@@ -171,6 +174,22 @@ export default {
         this.bundlesLoading = false;
       }
     },
+    async fetchITADDeals() {
+      if (this.itadDeals.length > 0) return;
+      this.itadLoading = true;
+      this.itadError = null;
+      try {
+        const { data } = await backendApi.get("/deals/itad", {
+          params: { limit: 40, sort: "trending" },
+        });
+        this.itadDeals = data.results || [];
+      } catch (err) {
+        console.error(err);
+        this.itadError = "Failed to load IsThereAnyDeal offers.";
+      } finally {
+        this.itadLoading = false;
+      }
+    },
   },
 
   async mounted() {
@@ -213,9 +232,17 @@ export default {
         </div>
 
         <!-- ══ Tabs ══ -->
-        <div class="deals-tabs" style="display: flex; gap: 1rem; margin-top: 1.5rem; margin-bottom: 0.5rem;">
-          <button class="deals-primary-btn" :style="{ opacity: activeTab === 'deals' ? 1 : 0.6 }" @click="activeTab = 'deals'">Game Deals</button>
-          <button class="deals-primary-btn" :style="{ opacity: activeTab === 'bundles' ? 1 : 0.6 }" @click="activeTab = 'bundles'; fetchBundles()">Active Bundles <span style="background: var(--accent); color: white; border-radius: 4px; padding: 2px 6px; font-size: 11px; margin-left: 6px;">GG.deals</span></button>
+        <div class="deals-tabs" style="display: flex; gap: 1rem; margin-top: 1.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+          <button class="deals-primary-btn" :style="{ opacity: activeTab === 'deals' ? 1 : 0.6 }" @click="activeTab = 'deals'">
+            CheapShark Deals
+          </button>
+          <button class="deals-primary-btn" :style="{ opacity: activeTab === 'itad' ? 1 : 0.6 }" @click="activeTab = 'itad'; fetchITADDeals()">
+            <i class="bi bi-fire me-1 text-warning"></i> ITAD Trends
+            <span style="background: #ffc107; color: #000; font-weight: 700; border-radius: 4px; padding: 2px 6px; font-size: 11px; margin-left: 6px;">ITAD API</span>
+          </button>
+          <button class="deals-primary-btn" :style="{ opacity: activeTab === 'bundles' ? 1 : 0.6 }" @click="activeTab = 'bundles'; fetchBundles()">
+            Active Bundles <span style="background: var(--accent); color: white; border-radius: 4px; padding: 2px 6px; font-size: 11px; margin-left: 6px;">GG.deals</span>
+          </button>
         </div>
 
         <!-- ══ Filter Panel ══ -->
@@ -686,6 +713,62 @@ export default {
           />
         </button>
       </nav>
+      </template>
+
+      <!-- ══ ITAD Deals Content ══ -->
+      <template v-else-if="activeTab === 'itad'">
+        <div v-if="itadLoading" class="games-grid">
+          <SkeletonCard v-for="n in 12" :key="n" />
+        </div>
+        <div v-else-if="itadError" class="deals-state">
+          <h3>Failed to load ITAD deals</h3>
+          <p>{{ itadError }}</p>
+          <button class="deals-primary-btn" @click="fetchITADDeals">Try Again</button>
+        </div>
+        <div v-else-if="itadDeals.length === 0" class="deals-state">
+          <h3>No IsThereAnyDeal offers available right now</h3>
+        </div>
+        <div v-else class="games-grid" style="margin-top: 2rem;">
+          <a
+            v-for="(deal, index) in itadDeals"
+            :key="deal.id || index"
+            :href="deal.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="game-card text-decoration-none"
+          >
+            <div class="game-card-media" style="background: #111422; display: flex; align-items: center; justify-content: center; height: 160px; padding: 1.5rem; text-align: center; position: relative;">
+              <div style="font-weight: 800; font-size: 1.1rem; color: #ffc107;">
+                <i class="bi bi-tags-fill me-2"></i>{{ deal.title }}
+              </div>
+              <div class="genre-ribbon" style="background: rgba(255, 193, 7, 0.2); border-color: rgba(255, 193, 7, 0.4); color: #ffc107;">
+                {{ deal.store_name }}
+              </div>
+              <span v-if="deal.is_historical_low" class="mc-badge mc-green" title="All-Time Historical Low Price Recorded!">
+                🔥 LOW
+              </span>
+            </div>
+            <div class="game-card-body">
+              <div class="game-card-header">
+                <h3 class="game-card-title">{{ deal.title }}</h3>
+                <span class="game-type premium" style="background: #ffc107; color: #000; font-weight: 800;">ITAD</span>
+              </div>
+              <div class="game-card-footer" style="margin-top: 1rem; display: flex; align-items: center; justify-content: space-between;">
+                <div class="d-flex align-items-center gap-2">
+                  <span v-if="deal.savings > 0" class="price-discount-badge" style="background: #c94040; color: white; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 0.75rem;">
+                    -{{ deal.savings }}%
+                  </span>
+                  <span v-if="deal.normal_price > 0" class="text-muted text-decoration-line-through small">
+                    ${{ deal.normal_price.toFixed(2) }}
+                  </span>
+                </div>
+                <span class="text-success fw-bold fs-5">
+                  ${{ deal.sale_price.toFixed(2) }}
+                </span>
+              </div>
+            </div>
+          </a>
+        </div>
       </template>
 
       <!-- ══ Bundles Content ══ -->

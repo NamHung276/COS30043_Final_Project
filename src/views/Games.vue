@@ -69,6 +69,7 @@ export default {
       itemsPerPage: 24,
       totalCount: 0,
       searchTimeout: null,
+      filterTimeout: null,
       // Trailer modal
       trailerGame: null,
       showTrailer: false,
@@ -150,14 +151,24 @@ export default {
     },
     selectedGenre() {
       this.currentPage = 1;
-      this.fetchGames();
+      clearTimeout(this.filterTimeout);
+      this.filterTimeout = setTimeout(() => {
+        this.fetchGames();
+      }, 200);
     },
     selectedPlatform() {
       this.currentPage = 1;
-      this.fetchGames();
+      clearTimeout(this.filterTimeout);
+      this.filterTimeout = setTimeout(() => {
+        this.fetchGames();
+      }, 200);
     },
     sortBy() {
       this.currentPage = 1;
+      clearTimeout(this.filterTimeout);
+      this.filterTimeout = setTimeout(() => {
+        this.fetchGames();
+      }, 200);
     },
     // React to auth state changes via the centralised store
     currentUser: {

@@ -4,7 +4,8 @@ import { ref } from 'vue';
 const props = defineProps({
   show: Boolean,
   targetName: String,
-  targetType: String
+  targetType: String,
+  onSubmit: Function
 });
 
 const emit = defineEmits(['close', 'submit']);
@@ -12,10 +13,12 @@ const emit = defineEmits(['close', 'submit']);
 const reason = ref('');
 const isSubmitting = ref(false);
 const error = ref('');
+const isSuccess = ref(false);
 
 const close = () => {
   reason.value = '';
   error.value = '';
+  isSuccess.value = false;
   emit('close');
 };
 
@@ -29,10 +32,17 @@ const submit = async () => {
   error.value = '';
   
   try {
-    emit('submit', reason.value.trim());
-    reason.value = '';
+    if (props.onSubmit) {
+      await props.onSubmit(reason.value.trim());
+    } else {
+      emit('submit', reason.value.trim());
+    }
+    isSuccess.value = true;
+    setTimeout(() => {
+      close();
+    }, 2000);
   } catch (err) {
-    error.value = "Failed to submit report. Please try again later.";
+    error.value = err.message || "Failed to submit report. Please try again later.";
   } finally {
     isSubmitting.value = false;
   }
@@ -60,25 +70,35 @@ const submit = async () => {
         <p class="modal-subtitle">You are reporting: <strong>{{ targetName }}</strong></p>
       </div>
 
-      <div class="modal-body">
-        <label for="report-reason" class="form-label">Reason for reporting</label>
-        <textarea 
-          id="report-reason" 
-          v-model="reason" 
-          placeholder="Please describe why you are reporting this content..."
-          class="form-textarea"
-          rows="4"
-        ></textarea>
-        <p v-if="error" class="error-msg">{{ error }}</p>
+      <div v-if="isSuccess" class="modal-body text-center py-5">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-success mb-3" style="stroke: #22c55e;">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <h3 style="color: white; font-weight: 700; margin-bottom: 0.5rem;">Report Submitted</h3>
+        <p class="text-muted">Thank you for helping keep GameHub safe.</p>
       </div>
+      <template v-else>
+        <div class="modal-body">
+          <label for="report-reason" class="form-label">Reason for reporting</label>
+          <textarea 
+            id="report-reason" 
+            v-model="reason" 
+            placeholder="Please describe why you are reporting this content..."
+            class="form-textarea"
+            rows="4"
+          ></textarea>
+          <p v-if="error" class="error-msg">{{ error }}</p>
+        </div>
 
-      <div class="modal-footer">
-        <button class="btn btn-secondary" @click="close" :disabled="isSubmitting">Cancel</button>
-        <button class="btn btn-danger" @click="submit" :disabled="isSubmitting">
-          <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-          Submit Report
-        </button>
-      </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" @click="close" :disabled="isSubmitting">Cancel</button>
+          <button class="btn btn-danger" @click="submit" :disabled="isSubmitting">
+            <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            Submit Report
+          </button>
+        </div>
+      </template>
     </div>
   </div>
 </template>

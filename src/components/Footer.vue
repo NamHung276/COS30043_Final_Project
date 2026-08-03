@@ -21,22 +21,22 @@
 
         <!-- Links -->
         <div class="col-lg-2 col-md-3 col-6">
-          <h6 class="text-white mb-3 fw-bold">Explore</h6>
+          <h6 class="text-white mb-3 fw-bold">Games</h6>
           <ul class="list-unstyled small d-flex flex-column gap-2">
-            <li><router-link to="/games" class="text-muted text-decoration-none hover-white">All Games</router-link></li>
-            <li><router-link to="/news" class="text-muted text-decoration-none hover-white">News & Updates</router-link></li>
-            <li><router-link to="/community" class="text-muted text-decoration-none hover-white">Community</router-link></li>
-            <li><a href="#" class="text-muted text-decoration-none hover-white">Top Rated</a></li>
+            <li><router-link to="/deals" class="text-muted text-decoration-none hover-white">Deals & Offers</router-link></li>
+            <li><router-link to="/free-to-play" class="text-muted text-decoration-none hover-white">Free To Play</router-link></li>
+            <li><router-link to="/paid-games" class="text-muted text-decoration-none hover-white">Premium Games</router-link></li>
+            <li><router-link to="/library" class="text-muted text-decoration-none hover-white">My Library</router-link></li>
           </ul>
         </div>
 
         <div class="col-lg-2 col-md-3 col-6">
-          <h6 class="text-white mb-3 fw-bold">Support</h6>
+          <h6 class="text-white mb-3 fw-bold">Discover</h6>
           <ul class="list-unstyled small d-flex flex-column gap-2">
-            <li><a href="#" class="text-muted text-decoration-none hover-white">Help Center</a></li>
-            <li><a href="#" class="text-muted text-decoration-none hover-white">Refund Policy</a></li>
-            <li><a href="#" class="text-muted text-decoration-none hover-white">Contact Us</a></li>
-            <li><a href="#" class="text-muted text-decoration-none hover-white">System Status</a></li>
+            <li><router-link to="/gamehub-news" class="text-muted text-decoration-none hover-white">News & Updates</router-link></li>
+            <li><router-link to="/converter" class="text-muted text-decoration-none hover-white">Currency Converter</router-link></li>
+            <li><router-link to="/profile" class="text-muted text-decoration-none hover-white">My Profile</router-link></li>
+            <li><router-link to="/favorites" class="text-muted text-decoration-none hover-white">Wishlist</router-link></li>
           </ul>
         </div>
 

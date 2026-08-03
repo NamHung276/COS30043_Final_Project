@@ -295,13 +295,9 @@ export default {
           createdAt: serverTimestamp(),
           status: "Pending"
         });
-        this.toast?.show("Report submitted successfully. Thank you.", "success");
-        this.showReportModal = false;
-        this.reportTargetReview = null;
       } catch (error) {
         console.error("Failed to submit report:", error);
-        this.toast?.show("Failed to submit report. Ensure permissions are correct.", "error");
-        throw error; // Let the modal show the error
+        throw new Error("Failed to submit report. Ensure permissions are correct.");
       }
     },
 
@@ -827,10 +823,10 @@ export default {
     
     <ReportModal 
       :show="showReportModal"
-      :targetName="reportTargetReview?.gameName || gameTitle || 'Game Review'"
+      :targetName="reportTargetReview?.userName || 'User Review'"
       targetType="Review"
       @close="showReportModal = false"
-      @submit="submitReport"
+      :on-submit="submitReport"
     />
   </div>
 </template>

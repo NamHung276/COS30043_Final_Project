@@ -741,13 +741,8 @@ export default {
               <!-- ITAD Image with fallback -->
               <img :src="`https://isthereanydeal.com/cdn/game/box_250x334/${deal.id}.jpg`" class="w-100 h-100 object-fit-cover position-absolute top-0 start-0 opacity-50" @error="(e) => { e.target.src = '/logo/gamepad.svg'; e.target.style.opacity = '0.2'; e.target.style.objectFit = 'contain'; e.target.style.padding = '2rem'; }" alt="Game cover" />
               
-              <div class="position-relative z-1 p-3 w-100">
-                <div style="font-weight: 800; font-size: 1.1rem; color: #ffc107; text-shadow: 0 2px 10px rgba(0,0,0,0.8); word-wrap: break-word;">
-                  <i class="bi bi-tags-fill me-2"></i>{{ deal.title }}
-                </div>
-                <div class="genre-ribbon mt-2 mx-auto" style="background: rgba(255, 193, 7, 0.9); border-color: rgba(255, 193, 7, 1); color: #000; font-weight: bold; width: fit-content;">
-                  {{ deal.store_name }}
-                </div>
+              <div v-if="false" class="position-relative z-1 p-3 w-100">
+                <!-- Removed messy overlay -->
               </div>
               
               <span v-if="deal.is_historical_low" class="mc-badge mc-green z-2" title="All-Time Historical Low Price Recorded!" style="position: absolute; top: 10px; right: 10px; box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);">
@@ -755,9 +750,12 @@ export default {
               </span>
             </div>
             <div class="game-card-body">
-              <div class="game-card-header">
+              <div class="game-card-header align-items-start">
                 <h3 class="game-card-title">{{ deal.title }}</h3>
-                <span class="game-type premium" style="background: #ffc107; color: #000; font-weight: 800;">ITAD</span>
+                <div class="d-flex flex-column align-items-end gap-1">
+                  <span class="game-type premium" style="background: #ffc107; color: #000; font-weight: 800; white-space: nowrap;">ITAD</span>
+                  <span class="badge" style="background: rgba(255, 255, 255, 0.1); color: var(--text-secondary); border: 1px solid var(--border-glass);">{{ deal.store_name }}</span>
+                </div>
               </div>
               <div class="game-card-footer" style="margin-top: 1rem; display: flex; align-items: center; justify-content: space-between;">
                 <div class="d-flex align-items-center gap-2">

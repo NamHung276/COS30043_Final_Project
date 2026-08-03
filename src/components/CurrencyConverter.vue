@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { backendApi } from '../services/api';
 
 const props = defineProps({
@@ -33,12 +33,83 @@ const convertedResult = ref(null);
 const loading = ref(false);
 const error = ref(null);
 
+const activeDropdown = ref(null);
+const fromSearchQuery = ref('');
+const toSearchQuery = ref('');
+
+const formatCurrencyName = (code, name) => {
+  if (!name) return code;
+  return `${code} - ${name}`;
+};
+
+const filteredFromCurrencies = computed(() => {
+  const query = fromSearchQuery.value.toLowerCase().trim();
+  const currentText = formatCurrencyName(fromCurrency.value, currencies.value[fromCurrency.value] || '').toLowerCase();
+  
+  if (!query || query === currentText) return currencies.value;
+  
+  const result = {};
+  for (const [code, name] of Object.entries(currencies.value)) {
+    if (code.toLowerCase().includes(query) || name.toLowerCase().includes(query)) {
+      result[code] = name;
+    }
+  }
+  return result;
+});
+
+const filteredToCurrencies = computed(() => {
+  const query = toSearchQuery.value.toLowerCase().trim();
+  const currentText = formatCurrencyName(toCurrency.value, currencies.value[toCurrency.value] || '').toLowerCase();
+  
+  if (!query || query === currentText) return currencies.value;
+  
+  const result = {};
+  for (const [code, name] of Object.entries(currencies.value)) {
+    if (code.toLowerCase().includes(query) || name.toLowerCase().includes(query)) {
+      result[code] = name;
+    }
+  }
+  return result;
+});
+
+const openDropdown = (type) => {
+  if (type === 'from' && props.fixedFrom) return;
+  activeDropdown.value = type;
+};
+
+const selectCurrency = (type, code) => {
+  if (type === 'from') {
+    fromCurrency.value = code;
+    fromSearchQuery.value = formatCurrencyName(code, currencies.value[code]);
+  } else {
+    toCurrency.value = code;
+    toSearchQuery.value = formatCurrencyName(code, currencies.value[code]);
+  }
+  activeDropdown.value = null;
+  convert();
+};
+
+watch(activeDropdown, (newVal, oldVal) => {
+  if (!newVal && oldVal) {
+    // Reset to selected currency text if clicked away without selecting
+    if (oldVal === 'from') {
+      fromSearchQuery.value = formatCurrencyName(fromCurrency.value, currencies.value[fromCurrency.value]);
+    } else if (oldVal === 'to') {
+      toSearchQuery.value = formatCurrencyName(toCurrency.value, currencies.value[toCurrency.value]);
+    }
+  }
+});
+
 const emit = defineEmits(['close', 'currency-change']);
 
 const fetchCurrencies = async () => {
   try {
     const res = await backendApi.get('/currency/list');
     currencies.value = res.data;
+    
+    fromSearchQuery.value = formatCurrencyName(fromCurrency.value, currencies.value[fromCurrency.value]);
+    toSearchQuery.value = formatCurrencyName(toCurrency.value, currencies.value[toCurrency.value]);
+    
     emit('currency-change', { from: fromCurrency.value, to: toCurrency.value });
   } catch (err) {
     console.error(err);
@@ -76,6 +147,10 @@ const swapCurrencies = () => {
   const temp = fromCurrency.value;
   fromCurrency.value = toCurrency.value;
   toCurrency.value = temp;
+  
+  fromSearchQuery.value = formatCurrencyName(fromCurrency.value, currencies.value[fromCurrency.value]);
+  toSearchQuery.value = formatCurrencyName(toCurrency.value, currencies.value[toCurrency.value]);
+  
   convert();
 };
 
@@ -119,13 +194,41 @@ onMounted(() => {
       </div>
 
       <div class="currency-controls">
+        
+        <!-- From Currency -->
         <div class="select-group">
           <label>From</label>
-          <select v-model="fromCurrency" @change="convert" :disabled="fixedFrom">
-            <option v-for="(name, code) in currencies" :key="code" :value="code">
-              {{ code }} - {{ name }}
-            </option>
-          </select>
+          <div class="custom-select-container">
+            <div class="combobox-wrapper" :class="{ disabled: fixedFrom }">
+              <input 
+                type="text" 
+                v-model="fromSearchQuery" 
+                class="combobox-input" 
+                @focus="openDropdown('from')"
+                :disabled="fixedFrom"
+                placeholder="Search currency..."
+              />
+              <svg class="combobox-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+            <div v-if="activeDropdown === 'from'" class="custom-select-dropdown">
+              <div class="custom-select-options">
+                <div 
+                  v-for="(name, code) in filteredFromCurrencies" 
+                  :key="code" 
+                  class="custom-select-option"
+                  :class="{ active: fromCurrency === code }"
+                  @click="selectCurrency('from', code)"
+                >
+                  {{ code }} - {{ name }}
+                </div>
+                <div v-if="Object.keys(filteredFromCurrencies).length === 0" class="custom-select-empty">
+                  No currencies found
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <button v-if="!fixedFrom" class="swap-btn" @click="swapCurrencies" title="Swap currencies" :disabled="loading">
@@ -137,17 +240,45 @@ onMounted(() => {
           </svg>
         </button>
 
+        <!-- To Currency -->
         <div class="select-group">
           <label>To</label>
-          <select v-model="toCurrency" @change="convert">
-            <option v-for="(name, code) in currencies" :key="code" :value="code">
-              {{ code }} - {{ name }}
-            </option>
-          </select>
+          <div class="custom-select-container">
+            <div class="combobox-wrapper">
+              <input 
+                type="text" 
+                v-model="toSearchQuery" 
+                class="combobox-input" 
+                @focus="openDropdown('to')"
+                placeholder="Search currency..."
+              />
+              <svg class="combobox-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+            <div v-if="activeDropdown === 'to'" class="custom-select-dropdown">
+              <div class="custom-select-options">
+                <div 
+                  v-for="(name, code) in filteredToCurrencies" 
+                  :key="code" 
+                  class="custom-select-option"
+                  :class="{ active: toCurrency === code }"
+                  @click="selectCurrency('to', code)"
+                >
+                  {{ code }} - {{ name }}
+                </div>
+                <div v-if="Object.keys(filteredToCurrencies).length === 0" class="custom-select-empty">
+                  No currencies found
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       
       <p v-if="error" class="error-text">{{ error }}</p>
+
+      <div v-if="activeDropdown" class="dropdown-overlay-capture" @click="activeDropdown = null"></div>
 
       <div class="result-box" :class="{ loading: loading }">
         <div class="result-label">Converted Amount</div>
@@ -265,15 +396,104 @@ input, select {
   outline: none;
 }
 
-select option {
-  background: var(--bg-surface, #1e1e24);
-  color: var(--text-primary, #fff);
+.select-group select:focus,
+.combobox-wrapper:focus-within {
+  outline: none;
+  border-color: rgba(124, 58, 237, 0.5);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+.select-group select:disabled,
+.combobox-wrapper.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--bg-surface-lighter, #191c28);
 }
 
-select:disabled {
-  opacity: 0.7;
+/* Custom Select Dropdown */
+.custom-select-container {
+  position: relative;
+  width: 100%;
+}
+.combobox-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--bg-surface, #1e2130);
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+.combobox-input {
+  flex: 1;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-primary, #ffffff);
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none;
+}
+.combobox-input:disabled {
   cursor: not-allowed;
-  background: var(--overlay-medium, rgba(255, 255, 255, 0.08));
+}
+.combobox-icon {
+  position: absolute;
+  right: 16px;
+  pointer-events: none;
+  color: var(--text-secondary);
+}
+.dropdown-overlay-capture {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+}
+.custom-select-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  background: #111422;
+  border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  z-index: 9999;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.custom-select-options {
+  max-height: 240px;
+  overflow-y: auto;
+}
+.custom-select-option {
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+}
+.custom-select-option:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+}
+.custom-select-option.active {
+  background: rgba(124, 58, 237, 0.2);
+  color: var(--primary-light);
+  font-weight: 600;
+}
+.custom-select-empty {
+  padding: 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.dropdown-overlay-capture {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
 }
 
 input:focus, select:focus {

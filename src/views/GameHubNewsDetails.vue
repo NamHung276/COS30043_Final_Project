@@ -92,12 +92,9 @@ export default {
           createdAt: serverTimestamp(),
           status: "Pending"
         });
-        alert("Report submitted successfully. Thank you.");
-        this.showReportModal = false;
       } catch (error) {
         console.error("Failed to submit report:", error);
-        alert("Failed to submit report. Ensure your permissions are correct.");
-        throw error; // Let the modal show the error
+        throw new Error("Failed to submit report. Ensure your permissions are correct.");
       }
     },
 
@@ -194,7 +191,8 @@ export default {
 </script>
 
 <template>
-  <div v-if="article" class="news-detail-page">
+  <div>
+    <div v-if="article" class="news-detail-page">
     <!-- Hero Image -->
     <div class="news-hero" v-if="article.image">
       <img :src="article.image" :alt="article.title" class="news-hero-img" @error="$event.target.src = 'https://placehold.co/1200x600?text=Image+Not+Found'" />
@@ -320,14 +318,15 @@ export default {
       <p>This article may have been removed or the link is incorrect.</p>
       <router-link to="/gamehub-news" class="btn btn-primary">← Back to News</router-link>
     </div>
-    <ReportModal 
-      :show="showReportModal"
-      :targetName="article?.title"
-      targetType="Article"
-      @close="showReportModal = false"
-      @submit="submitReport"
-    />
+  </div>
 
+  <ReportModal 
+    :show="showReportModal"
+    :targetName="article?.title"
+    targetType="Article"
+    @close="showReportModal = false"
+    :on-submit="submitReport"
+  />
   </div>
 </template>
 

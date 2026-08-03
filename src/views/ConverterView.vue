@@ -28,15 +28,18 @@ const handleCurrencyChange = (data) => {
       </div>
 
       <div class="converter-wrapper">
-        <div class="converter-col">
+        <div class="converter-box">
           <CurrencyConverter 
             :initialAmount="1.0" 
             :inline="false" 
             @currency-change="handleCurrencyChange"
           />
+        </div>
+        <div class="chart-box">
           <CurrencyChart 
             :from="currentFrom" 
-            :to="currentTo" 
+            :to="currentTo"
+            class="mt-0"
           />
         </div>
       </div>
@@ -55,7 +58,7 @@ const handleCurrencyChange = (data) => {
 
 .converter-container {
   width: 100%;
-  max-width: 800px;
+  max-width: 1100px;
 }
 
 .text-primary-var {
@@ -63,16 +66,20 @@ const handleCurrencyChange = (data) => {
 }
 
 .converter-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: start;
 }
 
-.converter-col {
+@media (min-width: 992px) {
+  .converter-wrapper {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.converter-box, .chart-box {
   width: 100%;
-  max-width: 500px;
-  display: flex;
-  flex-direction: column;
 }
 
 .converter-wrapper :deep(.currency-converter) {

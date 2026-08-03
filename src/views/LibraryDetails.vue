@@ -103,7 +103,18 @@ export default {
             }
           } else {
             res = await backendApi.get(`/games/${this.purchase.gameId}`);
-            this.game = res.data;
+            const data = res.data;
+            this.game = {
+              ...data,
+              name: data.title,
+              background_image: data.hero_image || data.cover_image,
+              developers: (data.developers || []).map(d => ({ name: d })),
+              publishers: (data.publishers || []).map(p => ({ name: p })),
+              genres: (data.genres || []).map(g => ({ name: g })),
+              parent_platforms: (data.platforms || []).map(p => ({ 
+                platform: { name: p, slug: p.toLowerCase() } 
+              }))
+            };
           }
 
           // Generate genre-based achievements

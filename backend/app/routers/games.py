@@ -22,7 +22,15 @@ from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, Query, status
 import re
 
-from app.services import rawg_service, cheapshark_service, ggdeals_service, steam_service, steamcharts_service, youtube_service, itad_service
+from app.services import (
+    rawg_service,
+    cheapshark_service,
+    ggdeals_service,
+    steam_service,
+    steamcharts_service,
+    itad_service,
+    youtube_service,
+)
 from app.services.recommendation_service import recommendation_service
 from app.cache.memory_cache import cache
 from app.schemas.game import UnifiedGameDetail, GameSummary, Screenshot, Trailer

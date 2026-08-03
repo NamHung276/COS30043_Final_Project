@@ -2644,7 +2644,7 @@ a:hover {
     border-top: none;
     padding: 14px;
     background: var(--bg-surface);
-    margin-top: -30px;
+    margin-top: 0;
     position: relative;
     z-index: 2;
   }
@@ -2653,14 +2653,23 @@ a:hover {
     min-height: 140px;
   }
 
+  .steam-arrow {
+    top: 120px; /* Center vertically over the 240px image */
+  }
+
+  .steam-arrow-left {
+    left: 10px;
+  }
+
   .steam-arrow-right {
     left: auto;
-    right: 14px;
+    right: 10px;
   }
 
   .steam-dots {
     width: 100%;
-    bottom: 10px;
+    bottom: auto;
+    top: 215px; /* Place at the bottom of the 240px main panel */
   }
 
   .scs-main {

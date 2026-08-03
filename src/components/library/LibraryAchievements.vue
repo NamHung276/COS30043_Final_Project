@@ -35,7 +35,7 @@ const completionPercentage = computed(() => totalCount.value ? Math.round((unloc
     <div class="ld-achievements-list d-flex flex-column gap-2" style="max-height: 400px; overflow-y: auto;">
       <div v-for="ach in achievements" :key="ach.id" class="achievement-card d-flex align-items-center gap-3 p-3 rounded-4 bg-black bg-opacity-25 border border-secondary border-opacity-10 position-relative overflow-hidden" :class="{'locked': !ach.unlocked}">
         <!-- Glow effect for unlocked -->
-        <div v-if="ach.unlocked" class="position-absolute top-0 start-0 w-100 h-100 bg-warning opacity-10 pointer-events-none"></div>
+        <div v-if="ach.unlocked" class="position-absolute top-0 start-0 w-100 h-100 bg-warning pointer-events-none" style="opacity: 0.1;"></div>
         
         <div class="achievement-icon rounded-circle d-flex align-items-center justify-content-center" :class="ach.unlocked ? 'bg-warning bg-opacity-25 border border-warning' : 'bg-secondary bg-opacity-25 border border-secondary'">
           <i class="bi fs-4" :class="ach.unlocked ? 'bi-trophy-fill text-warning' : 'bi-lock-fill text-secondary'"></i>

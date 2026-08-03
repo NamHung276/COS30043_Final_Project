@@ -117,32 +117,43 @@ export default {
             };
           }
 
+          // Calculate unlocked status based on total playtime (in seconds)
+          const pt = this.purchase.playtime || 0;
+          const unlockLevel1 = pt >= 3600;      // 1 hour
+          const unlockLevel2 = pt >= 18000;     // 5 hours
+          const unlockLevel3 = pt >= 36000;     // 10 hours
+          const unlockLevel4 = pt >= 180000;    // 50 hours
+          const unlockLevel5 = pt >= 360000;    // 100 hours
+
           // Generate genre-based achievements
           const genres = this.game.genres?.map(g => g.name.toLowerCase()) || [];
           let achs = [];
           if (genres.includes('action') || genres.includes('shooter')) {
             achs = [
-              { id: 1, title: "First Blood", unlocked: true },
-              { id: 2, title: "Sharpshooter", unlocked: true },
-              { id: 3, title: "Untouchable", unlocked: false },
-              { id: 4, title: "Master of Arms", unlocked: false }
+              { id: 1, title: "First Blood (1h)", unlocked: unlockLevel1 },
+              { id: 2, title: "Sharpshooter (5h)", unlocked: unlockLevel2 },
+              { id: 3, title: "Untouchable (10h)", unlocked: unlockLevel3 },
+              { id: 4, title: "Master of Arms (50h)", unlocked: unlockLevel4 },
+              { id: 5, title: "Legendary Marksman (100h)", unlocked: unlockLevel5 }
             ];
           } else if (genres.includes('rpg') || genres.includes('adventure')) {
             achs = [
-              { id: 1, title: "A New Journey", unlocked: true },
-              { id: 2, title: "First Camp", unlocked: true },
-              { id: 3, title: "Legend of the Realm", unlocked: false },
-              { id: 4, title: "Hero's Path", unlocked: false }
+              { id: 1, title: "A New Journey (1h)", unlocked: unlockLevel1 },
+              { id: 2, title: "First Camp (5h)", unlocked: unlockLevel2 },
+              { id: 3, title: "Legend of the Realm (10h)", unlocked: unlockLevel3 },
+              { id: 4, title: "Hero's Path (50h)", unlocked: unlockLevel4 },
+              { id: 5, title: "Mythical Savior (100h)", unlocked: unlockLevel5 }
             ];
           } else {
             achs = [
-              { id: 1, title: "Getting Started", unlocked: true },
-              { id: 2, title: "Halfway There", unlocked: true },
-              { id: 3, title: "Perfectionist", unlocked: false },
-              { id: 4, title: "Mastery", unlocked: false }
+              { id: 1, title: "Getting Started (1h)", unlocked: unlockLevel1 },
+              { id: 2, title: "Warming Up (5h)", unlocked: unlockLevel2 },
+              { id: 3, title: "Halfway There (10h)", unlocked: unlockLevel3 },
+              { id: 4, title: "Perfectionist (50h)", unlocked: unlockLevel4 },
+              { id: 5, title: "True Mastery (100h)", unlocked: unlockLevel5 }
             ];
           }
-          achs[0].title = `${this.game.name} Beginner`;
+          achs[0].title = `${this.game.name} Beginner (1h)`;
           this.achievements = achs;
         }
 

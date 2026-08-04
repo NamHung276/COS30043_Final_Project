@@ -28,14 +28,16 @@ export const cartState = reactive({
 
   add(game) {
     // Prevent duplicates
-    if (!this.items.some((item) => item.id === game.id)) {
+    const cleanId = String(game.id).replace(/^steam-/, "");
+    if (!this.items.some((item) => String(item.id).replace(/^steam-/, "") === cleanId)) {
       this.items.push(game);
     }
   },
 
   remove(gameId) {
+    const cleanId = String(gameId).replace(/^steam-/, "");
     this.items = this.items.filter(
-      (item) => String(item.id) !== String(gameId)
+      (item) => String(item.id).replace(/^steam-/, "") !== cleanId
     );
   },
 
@@ -44,7 +46,8 @@ export const cartState = reactive({
   },
 
   has(gameId) {
-    return this.items.some((item) => String(item.id) === String(gameId));
+    const cleanId = String(gameId).replace(/^steam-/, "");
+    return this.items.some((item) => String(item.id).replace(/^steam-/, "") === cleanId);
   },
 });
 

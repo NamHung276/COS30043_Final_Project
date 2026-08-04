@@ -14,10 +14,12 @@ export const useLibraryStore = defineStore("library", {
   
   getters: {
     isFavorite: (state) => (gameId) => {
-      return state.favorites.some(f => String(f.gameId) === String(gameId));
+      const cleanId = String(gameId).replace(/^steam-/, "");
+      return state.favorites.some(f => String(f.gameId).replace(/^steam-/, "") === cleanId);
     },
     hasPurchased: (state) => (gameId) => {
-      return state.purchases.some(p => String(p.gameId) === String(gameId));
+      const cleanId = String(gameId).replace(/^steam-/, "");
+      return state.purchases.some(p => String(p.gameId).replace(/^steam-/, "") === cleanId);
     }
   },
 

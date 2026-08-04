@@ -66,7 +66,12 @@ export const useWishlistStore = defineStore("wishlist", {
           query(collection(db, "favorites"), where("userId", "==", userId)),
         );
         this.wishlistedIds.clear();
-        snap.forEach((d) => this.wishlistedIds.add(String(d.data().gameId)));
+        snap.forEach((d) => {
+          const idStr = String(d.data().gameId);
+          const cleanId = idStr.replace(/^steam-/, "");
+          this.wishlistedIds.add(cleanId);
+          this.wishlistedIds.add(`steam-${cleanId}`);
+        });
         this.loadedForUser = userId;
       } catch (err) {
         console.error("[WishlistStore] loadWishlist failed:", err);
@@ -115,7 +120,9 @@ export const useWishlistStore = defineStore("wishlist", {
           // REMOVE LOGIC
           const docId = snap.docs[0].id;
           await deleteDoc(doc(db, "favorites", docId));
-          this.wishlistedIds.delete(gameIdStr);
+          const cleanId = gameIdStr.replace(/^steam-/, "");
+          this.wishlistedIds.delete(cleanId);
+          this.wishlistedIds.delete(`steam-${cleanId}`);
           toast?.show(`Removed "${title}" from wishlist`, "info");
           return false;
         }
@@ -132,7 +139,9 @@ export const useWishlistStore = defineStore("wishlist", {
           addedAt: new Date().toISOString(),
         });
 
-        this.wishlistedIds.add(gameIdStr);
+        const cleanId = gameIdStr.replace(/^steam-/, "");
+        this.wishlistedIds.add(cleanId);
+        this.wishlistedIds.add(`steam-${cleanId}`);
         toast?.show(`♥ "${title}" added to wishlist`, "success");
 
         // Trigger Notification

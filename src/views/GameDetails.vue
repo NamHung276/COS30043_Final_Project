@@ -16,6 +16,7 @@ import { getGameState } from "../services/gameState";
 import { mapState } from "pinia";
 import { useAuthStore } from "../stores/useAuthStore";
 import { useWishlistStore } from "../stores/useWishlistStore";
+import { useLibraryStore } from "../stores/useLibraryStore";
 import { STORE_NAMES, storeName, metacriticClass, formatDate, platformIcon } from "../composables/useGameUtils";
 
 // STORE_NAMES is now imported from useGameUtils — single source of truth.
@@ -60,6 +61,13 @@ export default {
     // Auth & wishlist state from centralised stores
     ...mapState(useAuthStore, ["currentUser"]),
     ...mapState(useWishlistStore, ["wishlistedIds"]),
+    ...mapState(useLibraryStore, ["purchases"]),
+
+    isOwned() {
+      if (!this.game || !this.currentUser) return false;
+      const libraryStore = useLibraryStore();
+      return libraryStore.hasPurchased(this.game.id);
+    },
 
     metacriticLabel() {
       const s = this.game?.metacritic;
@@ -345,6 +353,15 @@ export default {
         }
       },
     },
+    currentUser: {
+      immediate: true,
+      handler(user) {
+        if (user) {
+          const libraryStore = useLibraryStore();
+          libraryStore.fetchPurchases();
+        }
+      }
+    }
   },
 
   methods: {
@@ -795,12 +812,22 @@ export default {
 
               <!-- Quick Actions in Hero -->
               <div v-if="gameStateInfo.state !== 'UNKNOWN'" class="d-flex flex-wrap gap-3 mt-4 position-relative">
-                <template v-if="gameStateInfo.isReleased">
-                  <template v-if="displayPrice !== null">
+                <div class="gd-hero-purchase" v-if="gameStateInfo.state !== 'TBA'" style="display: contents;">
+                  <template v-if="isOwned">
                     <button
-                      class="gd-hero-btn-primary btn btn-primary btn-lg fw-bold px-5 shadow-sm text-primary-var"
-                      @click="buyNow"
-                      aria-label="Buy Now"
+                      class="gd-hero-btn-primary btn btn-success btn-lg fw-bold px-5 shadow-sm text-white"
+                      @click="$router.push('/library')"
+                      aria-label="Play / In Library"
+                    >
+                      <i class="bi bi-play-fill me-2"></i> In Library
+                    </button>
+                  </template>
+                  <template v-else-if="gameStateInfo.isReleased">
+                    <template v-if="displayPrice !== null">
+                      <button
+                        class="gd-hero-btn-primary btn btn-primary btn-lg fw-bold px-5 shadow-sm text-primary-var"
+                        @click="buyNow"
+                        aria-label="Buy Now"
                     >
                       <i class="bi bi-lightning-charge-fill me-2"></i> Buy Now - ${{
                         discountedPrice || displayPrice
@@ -843,6 +870,7 @@ export default {
                     @close="showConverter = false"
                   />
                 </template>
+              </div>
 
                 <!-- FREE -->
                 <template v-else-if="gameStateInfo.isFree">
@@ -1394,7 +1422,16 @@ export default {
                 <div
                   class="p-4 border-bottom border-secondary border-opacity-25"
                 >
-                  <template v-if="gameStateInfo.isReleased">
+                  <template v-if="isOwned">
+                    <button
+                      class="gd-buy-now-btn btn-success w-100 mb-3 fw-bold"
+                      @click="$router.push('/library')"
+                      aria-label="Play / In Library"
+                    >
+                      <i class="bi bi-play-fill me-2"></i> In Library
+                    </button>
+                  </template>
+                  <template v-else-if="gameStateInfo.isReleased">
                     <template v-if="displayPrice !== null">
                       <button
                         class="gd-buy-now-btn w-100 mb-3"

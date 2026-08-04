@@ -341,23 +341,21 @@ export default {
       }, 3000);
     },
 
-    async addToFavorites() {
+    async toggleFavorites() {
       if (!this.currentUser) {
         this.showFavStatus("Please login to add favorites.", "warning");
         setTimeout(() => this.$router.push("/login"), 1500);
         return;
       }
-      const gameId = String(this.game.id);
-      if (this.wishlistedIds.has(gameId)) {
-        this.showFavStatus("Already in your wishlist!", "warning");
-        return;
-      }
       const wishlistStore = useWishlistStore();
-      const added = await wishlistStore.addToWishlist(this.game, null);
+      const added = await wishlistStore.toggleWishlist(this.game, null);
       if (added) {
         this.showFavStatus("Added to wishlist!", "success");
       } else {
-        this.showFavStatus("Already in your wishlist!", "warning");
+        const gameIdStr = String(this.game.id);
+        if (!wishlistStore.wishlistedIds.has(gameIdStr)) {
+          this.showFavStatus("Removed from wishlist!", "info");
+        }
       }
     },
 
@@ -857,7 +855,7 @@ export default {
                 <template v-else>
                   <button
                     class="gd-hero-btn-primary btn btn-primary btn-lg fw-bold px-5 shadow-sm text-primary-var"
-                    @click="addToFavorites"
+                    @click="toggleFavorites"
                     aria-label="Add to wishlist"
                   >
                     <i class="bi bi-heart-fill me-2"></i> Wishlist
@@ -879,7 +877,7 @@ export default {
                 <button
                   v-if="gameStateInfo.isReleased || gameStateInfo.isFree"
                   class="gd-hero-btn-tertiary btn btn-lg px-4"
-                  @click="addToFavorites"
+                  @click="toggleFavorites"
                   aria-label="Add to wishlist"
                 >
                   <i class="bi bi-heart me-2"></i> Wishlist
@@ -1203,7 +1201,7 @@ export default {
                 <h4 class="text-primary-var fw-bold">Coming after release</h4>
                 <p class="text-muted mb-4">You'll be able to rate and review this game once it launches.</p>
                 <div class="d-flex justify-content-center gap-3">
-                  <button class="btn btn-primary fw-bold px-4" @click="addToFavorites"><i class="bi bi-heart-fill me-2"></i>Wishlist</button>
+                  <button class="btn btn-primary fw-bold px-4" @click="toggleFavorites"><i class="bi bi-heart-fill me-2"></i>Wishlist</button>
                   <button v-if="gameStateInfo.isComingSoon" class="btn btn-outline-secondary fw-bold px-4"><i class="bi bi-bell-fill me-2"></i>Notify Me</button>
                 </div>
               </div>
@@ -1441,7 +1439,7 @@ export default {
                 >
                   <button
                     class="gd-wishlist-btn w-100 d-flex justify-content-between align-items-center"
-                    @click="addToFavorites"
+                    @click="toggleFavorites"
                     aria-label="Add to wishlist"
                   >
                     <span>Add to your Wishlist</span>
@@ -1659,15 +1657,16 @@ export default {
                     class="table table-borderless table-hover align-middle mb-0"
                     style="color: var(--text-primary)"
                   >
+                    <caption class="visually-hidden">Current deals and prices across various game stores</caption>
                     <thead>
                       <tr
                         class="border-bottom border-secondary border-opacity-25"
                       >
-                        <th class="text-muted fw-normal pb-3 px-0">Store</th>
-                        <th class="text-muted fw-normal pb-3 text-end">
+                        <th scope="col" class="text-muted fw-normal pb-3 px-0">Store</th>
+                        <th scope="col" class="text-muted fw-normal pb-3 text-end">
                           Price
                         </th>
-                        <th class="pb-3 px-0"></th>
+                        <th scope="col" class="pb-3 px-0"><span class="visually-hidden">Action</span></th>
                       </tr>
                     </thead>
                     <tbody>

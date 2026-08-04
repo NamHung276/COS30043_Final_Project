@@ -288,21 +288,15 @@ export default {
                 Select the world you would like to explore.
               </p>
 
-              <div class="about-scene-btns">
-                <button
-                  class="about-scene-btn"
-                  :class="{ active: selectedScene === 'mountain' }"
-                  @click="selectedScene = 'mountain'"
-                >
+              <div class="about-scene-btns" role="radiogroup" aria-labelledby="scene-selection">
+                <label class="about-scene-btn" :class="{ active: selectedScene === 'mountain' }">
+                  <input type="radio" value="mountain" v-model="selectedScene" class="d-none" />
                   <i class="bi bi-triangle me-1"></i>Mountain Realm
-                </button>
-                <button
-                  class="about-scene-btn"
-                  :class="{ active: selectedScene === 'ocean' }"
-                  @click="selectedScene = 'ocean'"
-                >
+                </label>
+                <label class="about-scene-btn" :class="{ active: selectedScene === 'ocean' }">
+                  <input type="radio" value="ocean" v-model="selectedScene" class="d-none" />
                   <i class="bi bi-water me-1"></i>Ocean Kingdom
-                </button>
+                </label>
               </div>
 
               <div class="about-scene-img-wrap mt-3 mb-3">

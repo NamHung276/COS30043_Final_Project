@@ -543,6 +543,7 @@ export default {
               <h2 class="gd-section-title mb-4"><i class="bi bi-pc-display me-2 text-primary"></i> Minimum System Requirements</h2>
               <div class="table-responsive" v-if="sysReqs">
                 <table class="table table-striped mb-0 gd-table" style="font-size: 0.85rem">
+                  <caption class="visually-hidden">Minimum System Requirements</caption>
                   <tbody>
                     <tr v-for="req in sysReqs" :key="req.label">
                       <th

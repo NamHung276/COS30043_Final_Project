@@ -174,6 +174,13 @@ export default {
         await updateProfile(this.currentUser, {
           displayName: this.newName.trim(),
         });
+        
+        // Also update the Firestore users document
+        const { doc, setDoc } = await import("firebase/firestore");
+        await setDoc(doc(db, "users", this.currentUser.uid), {
+          displayName: this.newName.trim()
+        }, { merge: true });
+
         await this.currentUser.reload();
         this.currentUser = auth.currentUser;
         this.toast.show("Display name updated!", "success");

@@ -5,6 +5,7 @@ import { collection, addDoc, serverTimestamp, query, where, getDocs } from "fire
 import { onAuthStateChanged } from "firebase/auth";
 import PayPalCheckout from "../components/PayPalCheckout.vue";
 import { useLibraryStore } from "../stores/useLibraryStore";
+import { useNotificationStore } from "../stores/useNotificationStore";
 
 export default {
   name: "Checkout",
@@ -132,6 +133,19 @@ export default {
         });
 
         await Promise.all(batchPromises);
+        
+        // Trigger notifications for each purchased game
+        const notifStore = useNotificationStore();
+        newItems.forEach(item => {
+          const title = item.name || item.title || "Unknown Game";
+          notifStore.createNotification(
+            this.currentUser.uid,
+            "Purchase Successful",
+            `Thank you for purchasing ${title}! It is now available in your Library.`,
+            "payment",
+            `/library`
+          );
+        });
         
         // Refresh library store
         await store.fetchPurchases(true);

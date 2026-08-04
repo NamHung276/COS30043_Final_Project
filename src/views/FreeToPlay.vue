@@ -161,21 +161,16 @@ export default {
       return "PC (Windows)";
     },
 
-    async addToWishlist(game, event) {
+    async toggleWishlist(game, event) {
       event.stopPropagation();
       if (!this.currentUser) {
         this.toast?.show("Please log in to add to wishlist", "warning");
         this.$router.push("/login");
         return;
       }
-      const gameId = String(game.id);
-      if (this.wishlistedIds.has(gameId)) {
-        this.toast?.show("Already in your wishlist!", "info");
-        return;
-      }
       // Pass itemType so the store sets source: 'freetogame' correctly
       const wishlistStore = useWishlistStore();
-      await wishlistStore.addToWishlist({ ...game, itemType: "f2p" }, this.toast);
+      await wishlistStore.toggleWishlist({ ...game, itemType: "f2p" }, this.toast);
     },
 
     goToPage(page) {
@@ -530,7 +525,7 @@ export default {
               <button
                 class="card-float-btn wishlist-btn"
                 :class="{ wishlisted: wishlistedIds.has(String(game.id)) }"
-                @click.prevent="addToWishlist(game, $event)"
+                @click.prevent="toggleWishlist(game, $event)"
                 :title="
                   wishlistedIds.has(String(game.id))
                     ? 'In Wishlist'

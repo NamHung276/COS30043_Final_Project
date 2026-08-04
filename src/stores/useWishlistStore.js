@@ -28,7 +28,10 @@ import {
   where,
   getDocs,
   addDoc,
+  deleteDoc,
+  doc
 } from "firebase/firestore";
+import { useNotificationStore } from "./useNotificationStore";
 
 export const useWishlistStore = defineStore("wishlist", {
   state: () => ({
@@ -78,14 +81,14 @@ export const useWishlistStore = defineStore("wishlist", {
      * @param {object|null} toast — Injected toast reference for feedback
      * @returns {boolean} true if added, false if already in wishlist or error
      */
-    async addToWishlist(game, toast = null) {
+    async toggleWishlist(game, toast = null) {
       if (!auth.currentUser) return false;
 
       const gameId = game.id ?? game.gameId;
       const gameIdStr = String(gameId);
 
-      // Local duplicate check (fast path) and spam lock
-      if (this.wishlistedIds.has(gameIdStr) || this.pendingAdds.has(gameIdStr)) return false;
+      // Spam lock
+      if (this.pendingAdds.has(gameIdStr)) return false;
 
       // Determine game type for correct routing in Favorites
       const isF2P =
@@ -106,13 +109,16 @@ export const useWishlistStore = defineStore("wishlist", {
           ),
         );
 
+        const title = game.name ?? game.title ?? "Unknown";
+
         if (!snap.empty) {
-          // Sync local state with Firestore truth
-          this.wishlistedIds.add(gameIdStr);
+          // REMOVE LOGIC
+          const docId = snap.docs[0].id;
+          await deleteDoc(doc(db, "favorites", docId));
+          this.wishlistedIds.delete(gameIdStr);
+          toast?.show(`Removed "${title}" from wishlist`, "info");
           return false;
         }
-
-        const title = game.name ?? game.title ?? "Unknown";
 
         await addDoc(collection(db, "favorites"), {
           userId: auth.currentUser.uid,
@@ -128,9 +134,20 @@ export const useWishlistStore = defineStore("wishlist", {
 
         this.wishlistedIds.add(gameIdStr);
         toast?.show(`♥ "${title}" added to wishlist`, "success");
+
+        // Trigger Notification
+        const notifStore = useNotificationStore();
+        notifStore.createNotification(
+          auth.currentUser.uid,
+          "Game Wishlisted",
+          `You added ${title} to your wishlist.`,
+          "system",
+          `/favorites`
+        );
+
         return true;
       } catch (err) {
-        console.error("[WishlistStore] addToWishlist failed:", err);
+        console.error("[WishlistStore] toggleWishlist failed:", err);
         toast?.show("Failed to add to wishlist", "error");
         return false;
       } finally {

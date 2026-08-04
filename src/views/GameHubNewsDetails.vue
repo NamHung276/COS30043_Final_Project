@@ -44,6 +44,15 @@ export default {
     },
   },
 
+  watch: {
+    '$route.params.id'() {
+      if (this.$route.name === 'GameHubNewsDetails') {
+        this.loadArticle();
+        window.scrollTo(0, 0);
+      }
+    }
+  },
+
   mounted() {
     this.unsubscribe = onAuthStateChanged(auth, (user) => {
       this.currentUser = user;

@@ -214,7 +214,7 @@ export default {
       return !!(this.trailerYoutubeId(game) || this.trailerVideoUrl(game));
     },
 
-    async addToWishlist(game, e) {
+    async toggleWishlist(game, e) {
       e.preventDefault();
       e.stopPropagation();
       if (!this.currentUser) {
@@ -222,13 +222,8 @@ export default {
         this.$router.push("/login");
         return;
       }
-      const gameId = String(game.id ?? game.gameId);
-      if (this.wishlistedIds.has(gameId)) {
-        this.toast?.show("Already in your wishlist!", "info");
-        return;
-      }
       const wishlistStore = useWishlistStore();
-      await wishlistStore.addToWishlist(game, this.toast);
+      await wishlistStore.toggleWishlist(game, this.toast);
     },
 
     selectPlatform(key) {
@@ -612,7 +607,7 @@ export default {
               <button
                 class="card-float-btn wishlist-btn"
                 :class="{ wishlisted: wishlistedIds.has(String(game.id)) }"
-                @click="addToWishlist(game, $event)"
+                @click="toggleWishlist(game, $event)"
                 :title="
                   wishlistedIds.has(String(game.id))
                     ? 'In Wishlist'
@@ -845,7 +840,7 @@ export default {
               <button
                 class="glr-btn wishlist"
                 :class="{ active: wishlistedIds.has(String(game.id)) }"
-                @click="addToWishlist(game, $event)"
+                @click="toggleWishlist(game, $event)"
                 :aria-label="
                   wishlistedIds.has(String(game.id)) ? 'In Wishlist' : 'Wishlist'
                 "

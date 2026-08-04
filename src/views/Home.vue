@@ -495,20 +495,15 @@ export default {
       }
     },
 
-    async addToWishlist(game, e) {
+    async toggleWishlist(game, e) {
       if (e) { e.preventDefault(); e.stopPropagation(); }
       if (!this.currentUser) {
         this.toast?.show("Please log in to add to wishlist", "warning");
         this.$router.push("/login");
         return;
       }
-      const gameId = String(game.id ?? game.gameId);
-      if (this.wishlistedIds.has(gameId)) {
-        this.toast?.show("Already in your wishlist!", "info");
-        return;
-      }
       const wishlistStore = useWishlistStore();
-      await wishlistStore.addToWishlist(game, this.toast);
+      await wishlistStore.toggleWishlist(game, this.toast);
     },
 
     // Note: ratingStars, ratingLabel, metacriticClass, formatDate are imported

@@ -86,6 +86,7 @@ export default {
       <div v-else class="gd-glass-card overflow-hidden">
         <div class="table-responsive">
           <table class="table gd-table table-hover mb-0 align-middle">
+            <caption class="visually-hidden">Your purchase history and transaction details</caption>
             <thead>
               <tr>
                 <th scope="col" class="text-uppercase text-muted fw-bold small py-3 ps-4">Game</th>

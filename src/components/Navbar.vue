@@ -128,11 +128,6 @@
             </router-link>
           </li>
 
-          <li class="nav-item">
-            <router-link class="nav-link" to="/converter" @click="closeMenu" :exact-active-class="'nav-link-active'" active-class="">
-              Converter
-            </router-link>
-          </li>
 
           <li class="nav-item">
             <router-link class="nav-link" to="/about" @click="closeMenu" :exact-active-class="'nav-link-active'" active-class="">
@@ -339,6 +334,14 @@
               </a>
               <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 user-dropdown-menu mt-2">
                 <li>
+                  <router-link class="dropdown-item nav-dd-item" to="/converter" @click="closeMenu">
+                    <span class="nav-dd-icon" style="background: rgba(16, 185, 129, 0.15); box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);">
+                      <i class="bi bi-currency-exchange" style="font-size: 0.85rem; color: #10b981"></i>
+                    </span>
+                    Currency Converter
+                  </router-link>
+                </li>
+                <li>
                   <button class="dropdown-item nav-dd-item" @click.stop="toggleTheme">
                     <span class="nav-dd-icon" style="background: rgba(148, 163, 184, 0.15); box-shadow: 0 2px 8px rgba(148, 163, 184, 0.2);">
                       <i v-if="theme === 'dark'" class="bi bi-moon-fill" style="font-size: 0.85rem; color: #94a3b8"></i>
@@ -423,6 +426,14 @@
                       <i class="bi bi-gear-fill" style="font-size: 0.85rem;"></i>
                     </span>
                     Settings
+                  </router-link>
+                </li>
+                <li>
+                  <router-link class="dropdown-item nav-dd-item" to="/converter" @click="closeMenu">
+                    <span class="nav-dd-icon" style="background: rgba(16, 185, 129, 0.15); box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);">
+                      <i class="bi bi-currency-exchange" style="font-size: 0.85rem; color: #10b981"></i>
+                    </span>
+                    Currency Converter
                   </router-link>
                 </li>
                 <li>

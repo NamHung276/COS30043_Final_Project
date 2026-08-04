@@ -345,9 +345,12 @@ export default {
       if (!this.confirmRole || this.isSubmitting) return;
       this.isSubmitting = true;
       try {
-        await updateDoc(doc(db, "users", this.confirmRole.uid), {
+        // Use setDoc with merge instead of updateDoc to handle older accounts
+        // that might only exist in Firebase Auth but not yet in the Firestore users collection.
+        const { setDoc } = await import("firebase/firestore");
+        await setDoc(doc(db, "users", this.confirmRole.uid), {
           role: this.confirmRole.newRole,
-        });
+        }, { merge: true });
         const u = this.users.find((u) => u.uid === this.confirmRole.uid);
         if (u) u.role = this.confirmRole.newRole;
         this.toast.show(`Role updated for ${this.confirmRole.displayName}.`, "success");
@@ -382,9 +385,10 @@ export default {
       this.isSubmitting = true;
       try {
         const newStatus = this.confirmBan.isBanned ? 'Active' : 'Banned';
-        await updateDoc(doc(db, "users", this.confirmBan.uid), {
+        const { setDoc } = await import("firebase/firestore");
+        await setDoc(doc(db, "users", this.confirmBan.uid), {
           status: newStatus
-        });
+        }, { merge: true });
         const u = this.users.find((u) => u.uid === this.confirmBan.uid);
         if (u) u.mockStatus = newStatus;
         
@@ -718,13 +722,14 @@ export default {
             </div>
             <div class="table-responsive">
               <table class="gh-table align-middle">
+                <caption class="visually-hidden">List of published news articles and their statuses</caption>
                 <thead>
                   <tr>
-                    <th>Article</th>
-                    <th>Author</th>
-                    <th>Status</th>
-                    <th>Published Date</th>
-                    <th class="text-end">Actions</th>
+                    <th scope="col">Article</th>
+                    <th scope="col">Author</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Published Date</th>
+                    <th scope="col" class="text-end">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -862,14 +867,15 @@ export default {
             </div>
             <div class="table-responsive">
               <table class="gh-table align-middle">
+                <caption class="visually-hidden">List of registered players, their activity, and account status</caption>
                 <thead>
                   <tr>
-                    <th>Player</th>
-                    <th>Email</th>
-                    <th>Articles</th>
-                    <th>Reviews</th>
-                    <th>Status</th>
-                    <th class="text-end">Management</th>
+                    <th scope="col">Player</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Articles</th>
+                    <th scope="col">Reviews</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="text-end">Management</th>
                   </tr>
                 </thead>
                 <tbody>

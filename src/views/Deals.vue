@@ -106,7 +106,7 @@ export default {
     dealUrl(dealID) {
       return `https://www.cheapshark.com/redirect?dealID=${dealID}`;
     },
-    async addToWishlist(deal, e) {
+    async toggleWishlist(deal, e) {
       e.preventDefault();
       e.stopPropagation();
       if (!this.currentUser) {
@@ -114,14 +114,9 @@ export default {
         this.$router.push("/login");
         return;
       }
-      const id = String(deal.gameID || deal.dealID);
-      if (this.wishlistedIds.has(id)) {
-        this.toast?.show("Already in wishlist!", "info");
-        return;
-      }
       // Map CheapShark deal to a game-like object for the store
       const wishlistStore = useWishlistStore();
-      await wishlistStore.addToWishlist(
+      await wishlistStore.toggleWishlist(
         {
           id: deal.gameID || deal.dealID,
           name: deal.title,
@@ -490,7 +485,7 @@ export default {
                     String(deal.gameID || deal.dealID),
                   ),
                 }"
-                @click.prevent="addToWishlist(deal, $event)"
+                @click.prevent="toggleWishlist(deal, $event)"
                 :title="
                   wishlistedIds.has(String(deal.gameID || deal.dealID))
                     ? 'In Wishlist'
@@ -647,7 +642,7 @@ export default {
                 :class="{
                   active: wishlistedIds.has(String(deal.gameID || deal.dealID)),
                 }"
-                @click="addToWishlist(deal, $event)"
+                @click="toggleWishlist(deal, $event)"
                 :aria-label="
                   wishlistedIds.has(String(deal.gameID || deal.dealID))
                     ? 'In Wishlist'

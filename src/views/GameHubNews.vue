@@ -86,9 +86,11 @@ export default {
       const term = this.searchTerm.toLowerCase();
       return this.scoredNews.filter((item) => {
         const matchesSearch =
+          !term ||
           (item.title && item.title.toLowerCase().includes(term)) ||
           (item.content && item.content.toLowerCase().includes(term)) ||
-          (item.category && item.category.toLowerCase().includes(term));
+          (item.category && item.category.toLowerCase().includes(term)) ||
+          (item.date && item.date.toLowerCase().includes(term));
         const matchesCategory =
           this.selectedCategory === "All" ||
           item.category === this.selectedCategory;

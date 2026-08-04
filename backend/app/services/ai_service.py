@@ -82,6 +82,17 @@ async def chat(
             model="gemini-flash-latest",
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_INSTRUCTION + free_games_context,
+                temperature=0.2, # Lower temperature = more factual, less creative hallucinations
+                safety_settings=[
+                    types.SafetySetting(
+                        category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                        threshold=types.HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+                    ),
+                    types.SafetySetting(
+                        category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                        threshold=types.HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+                    )
+                ]
             ),
             history=gemini_history,
         )

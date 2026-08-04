@@ -121,7 +121,19 @@ export default {
 
     displayDiscount() {
       if (!this.game || this.gameStateInfo.isFree || !this.gameStateInfo.isReleased) return 0;
-      const roll = this.game.id % 4;
+      
+      // Use real Steam discount if available
+      if (this.game.price && this.game.price.discount_percent) {
+        return this.game.price.discount_percent;
+      }
+      
+      // Fallback pseudo-discount based on ID
+      const idStr = String(this.game.id);
+      // Extract numbers to handle 'steam-311310' style IDs safely
+      const numMatch = idStr.match(/\d+/);
+      const numId = numMatch ? parseInt(numMatch[0]) : 0;
+      
+      const roll = numId % 4;
       if (roll === 0) return 40;
       if (roll === 1) return 25;
       return 0;
@@ -208,7 +220,7 @@ export default {
 
     pcRequirements() {
       const pcPlatform = (this.game?.platforms || []).find(
-        (p) => p.platform.slug === "pc",
+        (p) => p && typeof p === "object" && p.platform && p.platform.slug === "pc",
       );
       return pcPlatform?.requirements || null;
     },
@@ -293,7 +305,7 @@ export default {
       if (!this.game?.tags) return [];
       
       const features = [];
-      const tagSlugs = this.game.tags.map(t => t.slug);
+      const tagSlugs = this.game.tags.map(t => typeof t === 'string' ? t.toLowerCase() : (t.slug || ""));
       
       if (tagSlugs.includes('singleplayer')) {
         features.push({ id: 'sp', name: 'Single-player', icon: 'bi bi-person-fill' });
@@ -317,7 +329,10 @@ export default {
     },
 
     hasMultiplayer() {
-      return this.game?.tags?.some(t => ['multiplayer', 'co-op', 'online'].includes(t.slug));
+      return this.game?.tags?.some(t => {
+        const s = typeof t === 'string' ? t.toLowerCase() : t.slug;
+        return ['multiplayer', 'co-op', 'online'].includes(s);
+      });
     },
   },
 
@@ -469,9 +484,10 @@ export default {
         this.trailers = this.game.trailers || [];
 
         // ── Gen 3: read pre-fetched enrichment from aggregated response ──────
-        this.processSteamData(this.game);
+        // The backend already unified the object (UnifiedGameDetail), no need to manually merge.
 
-        const genreSlug = this.game.genres?.[0]?.slug;
+        const firstGenre = this.game.genres?.[0];
+        const genreSlug = typeof firstGenre === 'string' ? firstGenre.toLowerCase() : firstGenre?.slug;
 
         const today = new Date();
         const past = new Date(today);
@@ -493,7 +509,7 @@ export default {
           recentPromise,
         ]);
 
-        const allDiscover = (discoverRes.data.results || []).filter((g) => g.id !== Number(id));
+        const allDiscover = (discoverRes.data.results || []).filter((g) => String(g.id) !== String(id));
         this.similarGames = allDiscover.slice(0, 6);
         this.discoverMoreGames = allDiscover.slice(6, 12);
         this.recentGames = recentRes.data.results || [];
@@ -520,24 +536,7 @@ export default {
       }
     },
 
-    /**
-     * processSteamData — reads Gen 3 enrichment keys from the aggregated
-     * game response and populates local reactive state.
-     * Called immediately after fetchData() receives the game object.
-     */
-    processSteamData(game) {
-      // Steam Store data (price, languages, categories, achievements)
-      this.game = game.steam_data || null;
 
-      // SteamCharts (live player counts)
-      this.game.players = game.steamcharts || null;
-
-      // YouTube trailer fallback — only populated when RAWG has no trailer
-      this.youtubeTrailerId = game.youtube_trailer_id || null;
-
-      // IsThereAnyDeal (ITAD deals, historical low, & store comparison)
-      this.game = game.itad_deals || null;
-    },
 
     async fetchDeals(title) {
       this.dealsLoading = true;

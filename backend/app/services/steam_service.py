@@ -114,6 +114,7 @@ async def get_steam_app_details(steam_id: str) -> Optional[Dict[str, Any]]:
                 achievements_total: int = raw.get("achievements", {}).get("total", 0)
 
                 return {
+                    "steam_name": raw.get("name", "Unknown Game"),
                     "steam_url": f"https://store.steampowered.com/app/{steam_id}/",
                     "short_description": raw.get("short_description", ""),
                     "header_image": raw.get("header_image", ""),
@@ -122,6 +123,7 @@ async def get_steam_app_details(steam_id: str) -> Optional[Dict[str, Any]]:
                     "categories": categories,
                     "achievements_total": achievements_total,
                     "is_free": raw.get("is_free", False),
+                    "release_date": raw.get("release_date", {}).get("date", ""),
                 }
 
         except httpx.TimeoutException:
@@ -149,3 +151,144 @@ async def get_steam_app_details(steam_id: str) -> Optional[Dict[str, Any]]:
     except Exception as exc:
         logger.warning("Steam cache error for app %s: %s", steam_id, exc)
         return None
+
+
+async def search_games_fallback(query: str, page: int = 1, page_size: int = 20) -> Dict[str, Any]:
+    """
+    Fallback search using Steam Store API when RAWG is down.
+    Maps Steam results to look exactly like RAWG GameSummary schema.
+    """
+    if not query:
+        return {"count": 0, "next": None, "previous": None, "results": []}
+    
+    # Steam storesearch has limited pagination (only works reliably for a few pages)
+    # We will just fetch a chunk of items
+    params = {
+        "term": query,
+        "l": "english",
+        "cc": "US"
+    }
+    
+    headers = {
+        "User-Agent": "GameHub/3.0 (COS30043 University Project)",
+        "Accept": "application/json",
+    }
+    
+    try:
+        async with httpx.AsyncClient(timeout=10.0, headers=headers) as client:
+            resp = await client.get(f"{STEAM_API_BASE}/storesearch/", params=params)
+            resp.raise_for_status()
+            data = resp.json()
+            
+            items = data.get("items", [])
+            total = data.get("total", 0)
+            
+            results = []
+            for item in items:
+                # Format to match GameSummary
+                results.append({
+                    "id": f"steam-{item['id']}",  # Prefix so frontend/backend knows it's a steam ID
+                    "name": item.get("name", "Unknown Game"),
+                    "slug": str(item.get("id", "")),
+                    "background_image": item.get("tiny_image", ""),
+                    "released": None,
+                    "metacritic": int(item.get("metascore")) if item.get("metascore") else None,
+                    "rating": None,
+                    "ratings_count": None,
+                    "genres": [],
+                    "platforms": [],
+                    "tags": [],
+                    "short_screenshots": []
+                })
+                
+            return {
+                "count": total,
+                "next": None,  # Steam API doesn't do cursor pagination nicely here
+                "previous": None,
+                "results": results
+            }
+            
+    except Exception as exc:
+        logger.warning("Steam search fallback failed for query %s: %s", query, exc)
+        # If Steam fails too, return empty 
+        return {"count": 0, "next": None, "previous": None, "results": []}
+
+
+async def get_game_detail_fallback(steam_id: str) -> Dict[str, Any]:
+    """
+    Fallback detail fetcher when RAWG is down. Uses the existing get_steam_app_details
+    and wraps it in a UnifiedGameDetail-compatible dictionary.
+    """
+    # Remove the "steam-" prefix if it exists
+    clean_id = steam_id.replace("steam-", "")
+    
+    steam_data = await get_steam_app_details(clean_id)
+    if not steam_data:
+        raise Exception(f"Steam API returned no data for app {clean_id}")
+        
+    # Map to UnifiedGameDetail structure
+    
+    # Format the price for UnifiedPrice
+    mapped_price = None
+    steam_price = steam_data.get("price")
+    if steam_price:
+        mapped_price = {
+            "currency": steam_price.get("currency", "USD"),
+            "initial": steam_price.get("initial", 0.0),
+            "final": steam_price.get("final", 0.0),
+            "discount_percent": steam_price.get("discount_percent", 0),
+            "store_name": "Steam",
+            "url": steam_data.get("steam_url", ""),
+            "source": "Steam API Fallback"
+        }
+        
+    return {
+        "id": f"steam-{clean_id}",
+        "title": steam_data.get("steam_name", "Game Details from Steam"),
+        "slug": clean_id,
+        "description": steam_data.get("short_description", "Description unavailable."),
+        "hero_image": steam_data.get("header_image", ""),
+        "cover_image": steam_data.get("header_image", ""),
+        "released": steam_data.get("release_date", "2023-01-01") or "2023-01-01",
+        "metacritic": None,
+        "website": steam_data.get("steam_url", ""),
+        
+        # Meta
+        "screenshots": [steam_data.get("header_image", "")],
+        
+        # Collections
+        "genres": [c for c in steam_data.get("categories", [])],
+        "developers": [],
+        "publishers": [],
+        "platforms": ["PC"],
+        
+        # Enrichment from Steam
+        "languages": steam_data.get("supported_languages", []),
+        "categories": steam_data.get("categories", []),
+        "achievements_total": steam_data.get("achievements_total", 0),
+        
+        # Fallback-Prioritized Blocks
+        "price": mapped_price,
+        "historical_low": None,
+        "players": None,
+        "trailer": None,
+        
+        # Extra data arrays
+        "store_deals": [],
+        "bundles": [],
+        
+        # Metadata
+        "rawg_url": "",
+        "steam_url": steam_data.get("steam_url", ""),
+        "aggregated_at": "Just now",
+        
+        # Sub-schemas for legacy components
+        "rawg_screenshots": [],
+        "rawg_trailers": [],
+        "deals": [], # Can't fetch deals easily without title
+        
+        # Extended fields from Steam/Steamcharts
+        "steam_data": steam_data,
+        "steamcharts_data": None
+    }
+

@@ -5,10 +5,10 @@ payments.py — Pydantic schemas for the payment API
 from pydantic import BaseModel, Field
 
 
-from typing import List
+from typing import List, Union
 
 class OrderCreateRequest(BaseModel):
-    items: List[int] = Field(..., description="List of game IDs to purchase")
+    items: List[Union[int, str]] = Field(..., description="List of game IDs to purchase (int for RAWG, 'steam-xxx' for Steam fallback)")
     currency: str = Field(default="USD", description="Currency code (e.g., USD, EUR)")
     description: str = Field(
         default="GameHub Purchase", description="Description of the purchase"

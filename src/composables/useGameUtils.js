@@ -6,6 +6,8 @@
  *   Deals.vue, FreeToPlay.vue, PaidGames.vue.
  */
 
+import { getGameState } from "../services/gameState";
+
 // ── Store Name Map ────────────────────────────────────────────────────────────
 // Single source of truth — was duplicated in GameDetails.vue and Deals.vue.
 export const STORE_NAMES = {
@@ -106,39 +108,58 @@ export function formatDate(value) {
   }).format(date);
 }
 
-// ── Dummy Pricing (Frontend Mock) ─────────────────────────────────────────────
+// ── Pricing (Unified with GameDetails and Backend) ─────────────────────────────────────────────
 
 /**
- * Generates a deterministic fake base price from a game's ID.
+ * Gets the base price for a game, matching the logic in GameDetails.vue and backend.
  */
 export function gamePrice(game) {
-  if (!game || (!game.id && !game.gameId)) return null;
-  const id = parseInt(game.id || game.gameId) || 0;
-  const prices = [19.99, 29.99, 39.99, 49.99, 59.99, 69.99];
-  return prices[id % prices.length].toFixed(2);
+  if (!game) return null;
+  const state = getGameState(game);
+  if (state.isFree) return null; // Free games shouldn't show a base price
+  
+  // getGameState already computes a price based on real data or tier logic
+  // We need to reverse-engineer the original price if there's a discount
+  const discount = gameDiscount(game);
+  if (discount > 0) {
+    // If there's a discount, state.price is the discounted price, so we calculate the original
+    return (state.price / (1 - discount / 100)).toFixed(2);
+  }
+  return state.price > 0 ? state.price.toFixed(2) : null;
 }
 
 /**
- * Generates a deterministic fake discount percentage from a game's ID.
+ * Gets the discount percentage, matching the logic in GameDetails.vue.
  */
 export function gameDiscount(game) {
-  if (!game || (!game.id && !game.gameId)) return 0;
-  const id = parseInt(game.id || game.gameId) || 0;
-  if (id % 3 !== 0) return 0; // 1/3 chance of discount
-  const discounts = [10, 20, 25, 33, 50, 75];
-  return discounts[id % discounts.length];
+  if (!game) return 0;
+  const state = getGameState(game);
+  if (state.isFree || !state.isReleased) return 0;
+  
+  // 1. Real Steam discount
+  if (game.price && game.price.discount_percent) {
+    return game.price.discount_percent;
+  }
+  
+  // 2. Fallback modulo pseudo-discount
+  const idStr = String(game.id || game.gameId || "");
+  const numMatch = idStr.match(/\d+/);
+  const numId = numMatch ? parseInt(numMatch[0]) : 0;
+  
+  const roll = numId % 4;
+  if (roll === 0) return 40;
+  if (roll === 1) return 25;
+  return 0;
 }
 
 /**
- * Calculates the final price after the fake discount.
+ * Calculates the final price after discount.
  */
 export function discountedPrice(game) {
-  const priceStr = gamePrice(game);
-  if (!priceStr) return null;
-  const price = parseFloat(priceStr);
-  const disc = gameDiscount(game);
-  if (!disc) return price.toFixed(2);
-  return (price * (1 - disc / 100)).toFixed(2);
+  if (!game) return null;
+  const state = getGameState(game);
+  if (state.isFree) return "0.00";
+  return state.price > 0 ? state.price.toFixed(2) : null;
 }
 
 // ── Platform Icons ────────────────────────────────────────────────────────────

@@ -23,6 +23,9 @@ export default {
       isVerified: false,
       verificationCode: "",
       showVerificationModal: false,
+      sessionCode: null,        // Generated 4-digit code for this checkout session
+      codeExpiry: null,         // Timestamp when the code expires
+      codeSent: false,
     };
   },
 
@@ -74,16 +77,43 @@ export default {
       cartState.remove(id);
     },
 
+    sendVerificationCode() {
+      // Generate a random 4-digit code and store it in session
+      const code = String(Math.floor(1000 + Math.random() * 9000));
+      this.sessionCode = code;
+      this.codeExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+      this.codeSent = true;
+      this.verificationCode = "";
+      this.showVerificationModal = true;
+
+      // For demo/testing: show the code in a prominent toast since we have no real email server
+      this.toast?.show(
+        `[TEST MODE] Your verification code is: ${code}`,
+        "info",
+        8000
+      );
+      console.info(`%c[GameHub Checkout] Verification code: ${code}`, "font-size:16px;color:cyan;font-weight:bold;");
+    },
+
     verifyAccount() {
-      // Validate: must be exactly 4 digits (numeric only)
-      const isValid = /^\d{4}$/.test(this.verificationCode);
-      if (isValid) {
+      if (!this.sessionCode) {
+        this.toast?.show("Please request a verification code first.", "error");
+        return;
+      }
+      if (Date.now() > this.codeExpiry) {
+        this.toast?.show("Code expired. Please request a new one.", "error");
+        this.sessionCode = null;
+        this.codeSent = false;
+        return;
+      }
+      if (this.verificationCode.trim() === this.sessionCode) {
         this.isVerified = true;
         this.showVerificationModal = false;
         this.verificationCode = "";
-        this.toast?.show("Account verified successfully.", "success");
+        this.sessionCode = null;
+        this.toast?.show("Account verified. You may now proceed with payment.", "success");
       } else {
-        this.toast?.show("Please enter the 4-digit code from your email.", "error");
+        this.toast?.show("Incorrect code. Please try again.", "error");
       }
     },
 
@@ -265,16 +295,12 @@ export default {
                 </label>
               </div>
               
-              <div v-if="agreedToTerms && currentUser && !currentUser.emailVerified" class="text-center">
-                <p class="small text-danger mb-2"><i class="bi bi-shield-exclamation me-1"></i> You must verify your email address to make purchases.</p>
-                <button class="btn btn-outline-danger w-100 fw-bold rounded-pill" disabled>
-                  <i class="bi bi-envelope-x me-2"></i> Email Verification Required
-                </button>
-              </div>
-              <div v-else-if="agreedToTerms && !isVerified" class="text-center">
+              <!-- Verification gate: shows only when terms agreed and not yet verified -->
+              <div v-if="agreedToTerms && !isVerified" class="text-center">
                 <p class="small text-warning mb-2"><i class="bi bi-shield-exclamation me-1"></i> For your security, please verify your account.</p>
-                <button class="btn btn-outline-warning w-100 fw-bold rounded-pill" @click="showVerificationModal = true">
-                  <i class="bi bi-envelope-check me-2"></i> Send 2FA Verification Code
+                <button class="btn btn-outline-warning w-100 fw-bold rounded-pill" @click="sendVerificationCode">
+                  <i class="bi bi-envelope-check me-2"></i> 
+                  {{ codeSent ? 'Resend Verification Code' : 'Send Verification Code' }}
                 </button>
               </div>
             </div>

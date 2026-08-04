@@ -23,6 +23,7 @@ Built as the final project for COS30043, this application leverages Vue 3 and Fi
 *   **Gamer Profiles:** A dynamic, Steam-inspired user profile displaying account statistics and recent community activity.
 *   **Admin Dashboard:** A moderation panel for managing user accounts and community posts.
 *   **Enterprise-Grade Security:** 100% of external API calls are securely proxied through the FastAPI backend, fully hiding sensitive API keys from the client-side.
+*   **High Availability (Circuit Breaker):** Implements an auto-recovering Circuit Breaker pattern with a custom Steam API fallback layer, ensuring the catalog and checkout remain 100% operational even if the primary database (RAWG) goes down.
 *   **Accessibility (WCAG 2.2.2):** Robust screen-reader support via `aria-live` regions and fully controllable pause/play elements.
 *   **Modern Aesthetics:** Deep dark-mode design by default, utilizing glowing accents, glassmorphism cards, and micro-animations to ensure a premium look and feel.
 *   **Responsive Design:** Optimised for desktop, tablet, and mobile viewing.
@@ -45,6 +46,7 @@ GameHub aggregates data from multiple powerful gaming and news APIs to deliver a
 Building GameHub involved navigating several real-world technical hurdles:
 
 *   **API Key Security:** Early iterations exposed API keys directly in the frontend. We resolved this by proxying **all** external API calls through the FastAPI backend, so the client never sees a single secret key.
+*   **High Availability & API Outages:** When third-party APIs (like RAWG) experienced downtime, the app would freeze. We built a robust **Circuit Breaker** (`rawg_health.py`) that detects outages and automatically fails over to a custom Steam Store API adapter. This parallel fallback system seamlessly mimics the RAWG schema so the UI doesn't break, and gracefully self-heals when the primary API returns.
 *   **N+1 Query Problem (Firestore):** When loading a user's wishlist, the app originally fired one Firestore read per game to fetch its details, causing severe slowdowns. We solved this using **Pinia** to cache the full wishlist in memory, and by batching reads with `getDocs` on startup instead of per-card.
 *   **Rate Limiting from External APIs:** RAWG and other APIs have strict rate limits. We introduced a server-side **in-memory cache** (`backend/app/cache/memory_cache.py`) with TTL-based expiry so repeated requests are served from cache without hitting the upstream APIs.
 *   **Vue Router Guard Timing:** Firebase Auth's `onAuthStateChanged` is asynchronous, which caused route guards to redirect users before auth state was resolved. We fixed this by implementing a `waitForReady()` promise in `useAuthStore` that blocks navigation until Firebase confirms the auth state.

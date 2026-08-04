@@ -31,6 +31,7 @@ from app.services import (
     itad_service,
     youtube_service,
 )
+from app.services.rawg_health import rawg_circuit
 from app.services.recommendation_service import recommendation_service
 from app.cache.memory_cache import cache
 from app.schemas.game import UnifiedGameDetail, GameSummary, Screenshot, Trailer
@@ -110,6 +111,12 @@ async def list_games(
     metacritic: Optional[str] = Query(default=None, description="Metacritic range"),
     ratings_count: Optional[int] = Query(default=None, description="Min ratings count"),
 ):
+    # ── Circuit breaker: skip RAWG entirely if it's known-down ──────────────
+    if rawg_circuit.is_open:
+        logger.info("RAWG circuit OPEN — serving list_games from Steam fallback")
+        fallback_query = search or genres or "action"
+        return await steam_service.search_games_fallback(query=fallback_query, page=page, page_size=page_size)
+
     try:
         data = await rawg_service.get_games(
             page=page,
@@ -124,10 +131,16 @@ async def list_games(
             metacritic=metacritic,
             ratings_count=ratings_count,
         )
+        rawg_circuit.record_success()
         return data
     except Exception as exc:
-        logger.error("list_games failed: %s", exc)
-        raise _rawg_error(exc)
+        rawg_circuit.record_failure()
+        logger.warning(
+            "list_games failed [circuit=%s]: %s — falling back to Steam.",
+            rawg_circuit.state, exc
+        )
+        fallback_query = search or genres or "action"
+        return await steam_service.search_games_fallback(query=fallback_query, page=page, page_size=page_size)
 
 
 @router.get(
@@ -141,11 +154,22 @@ async def search_games(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=40),
 ):
+    # ── Circuit breaker ───────────────────────────────────────────────────────
+    if rawg_circuit.is_open:
+        logger.info("RAWG circuit OPEN — serving search '%s' from Steam fallback", q)
+        return await steam_service.search_games_fallback(query=q, page=page, page_size=page_size)
+
     try:
-        return await rawg_service.search_games(query=q, page=page, page_size=page_size)
+        result = await rawg_service.search_games(query=q, page=page, page_size=page_size)
+        rawg_circuit.record_success()
+        return result
     except Exception as exc:
-        logger.error("search_games failed for query '%s': %s", q, exc)
-        raise _rawg_error(exc)
+        rawg_circuit.record_failure()
+        logger.warning(
+            "search_games failed [circuit=%s] for query '%s': %s — falling back to Steam.",
+            rawg_circuit.state, q, exc
+        )
+        return await steam_service.search_games_fallback(query=q, page=page, page_size=page_size)
 
 
 @router.get(
@@ -178,12 +202,42 @@ async def get_recommendations(
     summary="Unified game detail",
     description="Returns a single unified JSON object combining RAWG, Steam, ITAD, CheapShark, and SteamCharts.",
 )
-async def get_game_detail(game_id: int):
+async def get_game_detail(game_id: str):
+    # ── Always route steam-prefixed IDs straight to Steam ───────────────────
+    if game_id.startswith("steam-"):
+        try:
+            return await steam_service.get_game_detail_fallback(game_id)
+        except Exception as exc:
+            logger.error("Steam fallback detail failed for %s: %s", game_id, exc)
+            raise HTTPException(status_code=404, detail=f"Steam game not found: {exc}")
+
+    # ── Integer RAWG IDs: use circuit breaker ────────────────────────────────
+    try:
+        game_id_int = int(game_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=f"Invalid game id: {game_id!r}")
+
+    # If circuit is OPEN, skip RAWG and immediately serve from Steam fallback
+    if rawg_circuit.is_open:
+        logger.info(
+            "RAWG circuit OPEN — serving game detail %s from Steam fallback", game_id
+        )
+        # Try to find a cached steam_id mapping for this RAWG id
+        cached_fb = cache.get(f"rawg_fallback_{game_id}")
+        if cached_fb and cached_fb.get("steam_id"):
+            return await steam_service.get_game_detail_fallback(
+                f"steam-{cached_fb['steam_id']}"
+            )
+        raise HTTPException(
+            status_code=503,
+            detail="RAWG is currently unavailable and no Steam mapping is cached for this game. Please try again later."
+        )
+
     try:
         # Fire all requests concurrently
-        detail_task = rawg_service.get_game_detail(game_id)
-        screenshots_task = rawg_service.get_screenshots(game_id)
-        trailers_task = rawg_service.get_trailers(game_id)
+        detail_task = rawg_service.get_game_detail(game_id_int)
+        screenshots_task = rawg_service.get_screenshots(game_id_int)
+        trailers_task = rawg_service.get_trailers(game_id_int)
 
         detail_res, screenshots_res, trailers_res = await asyncio.gather(
             detail_task,
@@ -194,7 +248,8 @@ async def get_game_detail(game_id: int):
 
         detail = detail_res if not isinstance(detail_res, BaseException) else {}
         if not detail and isinstance(detail_res, BaseException):
-            logger.warning(f"RAWG failed completely for {game_id}")
+            rawg_circuit.record_failure()
+            logger.warning("RAWG detail failed completely for game %s", game_id)
             
         screenshots_data = screenshots_res if not isinstance(screenshots_res, BaseException) else {}
         trailers_data = trailers_res if not isinstance(trailers_res, BaseException) else {}
@@ -381,8 +436,8 @@ async def get_game_detail(game_id: int):
                 "source": "SteamCharts"
             }
 
-        return {
-            "id": game_id,
+        result = {
+            "id": game_id_int,
             "title": final_title,
             "slug": detail.get("slug", str(game_id)),
             "description": final_desc,
@@ -410,16 +465,30 @@ async def get_game_detail(game_id: int):
             "steam_url": steam_data.get("steam_url") if steam_data else None,
             "aggregated_at": datetime.now(timezone.utc).isoformat(),
         }
+        # RAWG responded successfully — close the circuit
+        rawg_circuit.record_success()
+        return result
 
     except Exception as exc:
-        logger.error("get_game_detail failed for game %d: %s", game_id, exc)
-        return {
-            "id": game_id,
-            "title": f"Game #{game_id}",
-            "slug": str(game_id),
-            "description": "Unable to load game details. Please try again later.",
-            "aggregated_at": datetime.now(timezone.utc).isoformat(),
-        }
+        rawg_circuit.record_failure()
+        logger.error(
+            "get_game_detail failed [circuit=%s] for game %s: %s",
+            rawg_circuit.state, game_id, exc
+        )
+        # Last-resort: if we have a cached Steam mapping, serve it
+        cached_fb = cache.get(f"rawg_fallback_{game_id}")
+        if cached_fb and cached_fb.get("steam_id"):
+            logger.info("Serving game %s from cached Steam mapping %s", game_id, cached_fb['steam_id'])
+            try:
+                return await steam_service.get_game_detail_fallback(
+                    f"steam-{cached_fb['steam_id']}"
+                )
+            except Exception as steam_exc:
+                logger.error("Steam fallback also failed for game %s: %s", game_id, steam_exc)
+        raise HTTPException(
+            status_code=503,
+            detail="Game data is temporarily unavailable. Please try again in a moment."
+        )
 
 @router.get(
     "/games/{game_id}/screenshots",

@@ -5,7 +5,7 @@ These models normalise data from RAWG and CheapShark into
 consistent shapes that Vue components can rely on.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel, Field
 
 
@@ -76,7 +76,7 @@ class Deal(BaseModel):
 class GameSummary(BaseModel):
     """Lightweight game card — used in lists and search results."""
 
-    id: int
+    id: Union[int, str]
     name: str
     slug: str
     background_image: Optional[str] = None
@@ -123,7 +123,7 @@ class UnifiedGameDetail(BaseModel):
     This is what GET /api/games/{id} returns to the frontend.
     """
 
-    id: int
+    id: Union[int, str]
     title: str
     slug: str
     description: str

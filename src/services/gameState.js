@@ -38,7 +38,14 @@ export function getGameState(game) {
   // Compute real or tiered price
   let price = 0;
   if (!isFree) {
-    if (game.cheapest_deal_price) {
+    if (game.price && game.price.final !== undefined) {
+      // Steam fallback price
+      price = parseFloat(game.price.final);
+    } else if (game.ggdeals && game.ggdeals.prices && game.ggdeals.prices.currentRetail) {
+      // GG.deals retail price
+      price = parseFloat(game.ggdeals.prices.currentRetail);
+    } else if (game.cheapest_deal_price) {
+      // CheapShark price
       price = parseFloat(game.cheapest_deal_price);
     } else {
       // Create a realistic tier based on rating and release year

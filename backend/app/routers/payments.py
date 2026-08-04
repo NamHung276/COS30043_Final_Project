@@ -13,9 +13,10 @@ from app.services.payment_service import payment_service
 from app.services.crypto_service import crypto_service
 from app.utils.dependencies import get_current_user
 from app.models.user import UserContext
-from app.services import rawg_service, cheapshark_service
+from app.services import rawg_service, cheapshark_service, steam_service
 from fastapi import Depends
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +37,23 @@ async def create_paypal_order(
         total_amount = 0.0
         for game_id in request.items:
             try:
-                game = await rawg_service.get_game_detail(game_id)
-                import re
+                game_id_str = str(game_id)
+                is_steam = game_id_str.startswith("steam-")
+
+                if is_steam:
+                    # Steam fallback game — use steam_service
+                    game = await steam_service.get_game_detail_fallback(game_id_str)
+                    # If Steam already gives us a price, use it directly
+                    steam_price = game.get("price")
+                    if steam_price and steam_price.get("final", 0) > 0:
+                        total_amount += float(steam_price["final"])
+                    else:
+                        total_amount += 17.99  # Reasonable Steam fallback default
+                    continue
+
+                # RAWG integer ID path
+                game_id_int = int(game_id)
+                game = await rawg_service.get_game_detail(game_id_int)
                 steam_id = None
                 stores = game.get("stores", [])
                 for s in stores:
@@ -83,13 +99,10 @@ async def create_paypal_order(
                     else:
                         final_price = 9.99
                         
-                # Apply old pseudo-discount logic if needed, or just use the tier price.
-                # Actually, the frontend cart price logic also applies discounts. 
-                # Let's match frontend exact logic! Frontend discount logic was in displayDiscount.
-                roll = game_id % 4
-                is_sale = roll in (0, 1)
+                # Apply discount roll using integer id only
+                roll = game_id_int % 4
                 discount = 40 if roll == 0 else (25 if roll == 1 else 0)
-                final_price = final_price * (1 - discount / 100) if is_sale else final_price
+                final_price = final_price * (1 - discount / 100) if discount else final_price
                 
                 total_amount += final_price
             except Exception as ex:

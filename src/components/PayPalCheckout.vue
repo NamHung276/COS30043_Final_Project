@@ -62,9 +62,10 @@ export default {
             // Collect items. If cart, use items array. If single game, use gameId.
             let itemsToPurchase = [];
             if (this.items && this.items.length > 0) {
-              itemsToPurchase = this.items.map(id => parseInt(id));
+              // Send IDs as-is: ints for RAWG, 'steam-xxx' strings for Steam fallback
+              itemsToPurchase = this.items.map(id => String(id));
             } else if (this.gameId && this.gameId !== "cart") {
-              itemsToPurchase = [parseInt(this.gameId)];
+              itemsToPurchase = [String(this.gameId)];
             }
               
             const response = await fetch(`${baseUrl}/paypal/create-order`, {

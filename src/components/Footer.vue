@@ -57,10 +57,7 @@
       <div class="row align-items-center">
         <div class="col-md-8 small">
           <div class="d-flex flex-wrap gap-3 mb-2">
-            <a href="#" class="text-muted text-decoration-none hover-white">Terms of Service</a>
-            <a href="#" class="text-muted text-decoration-none hover-white">Privacy Policy</a>
-            <a href="#" class="text-muted text-decoration-none hover-white">EULA</a>
-            <a href="#" class="text-muted text-decoration-none hover-white">Cookie Settings</a>
+            <router-link to="/about" class="text-muted text-decoration-none hover-white">About</router-link>
           </div>
           <p class="mb-0">&copy; {{ new Date().getFullYear() }} GameHub Inc. All rights reserved. All trademarks are property of their respective owners in the US and other countries.</p>
           <p class="mb-0 mt-1 opacity-50" style="font-size: 0.75rem;">Data provided by RAWG Video Games Database API and CheapShark.</p>

@@ -544,6 +544,296 @@ export default {
             class="gd-rec-card text-decoration-none"
           >
             <div class="gd-rec-img-wrapper">
+              <img :src="g.background_image || g.thumbnail || '/placeholder.png'" :alt="g.name" class="gd-rec-img" />
+            </div>
+            <div class="gd-rec-info p-3">
+              <h6 class="gd-rec-title fw-bold mb-1 text-truncate" :title="g.name">{{ g.name }}</h6>
+              <div class="d-flex justify-content-between align-items-center mt-2">
+                <span class="gd-rec-genre text-muted small text-truncate" style="max-width: 60%">{{ g.genres?.[0]?.name || 'Game' }}</span>
+                <span class="gd-rec-price fw-bold text-success small" v-if="gamePrice(g)">${{ gamePrice(g) }}</span>
+              </div>
+            </div>
+          </router-link>
+        </div>
+      </div>
+
+      <!-- ══ GRID VIEW ══ -->
+      <div v-if="viewMode === 'grid'" class="games-grid">
+        <router-link
+          v-for="(game, index) in paginatedGames"
+          :key="game.itemType + game.id"
+          :to="
+            game.itemType === 'f2p'
+              ? `/free-to-play/${game.id}`
+              : `/games/${game.id}`
+          "
+          class="game-card stagger-item"
+          :style="{ animationDelay: `${(index % 24) * 0.04}s` }"
+          :aria-label="`View details for ${game.name}`"
+        >
+          <!-- Cover Image -->
+          <div class="game-card-img-wrap">
+            <img
+              v-if="game.background_image"
+              v-lazy-img="game.background_image"
+              class="game-card-img"
+              :alt="`${game.name} cover art`"
+            />
+            <div v-else class="game-card-img-placeholder">
+              <img
+                src="/logo/gamepad.svg"
+                width="36"
+                height="36"
+                alt=""
+                aria-hidden="true"
+                style="opacity: 0.4"
+              />
+            </div>
+            <div class="game-card-img-overlay" aria-hidden="true"></div>
+
+            <!-- Floating action buttons -->
+            <div class="card-float-actions">
+              <!-- Trailer button -->
+              <button
+                v-if="hasTrailer(game)"
+                class="card-float-btn trailer-btn"
+                @click="openTrailer(game, $event)"
+                title="Watch Trailer"
+                aria-label="Watch trailer"
+              >
+                ▶ Trailer
+              </button>
+              <!-- Wishlist button -->
+              <button
+                class="card-float-btn wishlist-btn"
+                :class="{ wishlisted: wishlistedIds.has(String(game.id)) }"
+                @click="toggleWishlist(game, $event)"
+                :title="
+                  wishlistedIds.has(String(game.id))
+                    ? 'In Wishlist'
+                    : 'Add to Wishlist'
+                "
+                :aria-label="
+                  wishlistedIds.has(String(game.id))
+                    ? 'In Wishlist'
+                    : 'Add to Wishlist'
+                "
+              >
+                {{ wishlistedIds.has(String(game.id)) ? "♥" : "♡" }}
+              </button>
+            </div>
+
+            <!-- Genre Ribbon -->
+            <div class="genre-ribbon" v-if="game.genres?.length">
+              {{ game.genres[0].name }}
+            </div>
+
+            <!-- Metacritic badge -->
+            <span
+              v-if="game.metacritic"
+              class="mc-badge"
+              :class="metacriticClass(game.metacritic)"
+              :title="`Metacritic: ${game.metacritic}`"
+            >
+              {{ game.metacritic }}
+            </span>
+
+            <!-- Platform icons -->
+            <div
+              class="game-card-platforms"
+              v-if="platformIcons(game.platforms).length"
+            >
+              <span
+                v-for="p in platformIcons(game.platforms).slice(0, 4)"
+                :key="p.key"
+                class="platform-icon"
+                :title="p.label"
+              >
+                <img
+                  v-if="p.key === 'pc'"
+                  src="/game_logo/pc.svg"
+                  width="13"
+                  height="13"
+                  alt="PC"
+                />
+                <img
+                  v-else-if="p.key === 'ps'"
+                  src="/game_logo/playstation_logo.png"
+                  width="13"
+                  height="13"
+                  alt="PlayStation"
+                />
+                <img
+                  v-else-if="p.key === 'xbox'"
+                  src="/game_logo/xbox_logo.png"
+                  width="13"
+                  height="13"
+                  alt="Xbox"
+                />
+                <img
+                  v-else-if="p.key === 'nintendo'"
+                  src="/game_logo/nintendo_logo.png"
+                  width="13"
+                  height="13"
+                  alt="Nintendo"
+                />
+                <img
+                  v-else-if="p.key === 'mobile'"
+                  src="/game_logo/mobile.svg"
+                  width="13"
+                  height="13"
+                  alt="Mobile"
+                />
+              </span>
+              <span v-if="platformIcons(game.platforms).length > 4" class="platform-icon-more" style="font-size: 0.65rem; color: var(--text-muted); font-weight: bold; margin-left: 2px;">
+                +{{ platformIcons(game.platforms).length - 4 }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Card Body -->
+          <div class="game-card-body">
+            <div class="game-card-header d-flex justify-content-between align-items-center w-100 mb-1">
+              <h3 class="game-card-title text-truncate me-2" :title="game.name">{{ game.name }}</h3>
+              <span v-if="game.itemType === 'f2p'" class="badge bg-success rounded-pill"
+                >Free</span
+              >
+            </div>
+
+            <!-- Genre tags -->
+            <div class="game-card-genres" v-if="(game.genres || []).length">
+              <span
+                v-for="genre in (game.genres || []).slice(0, 2)"
+                :key="genre.id"
+                class="game-genre-tag text-muted"
+                style="background: transparent; border: 1px solid var(--border-glass);"
+              >
+                {{ genre.name }}
+              </span>
+              <span v-if="(game.genres || []).length > 2" class="game-genre-tag text-muted" style="background: transparent; border: 1px solid var(--border-glass);">
+                +{{ game.genres.length - 2 }}
+              </span>
+            </div>
+            <!-- Star Rating -->
+            <div class="game-card-stars" v-if="game.rating">
+              <span
+                v-for="(star, si) in ratingStars(game.rating)"
+                :key="si"
+                class="star-icon"
+                :class="star"
+              >
+                {{ star === "full" ? "★" : star === "half" ? "⯨" : "☆" }}
+              </span>
+              <span class="rating-label">{{ ratingLabel(game.rating) }}</span>
+            </div>
+
+            <!-- Price row -->
+            <div class="game-card-price-row">
+              <!-- Free badge -->
+              <template v-if="game.itemType === 'f2p'">
+                <span class="price-free">Free to Play</span>
+              </template>
+              <!-- Discounted -->
+              <template v-else-if="gameDiscount(game) > 0">
+                <span class="price-discount-badge"
+                  >-{{ gameDiscount(game) }}%</span
+                >
+                <span class="price-original">${{ gamePrice(game) }}</span>
+                <span class="price-current">${{ discountedPrice(game) }}</span>
+              </template>
+              <!-- Full price -->
+              <template v-else-if="gamePrice(game)">
+                <span class="price-current">${{ gamePrice(game) }}</span>
+              </template>
+
+              <span class="game-source-pill">{{
+                game.itemType === "f2p" ? "FreeToGame" : "RAWG"
+              }}</span>
+            </div>
+          </div>
+        </router-link>
+      </div>
+
+      <!-- ══ LIST VIEW ══ -->
+      <div v-else class="games-list">
+        <router-link
+          v-for="(game, index) in paginatedGames"
+          :key="game.itemType + game.id"
+          :to="
+            game.itemType === 'f2p'
+              ? `/free-to-play/${game.id}`
+              : `/games/${game.id}`
+          "
+          class="game-list-row stagger-item"
+          :style="{ animationDelay: `${(index % 24) * 0.03}s` }"
+        >
+          <div class="glr-thumb-wrap">
+            <img
+              v-if="game.background_image"
+              v-lazy-img="game.background_image"
+              :alt="game.name"
+              class="glr-thumb"
+            />
+            <div v-else class="glr-thumb-placeholder"></div>
+            <span
+              v-if="game.metacritic"
+              class="glr-mc"
+              :class="metacriticClass(game.metacritic)"
+              >{{ game.metacritic }}</span
+            >
+          </div>
+          <div class="glr-info">
+            <div class="glr-title">{{ game.name }}</div>
+            <div class="glr-meta">
+              <span
+                v-for="g in (game.genres || []).slice(0, 2)"
+                :key="g.id"
+                class="game-genre-tag text-muted"
+                style="background: transparent; border: 1px solid var(--border-glass);"
+                >{{ g.name }}</span
+              >
+              <span v-if="(game.genres || []).length > 2" class="game-genre-tag text-muted" style="background: transparent; border: 1px solid var(--border-glass);">
+                +{{ game.genres.length - 2 }}
+              </span>
+              <span v-if="game.released" class="glr-year">{{
+                game.released.split("-")[0]
+              }}</span>
+            </div>
+            <div class="glr-stars" v-if="game.rating">
+              <span
+                v-for="(s, si) in ratingStars(game.rating)"
+                :key="si"
+                class="star-icon"
+                :class="s"
+              >
+                {{ s === "full" ? "★" : s === "half" ? "⯨" : "☆" }}
+              </span>
+              <span class="rating-label">{{ game.rating.toFixed(1) }}</span>
+            </div>
+          </div>
+          <div class="glr-right">
+            <div class="glr-price">
+              <template v-if="game.itemType === 'f2p'"
+                ><span class="price-free">Free</span></template
+              >
+              <template v-else-if="gameDiscount(game) > 0">
+                <span class="price-discount-badge"
+                  >-{{ gameDiscount(game) }}%</span
+                >
+                <span class="price-current">${{ discountedPrice(game) }}</span>
+              </template>
+              <template v-else-if="gamePrice(game)"
+                ><span class="price-current"
+                  >${{ gamePrice(game) }}</span
+                ></template
+              >
+            </div>
+            <div class="glr-actions">
+              <button
+                v-if="hasTrailer(game)"
+                class="glr-btn trailer"
+                @click="openTrailer(game, $event)"
+                aria-label="Watch trailer"
               >
                 ▶
               </button>

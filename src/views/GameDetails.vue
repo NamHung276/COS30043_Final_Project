@@ -128,7 +128,7 @@ export default {
     },
 
     displayDiscount() {
-      if (!this.game || this.gameStateInfo.isFree || !this.gameStateInfo.isReleased) return 0;
+      if (!this.game || this.gameStateInfo.isFree || !this.gameStateInfo.isReleased || this.displayPrice === null) return 0;
       
       // Use real Steam discount if available
       if (this.game.price && this.game.price.discount_percent) {

@@ -185,6 +185,17 @@ async def search_games_fallback(query: str, page: int = 1, page_size: int = 20) 
             
             results = []
             for item in items:
+                # Map price if it exists
+                mapped_price = None
+                if "price" in item:
+                    mapped_price = {
+                        "final": item["price"].get("final", 0) / 100.0,
+                        "initial": item["price"].get("initial", 0) / 100.0,
+                        "discount_percent": 0  # storesearch does not seem to return discount_percent directly, but we can compute it or leave it 0
+                    }
+                    if mapped_price["initial"] > 0 and mapped_price["final"] < mapped_price["initial"]:
+                        mapped_price["discount_percent"] = round((1 - mapped_price["final"] / mapped_price["initial"]) * 100)
+
                 # Format to match GameSummary
                 results.append({
                     "id": f"steam-{item['id']}",  # Prefix so frontend/backend knows it's a steam ID
@@ -198,7 +209,8 @@ async def search_games_fallback(query: str, page: int = 1, page_size: int = 20) 
                     "genres": [],
                     "platforms": [],
                     "tags": [],
-                    "short_screenshots": []
+                    "short_screenshots": [],
+                    "price": mapped_price
                 })
                 
             return {

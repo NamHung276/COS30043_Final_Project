@@ -795,25 +795,35 @@ export default {
 
               <!-- Quick Actions in Hero -->
               <div v-if="gameStateInfo.state !== 'UNKNOWN'" class="d-flex flex-wrap gap-3 mt-4 position-relative">
-                <!-- RELEASED -->
                 <template v-if="gameStateInfo.isReleased">
-                  <button
-                    class="gd-hero-btn-primary btn btn-primary btn-lg fw-bold px-5 shadow-sm text-primary-var"
-                    @click="buyNow"
-                    aria-label="Buy Now"
-                  >
-                    <i class="bi bi-lightning-charge-fill me-2"></i> Buy Now — ${{
-                      discountedPrice || displayPrice
-                    }}
-                  </button>
+                  <template v-if="displayPrice !== null">
+                    <button
+                      class="gd-hero-btn-primary btn btn-primary btn-lg fw-bold px-5 shadow-sm text-primary-var"
+                      @click="buyNow"
+                      aria-label="Buy Now"
+                    >
+                      <i class="bi bi-lightning-charge-fill me-2"></i> Buy Now - ${{
+                        discountedPrice || displayPrice
+                      }}
+                    </button>
 
-                  <button
-                    class="gd-hero-btn-secondary btn btn-lg fw-bold px-4 shadow-sm"
-                    @click="addToCart"
-                    aria-label="Add to Cart"
-                  >
-                    <i class="bi bi-cart-plus-fill me-2"></i> Add to Cart
-                  </button>
+                    <button
+                      class="gd-hero-btn-secondary btn btn-lg fw-bold px-4 shadow-sm"
+                      @click="addToCart"
+                      aria-label="Add to Cart"
+                    >
+                      <i class="bi bi-cart-plus-fill me-2"></i> Add to Cart
+                    </button>
+                  </template>
+                  <template v-else>
+                    <button
+                      class="btn btn-secondary btn-lg fw-bold px-5 shadow-sm"
+                      disabled
+                      aria-label="Currently Unavailable"
+                    >
+                      <i class="bi bi-slash-circle me-2"></i> Price currently unavailable
+                    </button>
+                  </template>
 
                   <button
                     class="btn btn-outline-light btn-lg shadow-sm"
@@ -1385,22 +1395,33 @@ export default {
                   class="p-4 border-bottom border-secondary border-opacity-25"
                 >
                   <template v-if="gameStateInfo.isReleased">
-                    <button
-                      class="gd-buy-now-btn w-100 mb-3"
-                      @click="buyNow"
-                      aria-label="Buy Now"
-                    >
-                      <i class="bi bi-lightning-charge-fill me-2"></i>
-                      Buy Now — ${{ discountedPrice || displayPrice }}
-                    </button>
+                    <template v-if="displayPrice !== null">
+                      <button
+                        class="gd-buy-now-btn w-100 mb-3"
+                        @click="buyNow"
+                        aria-label="Buy Now"
+                      >
+                        <i class="bi bi-lightning-charge-fill me-2"></i>
+                        Buy Now — ${{ discountedPrice || displayPrice }}
+                      </button>
 
-                    <button
-                      class="gd-add-cart-btn w-100 mb-3"
-                      @click="addToCart"
-                      aria-label="Add to Cart"
-                    >
-                      <i class="bi bi-cart-plus me-2"></i> Add to Cart
-                    </button>
+                      <button
+                        class="gd-add-cart-btn w-100 mb-3"
+                        @click="addToCart"
+                        aria-label="Add to Cart"
+                      >
+                        <i class="bi bi-cart-plus me-2"></i> Add to Cart
+                      </button>
+                    </template>
+                    <template v-else>
+                      <button
+                        class="btn btn-secondary w-100 mb-3"
+                        disabled
+                        aria-label="Currently Unavailable"
+                      >
+                        <i class="bi bi-slash-circle me-2"></i> Price currently unavailable
+                      </button>
+                    </template>
                   </template>
 
                   <template v-else-if="gameStateInfo.isFree">

@@ -48,15 +48,8 @@ export function getGameState(game) {
       // CheapShark price
       price = parseFloat(game.cheapest_deal_price);
     } else {
-      // Create a realistic tier based on rating and release year
-      const year = game.released ? new Date(game.released).getFullYear() : 2020;
-      const score = game.metacritic || (game.rating ? game.rating * 20 : 70);
-      
-      if (year >= 2023 && score >= 80) price = 59.99;
-      else if (year >= 2022 || score >= 85) price = 49.99;
-      else if (year >= 2018 || score >= 75) price = 29.99;
-      else if (year >= 2015) price = 19.99;
-      else price = 9.99;
+      // No live price available
+      price = null;
     }
   }
 
@@ -71,7 +64,7 @@ export function getGameState(game) {
   return {
     state,
     price,
-    formattedPrice: price > 0 ? price.toFixed(2) : '0.00',
+    formattedPrice: price !== null ? price.toFixed(2) : null,
     releaseDate: game.released,
     countdownDays,
     

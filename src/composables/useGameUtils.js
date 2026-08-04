@@ -118,7 +118,8 @@ export function gamePrice(game) {
   const state = getGameState(game);
   if (state.isFree) return null; // Free games shouldn't show a base price
   
-  // getGameState already computes a price based on real data or tier logic
+  if (state.price === null || state.price === undefined) return null;
+
   // We need to reverse-engineer the original price if there's a discount
   const discount = gameDiscount(game);
   if (discount > 0) {
@@ -136,19 +137,11 @@ export function gameDiscount(game) {
   const state = getGameState(game);
   if (state.isFree || !state.isReleased) return 0;
   
-  // 1. Real Steam discount
+  // 1. Real Steam/GG Deals discount (if explicitly provided in price object)
   if (game.price && game.price.discount_percent) {
     return game.price.discount_percent;
   }
   
-  // 2. Fallback modulo pseudo-discount
-  const idStr = String(game.id || game.gameId || "");
-  const numMatch = idStr.match(/\d+/);
-  const numId = numMatch ? parseInt(numMatch[0]) : 0;
-  
-  const roll = numId % 4;
-  if (roll === 0) return 40;
-  if (roll === 1) return 25;
   return 0;
 }
 

@@ -83,32 +83,15 @@ async def create_paypal_order(
                 if cheapest_price:
                     final_price = float(cheapest_price)
                 else:
-                    # Tier logic
-                    year_str = game.get("released")
-                    year = int(year_str.split("-")[0]) if year_str else 2020
-                    score = game.get("metacritic") or (game.get("rating", 0) * 20) or 70
+                    logger.error(f"No live price available for game {game_id}")
+                    raise ValueError(f"Game {game.get('name', game_id)} is currently unavailable for purchase (no price found).")
                     
-                    if year >= 2023 and score >= 80:
-                        final_price = 59.99
-                    elif year >= 2022 or score >= 85:
-                        final_price = 49.99
-                    elif year >= 2018 or score >= 75:
-                        final_price = 29.99
-                    elif year >= 2015:
-                        final_price = 19.99
-                    else:
-                        final_price = 9.99
-                        
-                # Apply discount roll using integer id only
-                roll = game_id_int % 4
-                discount = 40 if roll == 0 else (25 if roll == 1 else 0)
-                final_price = final_price * (1 - discount / 100) if discount else final_price
-                
                 total_amount += final_price
+            except ValueError as ve:
+                raise ve
             except Exception as ex:
                 logger.error(f"Error fetching price for game {game_id}: {ex}")
-                # Safe fallback
-                total_amount += 19.99
+                raise ValueError(f"Game {game_id} is currently unavailable for purchase (error).")
 
         # Round to 2 decimal places to match PayPal requirements
         final_total = round(total_amount, 2)

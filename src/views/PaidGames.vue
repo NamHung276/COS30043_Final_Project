@@ -329,6 +329,7 @@ export default {
               <div class="d-flex justify-content-between align-items-center mt-2">
                 <span class="gd-rec-genre text-muted small text-truncate" style="max-width: 60%">{{ g.genres?.[0]?.name || 'Game' }}</span>
                 <span class="gd-rec-price fw-bold text-success small" v-if="gamePrice(g)">${{ gamePrice(g) }}</span>
+                <span class="gd-rec-price fw-bold text-info small" v-else-if="g.itemType !== 'f2p'">Live Price</span>
               </div>
             </div>
           </router-link>
@@ -534,6 +535,9 @@ export default {
               <template v-else-if="gamePrice(game)">
                 <span class="price-current">${{ gamePrice(game) }}</span>
               </template>
+              <template v-else>
+                <span class="price-current text-info fs-6">Check Price</span>
+              </template>
               <span class="game-source-pill">RAWG</span>
             </div>
           </div>
@@ -605,6 +609,9 @@ export default {
                   >${{ gamePrice(game) }}</span
                 ></template
               >
+              <template v-else>
+                <span class="price-current text-info fs-6" style="margin-right: 15px;">Check Price</span>
+              </template>
             </div>
             <div class="glr-actions">
               <button

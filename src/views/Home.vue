@@ -980,6 +980,9 @@ export default {
                   <span class="sso-sale" style="font-size: 0.9rem; margin-left: auto;">Est. ${{ gamePrice(game) }}</span>
                 </template>
               </div>
+              <div class="sso-price-row mt-2" v-else-if="game.itemType !== 'f2p'" style="display: flex; align-items: center; gap: 8px;">
+                <span class="sso-sale text-info" style="font-size: 0.8rem; margin-left: auto; font-weight: bold;">Check Price</span>
+              </div>
             </div>
           </router-link>
         </div>

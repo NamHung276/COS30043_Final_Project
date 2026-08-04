@@ -67,29 +67,20 @@ async def _calculate_price(game_id: Union[int, str]) -> float:
             if best:
                 return float(best["cheapest"])
 
-        # Tier pricing
-        year_str = game.get("released")
-        year = int(year_str.split("-")[0]) if year_str else 2020
-        score = game.get("metacritic") or (game.get("rating", 0) * 20) or 70
+        # Try CheapShark
+        cheapest_deal = game.get("cheapest_deal_price")
+        if cheapest_deal:
+            return float(cheapest_deal)
+            
+        # No live price available
+        logger.error(f"No live price available for game {game_id}")
+        raise ValueError(f"Game {game.get('name', game_id)} is currently unavailable for purchase (no price found).")
 
-        if year >= 2023 and score >= 80:
-            base = 59.99
-        elif year >= 2022 or score >= 85:
-            base = 49.99
-        elif year >= 2018 or score >= 75:
-            base = 29.99
-        elif year >= 2015:
-            base = 19.99
-        else:
-            base = 9.99
-
-        roll = game_id_int % 4
-        discount = 40 if roll == 0 else (25 if roll == 1 else 0)
-        return round(base * (1 - discount / 100), 2) if discount else base
-
+    except ValueError as ve:
+        raise ve
     except Exception as exc:
-        logger.warning("Price calc failed for %s: %s — using fallback $19.99", game_id, exc)
-        return 19.99
+        logger.error(f"Price calc failed for {game_id}: {exc}")
+        raise ValueError(f"Game {game_id} is currently unavailable for purchase (error).")
 
 
 @router.post("/create-order")

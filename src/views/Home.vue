@@ -968,21 +968,24 @@ export default {
                   {{ star === "full" ? "★" : star === "half" ? "⯨" : "☆" }}
                 </span>
               </div>
-              <div class="sso-price-row mt-2" v-if="gamePrice(game)" style="display: flex; align-items: center; gap: 8px;">
-                <template v-if="gameDiscount(game) > 0">
-                  <span class="sso-discount">-{{ gameDiscount(game) }}%</span>
-                  <div class="sso-prices" style="display: flex; flex-direction: column; align-items: flex-end;">
-                    <span class="sso-orig" style="font-size: 0.7rem;">Est. ${{ gamePrice(game) }}</span>
-                    <span class="sso-sale" style="font-size: 0.9rem;">Est. ${{ discountedPrice(game) }}</span>
-                  </div>
+              <div class="sso-price-row mt-2" style="display: flex; align-items: center; gap: 8px;">
+                <template v-if="gamePrice(game)">
+                  <template v-if="gameDiscount(game) > 0">
+                    <span class="sso-discount">-{{ gameDiscount(game) }}%</span>
+                    <div class="sso-prices" style="display: flex; flex-direction: column; align-items: flex-end;">
+                      <span class="sso-orig" style="font-size: 0.7rem;">${{ gamePrice(game) }}</span>
+                      <span class="sso-sale" style="font-size: 0.9rem;">${{ discountedPrice(game) }}</span>
+                    </div>
+                  </template>
+                  <template v-else>
+                    <span class="sso-sale" style="font-size: 0.9rem; margin-left: auto;">${{ gamePrice(game) }}</span>
+                  </template>
                 </template>
-                <template v-else>
-                  <span class="sso-sale" style="font-size: 0.9rem; margin-left: auto;">Est. ${{ gamePrice(game) }}</span>
+                <template v-else-if="game.itemType !== 'f2p'">
+                  <span class="sso-sale text-info" style="font-size: 0.9rem; margin-left: auto;">Check Price</span>
                 </template>
               </div>
-              <div class="sso-price-row mt-2" v-else-if="game.itemType !== 'f2p'" style="display: flex; align-items: center; gap: 8px;">
-                <span class="sso-sale text-info" style="font-size: 0.8rem; margin-left: auto; font-weight: bold;">Check Price</span>
-              </div>
+
             </div>
           </router-link>
         </div>

@@ -12,6 +12,7 @@ import LibraryGallery from "../components/library/LibraryGallery.vue";
 import LibraryNotesAndGoals from "../components/library/LibraryNotesAndGoals.vue";
 import LibraryCommunity from "../components/library/LibraryCommunity.vue";
 import LibrarySidebar from "../components/library/LibrarySidebar.vue";
+import { useLibraryStore } from "../stores/useLibraryStore";
 
 export default {
   name: "LibraryDetails",
@@ -169,12 +170,27 @@ export default {
       this.purchase.status = newStatus;
       try {
         await setDoc(doc(db, "purchases", this.purchaseId), { status: newStatus }, { merge: true });
+        
+        // Sync with store
+        const store = useLibraryStore();
+        const storeGame = store.purchases.find(p => p.id === this.purchaseId);
+        if (storeGame) storeGame.status = newStatus;
       } catch (e) {
         console.error("Failed to update status", e);
       }
     },
 
     async playGame() {
+      // Find any already playing game in store and stop it
+      const store = useLibraryStore();
+      for (const p of store.purchases) {
+        if (p.status === 'playing' && p.id !== this.purchaseId) {
+          // It's playing somewhere else, update it locally in store as installed
+          p.status = 'installed';
+          p.sessionStart = null;
+        }
+      }
+
       this.purchase.status = 'playing';
       this.purchase.sessionStart = Date.now();
       await setDoc(doc(db, "purchases", this.purchaseId), { 
@@ -182,6 +198,14 @@ export default {
         lastPlayed: new Date(),
         sessionStart: this.purchase.sessionStart
       }, { merge: true });
+
+      // Sync with store
+      const storeGame = store.purchases.find(p => p.id === this.purchaseId);
+      if (storeGame) {
+        storeGame.status = 'playing';
+        storeGame.sessionStart = this.purchase.sessionStart;
+        storeGame.lastPlayed = { seconds: Math.floor(Date.now() / 1000) }; // Mock Firestore timestamp format
+      }
     },
 
     async stopGame() {
@@ -198,17 +222,27 @@ export default {
       const sessions = this.purchase.sessions || [];
       sessions.unshift(newSession);
 
-      this.purchase.status = 'installed';
-      this.purchase.playtime = newPlaytime;
-      this.purchase.sessionStart = null;
-      this.purchase.sessions = sessions;
-
       await setDoc(doc(db, "purchases", this.purchaseId), {
         status: 'installed',
         playtime: newPlaytime,
         sessionStart: null,
         sessions: sessions
       }, { merge: true });
+
+      this.purchase.status = 'installed';
+      this.purchase.playtime = newPlaytime;
+      this.purchase.sessionStart = null;
+      this.purchase.sessions = sessions;
+
+      // Sync with store
+      const store = useLibraryStore();
+      const storeGame = store.purchases.find(p => p.id === this.purchaseId);
+      if (storeGame) {
+        storeGame.status = 'installed';
+        storeGame.playtime = newPlaytime;
+        storeGame.sessions = sessions;
+        storeGame.sessionStart = null;
+      }
     },
 
     // Handlers for child components

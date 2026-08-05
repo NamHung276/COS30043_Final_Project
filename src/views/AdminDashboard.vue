@@ -377,11 +377,8 @@ export default {
     },
 
     askBanUser(user) {
-      this.confirmBan = {
-        uid: user.uid,
-        displayName: user.displayName || user.email,
-        isBanned: user.mockStatus === 'Banned'
-      };
+      this.toast.show("Account moderation will be introduced soon, please wait for further updates.", "info");
+      return;
     },
 
     async confirmBanAction() {

@@ -15,8 +15,13 @@
 
 import { defineStore } from "pinia";
 import { auth, db } from "../firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import {
+  onAuthStateChanged,
+  signOut,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
@@ -90,6 +95,71 @@ export const useAuthStore = defineStore("auth", {
 
         setTimeout(poll, POLL_MS);
       });
-    }
+    },
+
+    /**
+     * Sign in with Google using a popup.
+     * - First-time users: creates a Firestore user doc.
+     * - Returning users: merges non-destructive fields only (preserves role, etc.).
+     * - Popup-closed-by-user is treated as a silent cancel (no error thrown).
+     * @returns {{ ok: boolean, error?: string }}
+     */
+    async signInWithGoogle() {
+      const provider = new GoogleAuthProvider();
+      // Request the user's email scope so it is always available
+      provider.addScope("email");
+      provider.addScope("profile");
+
+      try {
+        const { user } = await signInWithPopup(auth, provider);
+
+        // Build / update Firestore user document
+        const userRef = doc(db, "users", user.uid);
+        const snap = await getDoc(userRef);
+
+        if (!snap.exists()) {
+          // First-ever Google login → create full document
+          await setDoc(userRef, {
+            uid: user.uid,
+            displayName: user.displayName || user.email.split("@")[0],
+            email: user.email,
+            photoURL: user.photoURL || null,
+            provider: "google",
+            role: "user",
+            createdAt: serverTimestamp(),
+          });
+        } else {
+          // Returning user → safely refresh photoURL / displayName only
+          // role, status, and all other fields are preserved unchanged
+          await setDoc(
+            userRef,
+            {
+              photoURL: user.photoURL || null,
+              displayName: user.displayName || snap.data().displayName,
+              lastLoginAt: serverTimestamp(),
+            },
+            { merge: true },
+          );
+
+          // Check ban status the same way email/password login does
+          if (snap.data().status === "Banned") {
+            await signOut(auth);
+            return { ok: false, error: "Your account has been suspended by an administrator." };
+          }
+        }
+
+        return { ok: true };
+      } catch (err) {
+        // User closed the popup — not an error
+        if (
+          err.code === "auth/popup-closed-by-user" ||
+          err.code === "auth/cancelled-popup-request"
+        ) {
+          return { ok: false, error: null };
+        }
+        console.error("[AuthStore] Google sign-in failed:", err);
+        return { ok: false, error: "Google sign-in failed. Please try again." };
+      }
+    },
   },
 });

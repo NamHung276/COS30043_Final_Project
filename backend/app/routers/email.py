@@ -3,7 +3,7 @@ from email.message import EmailMessage
 import logging
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Email"])
 
 class VerificationRequest(BaseModel):
-    email: EmailStr
+    email: str
     code: str
 
 def send_email_sync(recipient: str, code: str):

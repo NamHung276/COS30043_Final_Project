@@ -335,10 +335,6 @@ export default {
     },
 
     askChangeRole(user, newRole) {
-      if (newRole === 'admin') {
-        this.toast.show("Promotion will be introduced soon, please wait for the further updates", "info");
-        return;
-      }
       this.confirmRole = {
         uid: user.uid,
         displayName: user.displayName || user.email,
@@ -377,8 +373,11 @@ export default {
     },
 
     askBanUser(user) {
-      this.toast.show("Account moderation will be introduced soon, please wait for further updates.", "info");
-      return;
+      this.confirmBan = {
+        uid: user.uid,
+        displayName: user.displayName || user.email,
+        isBanned: user.mockStatus === 'Banned'
+      };
     },
 
     async confirmBanAction() {

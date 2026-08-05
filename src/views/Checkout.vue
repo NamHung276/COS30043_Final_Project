@@ -26,6 +26,7 @@ export default {
       sessionCode: null,        // Generated 4-digit code for this checkout session
       codeExpiry: null,         // Timestamp when the code expires
       codeSent: false,
+      sendingEmail: false,
     };
   },
 
@@ -77,22 +78,50 @@ export default {
       cartState.remove(id);
     },
 
-    sendVerificationCode() {
+    async sendVerificationCode() {
+      if (!this.currentUser || !this.currentUser.email) {
+        this.toast?.show("You must be logged in to verify your account.", "error");
+        return;
+      }
+      
       // Generate a random 4-digit code and store it in session
       const code = String(Math.floor(1000 + Math.random() * 9000));
       this.sessionCode = code;
       this.codeExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
-      this.codeSent = true;
       this.verificationCode = "";
       this.showVerificationModal = true;
+      this.sendingEmail = true; // NEW STATE
 
-      // For demo/testing: show the code in a prominent toast since we have no real email server
-      this.toast?.show(
-        `[TEST MODE] Your verification code is: ${code}`,
-        "info",
-        8000
-      );
-      console.info(`%c[GameHub Checkout] Verification code: ${code}`, "font-size:16px;color:cyan;font-weight:bold;");
+      try {
+        const response = await fetch("http://localhost:8000/api/email/send-verification", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email: this.currentUser.email,
+            code: code
+          })
+        });
+
+        if (response.ok) {
+          this.codeSent = true;
+          this.toast?.show("Verification code sent to your email!", "success");
+        } else if (response.status === 503) {
+          // Fallback if backend doesn't have SMTP configured
+          this.codeSent = true;
+          this.toast?.show(`[TEST MODE] Code is: ${code}`, "info", 8000);
+          console.warn("Backend SMTP not configured. Falling back to test mode.");
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || "Failed to send email");
+        }
+      } catch (error) {
+        console.error("Error sending verification email:", error);
+        this.toast?.show("Failed to send verification code. Please try again.", "error");
+      } finally {
+        this.sendingEmail = false;
+      }
     },
 
     verifyAccount() {
@@ -296,11 +325,17 @@ export default {
               </div>
               
               <!-- Verification gate: shows only when terms agreed and not yet verified -->
-              <div v-if="agreedToTerms && !isVerified" class="text-center">
+              <div v-if="agreedToTerms && !isVerified" class="mb-4 text-center verification-section">
                 <p class="small text-warning mb-2"><i class="bi bi-shield-exclamation me-1"></i> For your security, please verify your account.</p>
-                <button class="btn btn-outline-warning w-100 fw-bold rounded-pill" @click="sendVerificationCode">
-                  <i class="bi bi-envelope-check me-2"></i> 
-                  {{ codeSent ? 'Resend Verification Code' : 'Send Verification Code' }}
+                <button 
+                  class="btn btn-outline-warning w-100 fw-bold rounded-pill" 
+                  @click="sendVerificationCode"
+                  :disabled="sendingEmail"
+                >
+                  <span v-if="sendingEmail" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  <i v-else class="bi bi-envelope-check me-2"></i> 
+                  <span v-if="sendingEmail">Sending...</span>
+                  <span v-else>{{ codeSent ? 'Resend Verification Code' : 'Send Verification Code' }}</span>
                 </button>
               </div>
             </div>

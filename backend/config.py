@@ -53,6 +53,8 @@ class Settings(BaseSettings):
             self.youtube_api_key = resolve_value("YOUTUBE_API_KEY", "VITE_YOUTUBE_API_KEY") or self.youtube_api_key
             self.itad_api_key = resolve_value("ITAD_API_KEY", "VITE_ITAD_API_KEY") or self.itad_api_key
             self.paypal_client_id = resolve_value("PAYPAL_CLIENT_ID", "VITE_PAYPAL_CLIENT_ID") or self.paypal_client_id
+            self.smtp_email = resolve_value("SMTP_EMAIL") or self.smtp_email
+            self.smtp_password = resolve_value("SMTP_PASSWORD") or self.smtp_password
 
     # ── Application ─────────────────────────────────────────────────────────────
     app_env: str = Field(default="development", description="Environment: development | production")
@@ -74,6 +76,10 @@ class Settings(BaseSettings):
     paypal_client_id: str = Field(default="", description="PayPal REST API Client ID")
     paypal_client_secret: str = Field(default="", description="PayPal REST API Secret")
     paypal_mode: str = Field(default="sandbox", description="PayPal mode: sandbox | live")
+
+    # ── Email (SMTP) ─────────────────────────────────────────────────────────────
+    smtp_email: str = Field(default="", description="Sender email address for SMTP")
+    smtp_password: str = Field(default="", description="App Password for SMTP email")
 
     # ── Firebase ─────────────────────────────────────────────────────────────────
     firebase_service_account_path: str = Field(

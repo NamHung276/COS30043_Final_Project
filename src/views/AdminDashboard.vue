@@ -13,7 +13,8 @@ import {
   limit,
   startAfter,
   getCountFromServer,
-  where
+  where,
+  setDoc
 } from "firebase/firestore";
 import { Star, Newspaper, Users, Database } from "@lucide/vue";
 import { backendApi } from "../services/api";
@@ -334,6 +335,10 @@ export default {
     },
 
     askChangeRole(user, newRole) {
+      if (newRole === 'admin') {
+        this.toast.show("Promotion will be introduced soon, please wait for the further updates", "info");
+        return;
+      }
       this.confirmRole = {
         uid: user.uid,
         displayName: user.displayName || user.email,
@@ -347,7 +352,6 @@ export default {
       try {
         // Use setDoc with merge instead of updateDoc to handle older accounts
         // that might only exist in Firebase Auth but not yet in the Firestore users collection.
-        const { setDoc } = await import("firebase/firestore");
         await setDoc(doc(db, "users", this.confirmRole.uid), {
           role: this.confirmRole.newRole,
         }, { merge: true });
@@ -385,7 +389,6 @@ export default {
       this.isSubmitting = true;
       try {
         const newStatus = this.confirmBan.isBanned ? 'Active' : 'Banned';
-        const { setDoc } = await import("firebase/firestore");
         await setDoc(doc(db, "users", this.confirmBan.uid), {
           status: newStatus
         }, { merge: true });

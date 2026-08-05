@@ -10,7 +10,7 @@ def test_vite_prefixed_api_keys_are_used_as_fallback(monkeypatch):
     monkeypatch.setenv("VITE_RAWG_API_KEY", "rawg-test-key")
     monkeypatch.setenv("VITE_NEWS_API_KEY", "news-test-key")
 
-    import backend.config as config
+    import config  # noqa: PLC0415 – intentional deferred import for monkeypatch isolation
 
     importlib.reload(config)
 

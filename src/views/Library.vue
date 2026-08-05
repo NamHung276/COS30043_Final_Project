@@ -21,6 +21,7 @@ export default {
       viewMode: "grid",   // 'grid' | 'list'
       sortBy: "recent",   // 'recent' | 'playtime' | 'az' | 'status'
       searchQuery: "",
+      isProcessing: false, // Prevents rapid clicking on play/stop
     };
   },
 
@@ -193,6 +194,9 @@ export default {
     },
 
     async playGame(game) {
+      if (this.isProcessing) return;
+      this.isProcessing = true;
+      
       // Stop any other game first
       for (const p of this.purchases) {
         if (p.status === 'playing' && p.id !== game.id) {
@@ -200,21 +204,36 @@ export default {
         }
       }
       try {
+        const nowMs = Date.now();
         await setDoc(doc(db, "purchases", game.docId), { 
           status: 'playing', 
           lastPlayed: new Date(),
+          sessionStart: nowMs,
           userId: this.currentUser.uid 
         }, { merge: true });
         game.status = 'playing';
-        game.sessionStart = Date.now();
+        game.sessionStart = nowMs;
+        
+        // Sync with store immediately
+        const store = useLibraryStore();
+        const storeGame = store.purchases.find(p => p.id === game.id);
+        if (storeGame) {
+          storeGame.status = 'playing';
+          storeGame.sessionStart = nowMs;
+          storeGame.lastPlayed = { seconds: Math.floor(nowMs / 1000) };
+        }
       } catch (err) {
         console.error("Failed to start game:", err);
         alert("Failed to launch game: " + err.message);
+      } finally {
+        setTimeout(() => { this.isProcessing = false; }, 2000);
       }
     },
 
     async stopGame(game) {
-      if (game.status !== 'playing') return;
+      if (game.status !== 'playing' || !game.sessionStart || this.isProcessing) return;
+      this.isProcessing = true;
+      
       const elapsedSeconds = Math.floor((Date.now() - game.sessionStart) / 1000);
       const newPlaytime = (game.playtime || 0) + elapsedSeconds;
 
@@ -240,6 +259,8 @@ export default {
         game.sessions = sessions;
       } catch (err) {
         console.error("Failed to stop game:", err);
+      } finally {
+        setTimeout(() => { this.isProcessing = false; }, 2000);
       }
     },
 

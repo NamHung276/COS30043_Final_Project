@@ -35,7 +35,8 @@ export default {
       error: null,
       now: Date.now(),
       activeSessionTimer: null,
-      achievements: []
+      achievements: [],
+      isProcessing: false,
     };
   },
 
@@ -181,6 +182,9 @@ export default {
     },
 
     async playGame() {
+      if (this.isProcessing) return;
+      this.isProcessing = true;
+
       // Find any already playing game in store and stop it
       const store = useLibraryStore();
       for (const p of store.purchases) {
@@ -206,10 +210,13 @@ export default {
         storeGame.sessionStart = this.purchase.sessionStart;
         storeGame.lastPlayed = { seconds: Math.floor(Date.now() / 1000) }; // Mock Firestore timestamp format
       }
+
+      setTimeout(() => { this.isProcessing = false; }, 2000);
     },
 
     async stopGame() {
-      if (this.purchase.status !== 'playing') return;
+      if (this.purchase.status !== 'playing' || !this.purchase.sessionStart || this.isProcessing) return;
+      this.isProcessing = true;
       
       const elapsedSeconds = Math.floor((Date.now() - this.purchase.sessionStart) / 1000);
       const newPlaytime = (this.purchase.playtime || 0) + elapsedSeconds;
@@ -243,6 +250,8 @@ export default {
         storeGame.sessions = sessions;
         storeGame.sessionStart = null;
       }
+
+      setTimeout(() => { this.isProcessing = false; }, 2000);
     },
 
     // Handlers for child components

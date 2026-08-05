@@ -53,7 +53,7 @@ class RawgCircuitBreaker:
                     # Transition to HALF_OPEN so one probe is allowed
                     self._state = _State.HALF_OPEN
                     logger.info(
-                        "RAWG circuit breaker → HALF_OPEN (probing after %ds cooldown)",
+                        "RAWG circuit breaker -> HALF_OPEN (probing after %ds cooldown)",
                         RECOVERY_TIMEOUT_S,
                     )
                     return False   # let the probe through
@@ -65,7 +65,7 @@ class RawgCircuitBreaker:
         with self._lock:
             if self._state != _State.CLOSED:
                 logger.info(
-                    "RAWG circuit breaker → CLOSED (RAWG is healthy again after %d failures)",
+                    "RAWG circuit breaker -> CLOSED (RAWG is healthy again after %d failures)",
                     self._failures,
                 )
             self._state = _State.CLOSED
@@ -80,14 +80,14 @@ class RawgCircuitBreaker:
                 self._state = _State.OPEN
                 self._opened_at = time.monotonic()
                 logger.warning(
-                    "RAWG circuit breaker → OPEN (probe failed; next retry in %ds)",
+                    "RAWG circuit breaker -> OPEN (probe failed; next retry in %ds)",
                     RECOVERY_TIMEOUT_S,
                 )
             elif self._failures >= FAILURE_THRESHOLD:
                 self._state = _State.OPEN
                 self._opened_at = time.monotonic()
                 logger.warning(
-                    "RAWG circuit breaker → OPEN after %d consecutive failures "
+                    "RAWG circuit breaker -> OPEN after %d consecutive failures "
                     "(next retry in %ds)",
                     self._failures,
                     RECOVERY_TIMEOUT_S,

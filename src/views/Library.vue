@@ -247,7 +247,9 @@ export default {
       if (confirm(`Are you sure you want to refund ${game.gameName}? This will remove it from your library permanently.`)) {
         try {
           await deleteDoc(doc(db, "purchases", game.id));
-          this.purchases = this.purchases.filter(p => p.id !== game.id);
+          // Refresh the Pinia store so the UI updates immediately without needing a reload
+          const store = useLibraryStore();
+          await store.fetchPurchases(true);
         } catch (e) {
           console.error("Refund failed", e);
         }

@@ -130,12 +130,23 @@ export default {
     displayDiscount() {
       if (!this.game || this.gameStateInfo.isFree || !this.gameStateInfo.isReleased || this.displayPrice === null) return 0;
       
-      // Use real Steam discount if available
+      // Use real discount from price data if available (Steam, CheapShark, ITAD all provide this)
       if (this.game.price && this.game.price.discount_percent) {
         return this.game.price.discount_percent;
       }
+
+      // Do NOT apply pseudo-discounts to Steam backup games — they have a real known price.
+      // Showing a fake 40% off on a real Steam price causes a mismatch vs what PayPal charges.
+      const isSteamSource = this.game.price && (
+        this.game.price.source === 'Steam' ||
+        this.game.price.source === 'Steam API Fallback'
+      );
+      const isSteamPrefixedId = String(this.game.id).startsWith('steam-');
+      if (isSteamSource || isSteamPrefixedId) {
+        return 0;
+      }
       
-      // Fallback pseudo-discount based on ID
+      // Fallback pseudo-discount for RAWG-only games with no real price source
       const idStr = String(this.game.id);
       // Extract numbers to handle 'steam-311310' style IDs safely
       const numMatch = idStr.match(/\d+/);
@@ -146,6 +157,7 @@ export default {
       if (roll === 1) return 25;
       return 0;
     },
+
 
     discountedPrice() {
       const price = parseFloat(this.displayPrice);

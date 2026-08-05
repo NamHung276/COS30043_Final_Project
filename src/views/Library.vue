@@ -38,8 +38,10 @@ export default {
 
     totalPlaytimeFormatted() {
       const total = this.totalPlaytimeSeconds;
-      const h = Math.floor(total / 3600);
+      const d = Math.floor(total / 86400);
+      const h = Math.floor((total % 86400) / 3600);
       const m = Math.floor((total % 3600) / 60);
+      if (d > 0) return `${d}d ${h}h ${m}m`;
       if (h > 0) return `${h}h ${m}m`;
       return `${m}m`;
     },
@@ -133,9 +135,11 @@ export default {
     },
 
     formatPlaytime(seconds) {
-      if (!seconds) return "0m";
-      const h = Math.floor(seconds / 3600);
+      if (!seconds) return '0m';
+      const d = Math.floor(seconds / 86400);
+      const h = Math.floor((seconds % 86400) / 3600);
       const m = Math.floor((seconds % 3600) / 60);
+      if (d > 0) return `${d}d ${h}h ${m}m`;
       if (h > 0) return `${h}h ${m}m`;
       return `${m}m`;
     },
@@ -143,9 +147,12 @@ export default {
     formatSessionTime(game) {
       if (!game.sessionStart) return "00:00";
       const elapsed = Math.floor((this.now - game.sessionStart) / 1000);
-      const h = Math.floor(elapsed / 3600);
+      const d = Math.floor(elapsed / 86400);
+      const h = Math.floor((elapsed % 86400) / 3600);
       const m = Math.floor((elapsed % 3600) / 60).toString().padStart(2, '0');
       const s = (elapsed % 60).toString().padStart(2, '0');
+      
+      if (d > 0) return `${d}d ${h}:${m}:${s}`;
       if (h > 0) return `${h}:${m}:${s}`;
       return `${m}:${s}`;
     },

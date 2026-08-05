@@ -13,8 +13,11 @@ const props = defineProps({
 });
 
 const formatDuration = (seconds) => {
-  const h = Math.floor(seconds / 3600);
+  if (!seconds) return '0m';
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
   const m = Math.floor((seconds % 3600) / 60);
+  if (d > 0) return `${d}d ${h}h ${m}m`;
   if (h > 0) return `${h}h ${m}m`;
   return `${m}m`;
 };

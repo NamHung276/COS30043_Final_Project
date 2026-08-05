@@ -100,11 +100,23 @@ export default {
     },
 
     developerNames() {
-      return (this.game?.developers || []).join(", ") || "—";
+      try {
+        if (!this.game?.developers?.length) return 'Unknown';
+        return this.game.developers.map(d => typeof d.name === 'string' ? d.name : (d.name?.name || d.name || '')).join(', ');
+      } catch (err) {
+        console.warn("Error in developerNames:", err);
+        return 'Unknown';
+      }
     },
 
     publisherNames() {
-      return (this.game?.publishers || []).join(", ") || "—";
+      try {
+        if (!this.game?.publishers?.length) return 'Unknown';
+        return this.game.publishers.map(p => typeof p.name === 'string' ? p.name : (p.name?.name || p.name || '')).join(', ');
+      } catch (err) {
+        console.warn("Error in publisherNames:", err);
+        return 'Unknown';
+      }
     },
 
     genreNames() {
@@ -128,34 +140,35 @@ export default {
     },
 
     displayDiscount() {
-      if (!this.game || this.gameStateInfo.isFree || !this.gameStateInfo.isReleased || this.displayPrice === null) return 0;
-      
-      // Use real discount from price data if available (Steam, CheapShark, ITAD all provide this)
-      if (this.game.price && this.game.price.discount_percent) {
-        return this.game.price.discount_percent;
-      }
-
-      // Do NOT apply pseudo-discounts to Steam backup games — they have a real known price.
-      // Showing a fake 40% off on a real Steam price causes a mismatch vs what PayPal charges.
-      const isSteamSource = this.game.price && (
-        this.game.price.source === 'Steam' ||
-        this.game.price.source === 'Steam API Fallback'
-      );
-      const isSteamPrefixedId = String(this.game.id).startsWith('steam-');
-      if (isSteamSource || isSteamPrefixedId) {
+      try {
+        if (!this.game || this.gameStateInfo.isFree || !this.gameStateInfo.isReleased || this.displayPrice === null) return 0;
+        
+        // Use real Steam discount if available
+        if (this.game.price && this.game.price.discount_percent > 0) {
+          return this.game.price.discount_percent;
+        }
+        
+        const isSteamSource = this.game.price && (
+          this.game.price.source === 'Steam' ||
+          this.game.price.source === 'Steam API Fallback'
+        );
+        const gameIdStr = this.game.id ? this.game.id.toString() : '';
+        const isSteamPrefixedId = gameIdStr.startsWith('steam-');
+        
+        if (isSteamSource || isSteamPrefixedId) {
+          return 0;
+        }
+        
+        // Fallback pseudo-discount for RAWG-only games with no real price source
+        // Extract numbers to handle 'steam-311310' style IDs safely
+        const numMatch = gameIdStr.match(/\d+/);
+        const numericId = numMatch ? parseInt(numMatch[0]) : 0;
+        
+        return numericId % 2 === 0 ? 40 : 25;
+      } catch (err) {
+        console.warn("Error in displayDiscount:", err);
         return 0;
       }
-      
-      // Fallback pseudo-discount for RAWG-only games with no real price source
-      const idStr = String(this.game.id);
-      // Extract numbers to handle 'steam-311310' style IDs safely
-      const numMatch = idStr.match(/\d+/);
-      const numId = numMatch ? parseInt(numMatch[0]) : 0;
-      
-      const roll = numId % 4;
-      if (roll === 0) return 40;
-      if (roll === 1) return 25;
-      return 0;
     },
 
 

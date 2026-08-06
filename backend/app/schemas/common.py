@@ -53,3 +53,14 @@ class HealthResponse(BaseModel):
     uptime_seconds: float = Field(description="Seconds since the server started")
     environment: str = Field(description="'development' or 'production'")
     cache_stats: dict = Field(description="Current in-memory cache statistics")
+
+
+class SystemHealthResponse(BaseModel):
+    """Admin System Health response."""
+    status: str
+    frontend: str
+    backend: str
+    firebase: dict
+    apis: dict
+    fallback: dict
+    lastCheck: str

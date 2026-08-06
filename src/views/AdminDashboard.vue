@@ -19,6 +19,7 @@ import {
 import { Star, Newspaper, Users, Database } from "@lucide/vue";
 import { backendApi } from "../services/api";
 import { useNotificationStore } from "../stores/useNotificationStore";
+import SystemHealth from "../components/SystemHealth.vue";
 
 export default {
   name: "AdminDashboard",
@@ -27,6 +28,7 @@ export default {
     Newspaper,
     Users,
     Database,
+    SystemHealth,
   },
 
   inject: ["toast"],
@@ -516,6 +518,10 @@ export default {
                 <span>Players</span>
                 <span class="nav-badge ms-auto" v-if="badgeCounts.users > 0">{{ badgeCounts.users }}</span>
               </button>
+              <button class="nav-btn" :class="{ active: activeTab === 'health' }" @click="activeTab = 'health'">
+                <i class="bi bi-heart-pulse-fill me-3 text-danger"></i> 
+                <span>System Health</span>
+              </button>
             </nav>
           </aside>
         </div>
@@ -524,6 +530,11 @@ export default {
         <div class="col-lg-9">
           <div class="content-container">
         
+        <!-- ── TAB: SYSTEM HEALTH ── -->
+        <div v-if="activeTab === 'health'" class="gh-tab-pane fade-in">
+          <SystemHealth />
+        </div>
+
         <!-- ── TAB: DASHBOARD ── -->
         <div v-if="activeTab === 'dashboard'" class="gh-tab-pane fade-in">
           

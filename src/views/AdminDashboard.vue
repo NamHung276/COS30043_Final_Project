@@ -185,7 +185,13 @@ export default {
     async loadAiHealth() {
       this.loadingAiHealth = true;
       try {
-        const { data } = await backendApi.get("/admin/ai-health");
+        let token = "";
+        if (this.currentUser) {
+          token = await this.currentUser.getIdToken();
+        }
+        const { data } = await backendApi.get("/admin/ai-health", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         this.aiHealth = data;
       } catch (e) {
         console.error("Failed to load AI health data", e);

@@ -28,13 +28,17 @@ export default {
     ...mapState(useAuthStore, ["currentUser"]),
     ...mapState(useLibraryStore, ["purchases"]),
 
-    isClaimed() {
-      if (!this.game || !this.currentUser) return false;
-      return this.purchases.some(
+    ownedPurchase() {
+      if (!this.game || !this.currentUser) return null;
+      return this.purchases.find(
         (p) =>
           String(p.gameId) === String(this.game.id) &&
           p.source === "freetogame",
       );
+    },
+
+    isClaimed() {
+      return !!this.ownedPurchase;
     },
 
     genrePills() {
@@ -419,14 +423,24 @@ export default {
               <!-- Quick Actions in Hero -->
               <div class="d-flex flex-wrap gap-3 mt-4 align-items-center">
                 <!-- State: Already Claimed → Download -->
-                <button
-                  v-if="isClaimed || claimStatus === 'claimed'"
-                  class="ftg-claim-btn ftg-claim-btn--download btn btn-lg fw-bold px-5 shadow"
-                  @click="$router.push('/library')"
-                  aria-label="Go to library to download"
-                >
-                  <i class="bi bi-download me-2"></i> Download
-                </button>
+                <template v-if="isClaimed || claimStatus === 'claimed'">
+                  <button
+                    v-if="ownedPurchase?.status === 'installed' || ownedPurchase?.status === 'completed'"
+                    class="ftg-claim-btn btn-success btn btn-lg fw-bold px-5 shadow"
+                    @click="$router.push('/library')"
+                    aria-label="Play Game"
+                  >
+                    <i class="bi bi-play-fill me-2"></i> Play
+                  </button>
+                  <button
+                    v-else
+                    class="ftg-claim-btn ftg-claim-btn--download btn btn-lg fw-bold px-5 shadow"
+                    @click="$router.push('/library')"
+                    aria-label="Go to library to download"
+                  >
+                    <i class="bi bi-download me-2"></i> Download
+                  </button>
+                </template>
 
                 <!-- State: Claiming in progress -->
                 <button
@@ -669,13 +683,24 @@ export default {
                 <p class="ftg-price-subtitle">No purchase required</p>
 
                 <!-- Claim / Download CTA (mirrored in sidebar) -->
-                <button
-                  v-if="isClaimed || claimStatus === 'claimed'"
-                  class="ftg-claim-btn ftg-claim-btn--download btn btn-lg fw-bold w-100 shadow mb-3"
-                  @click="$router.push('/library')"
-                >
-                  <i class="bi bi-download me-2"></i> Download
-                </button>
+                <template v-if="isClaimed || claimStatus === 'claimed'">
+                  <button
+                    v-if="ownedPurchase?.status === 'installed' || ownedPurchase?.status === 'completed'"
+                    class="ftg-claim-btn btn-success btn btn-lg fw-bold w-100 shadow mb-3"
+                    @click="$router.push('/library')"
+                    aria-label="Play Game"
+                  >
+                    <i class="bi bi-play-fill me-2"></i> Play
+                  </button>
+                  <button
+                    v-else
+                    class="ftg-claim-btn ftg-claim-btn--download btn btn-lg fw-bold w-100 shadow mb-3"
+                    @click="$router.push('/library')"
+                    aria-label="Go to library to download"
+                  >
+                    <i class="bi bi-download me-2"></i> Download
+                  </button>
+                </template>
                 <button
                   v-else-if="claimStatus === 'claiming'"
                   class="ftg-claim-btn ftg-claim-btn--loading btn btn-lg fw-bold w-100 mb-3"

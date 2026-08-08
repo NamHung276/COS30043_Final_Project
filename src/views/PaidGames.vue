@@ -2,6 +2,9 @@
 import SkeletonCard from "../components/SkeletonCard.vue";
 import TrailerModal from "../components/TrailerModal.vue";
 import { backendApi } from "../services/api";
+import { mapState } from "pinia";
+import { useAuthStore } from "../stores/useAuthStore";
+import { useWishlistStore } from "../stores/useWishlistStore";
 import {
   metacriticClass,
   ratingStars,
@@ -63,11 +66,13 @@ export default {
       itemsPerPage: 12,
       totalCount: 0,
       searchTimeout: null,
-      wishlisted: new Set(),
     };
   },
 
   computed: {
+    ...mapState(useAuthStore, ["currentUser"]),
+    ...mapState(useWishlistStore, ["wishlistedIds"]),
+
     filteredGames() {
       let list = this.games;
       if (this.selectedGenre !== "All") {
@@ -144,11 +149,16 @@ export default {
     openTrailer(game, e) {
       e.preventDefault();
     },
-    addToWishlist(game, e) {
+    async toggleWishlist(game, e) {
       e.preventDefault();
-      this.wishlisted.has(String(game.id))
-        ? this.wishlisted.delete(String(game.id))
-        : this.wishlisted.add(String(game.id));
+      e.stopPropagation();
+      if (!this.currentUser) {
+        this.toast?.show("Please log in to add to wishlist", "warning");
+        this.$router.push("/login");
+        return;
+      }
+      const wishlistStore = useWishlistStore();
+      await wishlistStore.toggleWishlist(game, this.toast);
     },
 
     async fetchGames() {
@@ -404,20 +414,20 @@ export default {
               <!-- Wishlist button -->
               <button
                 class="card-float-btn wishlist-btn"
-                :class="{ wishlisted: wishlisted.has(String(game.id)) }"
-                @click="addToWishlist(game, $event)"
+                :class="{ wishlisted: wishlistedIds.has(String(game.id)) }"
+                @click="toggleWishlist(game, $event)"
                 :title="
-                  wishlisted.has(String(game.id))
+                  wishlistedIds.has(String(game.id))
                     ? 'In Wishlist'
                     : 'Add to Wishlist'
                 "
                 :aria-label="
-                  wishlisted.has(String(game.id))
+                  wishlistedIds.has(String(game.id))
                     ? 'In Wishlist'
                     : 'Add to Wishlist'
                 "
               >
-                {{ wishlisted.has(String(game.id)) ? "♥" : "♡" }}
+                {{ wishlistedIds.has(String(game.id)) ? "♥" : "♡" }}
               </button>
             </div>
 
@@ -624,13 +634,13 @@ export default {
               </button>
               <button
                 class="glr-btn wishlist"
-                :class="{ active: wishlisted.has(String(game.id)) }"
-                @click="addToWishlist(game, $event)"
+                :class="{ active: wishlistedIds.has(String(game.id)) }"
+                @click="toggleWishlist(game, $event)"
                 :aria-label="
-                  wishlisted.has(String(game.id)) ? 'In Wishlist' : 'Wishlist'
+                  wishlistedIds.has(String(game.id)) ? 'In Wishlist' : 'Wishlist'
                 "
               >
-                {{ wishlisted.has(String(game.id)) ? "♥" : "♡" }}
+                {{ wishlistedIds.has(String(game.id)) ? "♥" : "♡" }}
               </button>
             </div>
           </div>

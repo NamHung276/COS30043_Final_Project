@@ -63,10 +63,14 @@ export default {
     ...mapState(useWishlistStore, ["wishlistedIds"]),
     ...mapState(useLibraryStore, ["purchases"]),
 
+    ownedPurchase() {
+      if (!this.game || !this.currentUser) return null;
+      const cleanId = String(this.game.id).replace(/^steam-/, "");
+      return this.purchases.find(p => String(p.gameId).replace(/^steam-/, "") === cleanId);
+    },
+
     isOwned() {
-      if (!this.game || !this.currentUser) return false;
-      const libraryStore = useLibraryStore();
-      return libraryStore.hasPurchased(this.game.id);
+      return !!this.ownedPurchase;
     },
 
     metacriticLabel() {
@@ -847,11 +851,20 @@ export default {
                 <div class="gd-hero-purchase" v-if="gameStateInfo.state !== 'TBA'" style="display: contents;">
                   <template v-if="isOwned">
                     <button
+                      v-if="ownedPurchase.status === 'installed' || ownedPurchase.status === 'completed'"
                       class="gd-hero-btn-primary btn btn-success btn-lg fw-bold px-5 shadow-sm text-white"
                       @click="$router.push('/library')"
-                      aria-label="Play / In Library"
+                      aria-label="Play Game"
                     >
-                      <i class="bi bi-play-fill me-2"></i> In Library
+                      <i class="bi bi-play-fill me-2"></i> Play
+                    </button>
+                    <button
+                      v-else
+                      class="gd-hero-btn-primary btn btn-info btn-lg fw-bold px-5 shadow-sm text-dark"
+                      @click="$router.push('/library')"
+                      aria-label="Install Game"
+                    >
+                      <i class="bi bi-download me-2"></i> Install
                     </button>
                   </template>
                   <template v-else-if="gameStateInfo.isReleased">
@@ -1456,11 +1469,20 @@ export default {
                 >
                   <template v-if="isOwned">
                     <button
+                      v-if="ownedPurchase.status === 'installed' || ownedPurchase.status === 'completed'"
                       class="gd-buy-now-btn btn-success w-100 mb-3 fw-bold"
                       @click="$router.push('/library')"
-                      aria-label="Play / In Library"
+                      aria-label="Play Game"
                     >
-                      <i class="bi bi-play-fill me-2"></i> In Library
+                      <i class="bi bi-play-fill me-2"></i> Play
+                    </button>
+                    <button
+                      v-else
+                      class="gd-buy-now-btn btn-info w-100 mb-3 fw-bold text-dark"
+                      @click="$router.push('/library')"
+                      aria-label="Install Game"
+                    >
+                      <i class="bi bi-download me-2"></i> Install
                     </button>
                   </template>
                   <template v-else-if="gameStateInfo.isReleased">

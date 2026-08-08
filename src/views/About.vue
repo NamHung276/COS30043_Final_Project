@@ -290,11 +290,11 @@ export default {
 
               <div class="about-scene-btns" role="radiogroup" aria-labelledby="scene-selection">
                 <label class="about-scene-btn" :class="{ active: selectedScene === 'mountain' }">
-                  <input type="radio" value="mountain" v-model="selectedScene" class="d-none" />
+                  <input type="radio" value="mountain" v-model="selectedScene" class="visually-hidden" />
                   <i class="bi bi-triangle me-1"></i>Mountain Realm
                 </label>
                 <label class="about-scene-btn" :class="{ active: selectedScene === 'ocean' }">
-                  <input type="radio" value="ocean" v-model="selectedScene" class="d-none" />
+                  <input type="radio" value="ocean" v-model="selectedScene" class="visually-hidden" />
                   <i class="bi bi-water me-1"></i>Ocean Kingdom
                 </label>
               </div>

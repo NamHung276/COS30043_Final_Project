@@ -287,7 +287,7 @@ export default {
           </div>
           <div class="jh-search">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input v-model="searchTerm" type="text" placeholder="Search stories..." />
+            <input v-model="searchTerm" type="text" placeholder="Search stories..." aria-label="Search live news" />
           </div>
         </div>
 
@@ -401,7 +401,7 @@ export default {
         <section class="market-widget-section mb-5" v-if="!searchTerm && currentPage === 1">
           <div class="market-header d-flex justify-content-between align-items-center mb-4">
             <h3 class="ed-grid-title m-0"><i class="bi bi-shop me-2"></i> Trending Games & Deals</h3>
-            <router-link to="/games" class="btn btn-outline-light btn-sm rounded-pill px-3">Store Home &rarr;</router-link>
+            <router-link to="/games" class="btn btn-sm rounded-pill px-3" style="border: 1px solid var(--text-muted); color: var(--text-primary);">Store Home &rarr;</router-link>
           </div>
           
           <div v-if="marketLoading" class="text-center py-5 text-muted">
@@ -481,8 +481,8 @@ export default {
                   <div class="mt-auto d-flex align-items-center justify-content-between pt-3 border-top border-secondary border-opacity-25">
                     <span class="text-muted small fw-bold">{{ timeAgo(article.publishedAt) }}</span>
                     <div class="d-flex gap-2">
-                      <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-1 border-0" @click.prevent><i class="bi bi-bookmark"></i></button>
-                      <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-1 border-0" @click.prevent><i class="bi bi-share"></i></button>
+                      <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-1 border-0" @click.prevent aria-label="Bookmark"><i class="bi bi-bookmark"></i></button>
+                      <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-1 border-0" @click.prevent aria-label="Share"><i class="bi bi-share"></i></button>
                     </div>
                   </div>
                 </div>
@@ -525,8 +525,8 @@ export default {
                     <span class="ed-source"><i class="bi bi-building me-1"></i> {{ article.source?.name }}</span>
                   </div>
                   <div class="d-flex gap-2 align-items-center">
-                    <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-1 border-0" @click.prevent><i class="bi bi-bookmark"></i></button>
-                    <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-1 border-0" @click.prevent><i class="bi bi-share"></i></button>
+                    <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-1 border-0" @click.prevent aria-label="Bookmark"><i class="bi bi-bookmark"></i></button>
+                    <button class="btn btn-sm btn-outline-secondary rounded-circle py-0 px-1 border-0" @click.prevent aria-label="Share"><i class="bi bi-share"></i></button>
                   </div>
                 </div>
               </div>
@@ -783,6 +783,7 @@ export default {
   margin: 0 0 20px;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -925,6 +926,7 @@ export default {
   color: var(--text-primary);
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1171,6 +1173,7 @@ export default {
   margin-bottom: 8px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

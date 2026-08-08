@@ -120,6 +120,7 @@ export default {
 
 <template>
   <button
+    aria-label="Like article"
     class="btn btn-sm like-button"
     :class="[
       isLiked ? 'btn-danger' : 'btn-outline-danger',

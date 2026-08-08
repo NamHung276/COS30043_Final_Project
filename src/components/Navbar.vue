@@ -4,7 +4,7 @@
     <div v-if="currentUser && !currentUser.emailVerified" class="alert alert-warning text-center rounded-0 mb-0 py-2 border-0" style="z-index: 1050; position: relative;">
       <small>
         <strong>Action Required:</strong> Please verify your email address ({{ currentUser.email }}) to unlock purchasing. 
-        <button @click="resendVerification" class="btn btn-sm btn-link p-0 fw-bold ms-2 text-dark" :disabled="resendingEmail">
+        <button @click="resendVerification" class="btn btn-sm btn-link p-0 fw-bold ms-2 text-light" :disabled="resendingEmail">
           {{ resendingEmail ? 'Sending...' : 'Resend Email' }}
         </button>
       </small>
@@ -154,6 +154,7 @@
                 type="text"
                 class="nav-search-input"
                 placeholder="Search games..."
+                aria-label="Search games"
                 autocomplete="off"
                 @focus="searchFocused = true"
                 @input="onSearchInput"
@@ -247,6 +248,7 @@
               role="button"
               data-bs-toggle="dropdown"
               aria-expanded="false"
+              aria-label="Notifications"
               @click="onBellClick"
             >
               <i class="bi bi-bell fs-5" aria-hidden="true"></i>

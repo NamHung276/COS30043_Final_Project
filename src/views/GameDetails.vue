@@ -40,6 +40,7 @@ export default {
       lightboxSrc: null,
       lightboxIndex: 0,
       favStatus: { visible: false, message: "", type: "success" },
+      itadLoading: false,
       discoverMoreGames: [],
       recentGames: [],
       carouselInterval: null,

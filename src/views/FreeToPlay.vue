@@ -404,9 +404,9 @@ export default {
         </div>
 
         <!-- Active summary + result count -->
-        <div class="ftg-summary-row">
+        <div class="ftg-summary-row d-flex align-items-center gap-2">
           <span class="ftg-summary-text">{{ activeSummary }}</span>
-          <span v-if="!loading" class="ftg-results-badge"
+          <span v-if="!loading" class="ftg-results-badge badge bg-secondary bg-opacity-25 text-light"
             >{{ filteredGames.length }} results</span
           >
         </div>

@@ -9,7 +9,7 @@
             <h5 class="text-white mb-0 fw-bold">GameHub</h5>
           </div>
           <p class="small mb-3">
-            Your premium destination for discovering, tracking, and exploring the vast universe of video games. We aggregate data from top sources to bring you the best gaming experience.
+            Your destination for discovering, tracking, and exploring the vast universe of video games. We aggregate data from top sources like RAWG, Steam, and IsThereAnyDeal.
           </p>
           <div class="d-flex gap-3 fs-5">
             <a href="#" class="text-muted text-decoration-none hover-white"><i class="bi bi-twitter-x"></i></a>

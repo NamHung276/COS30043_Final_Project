@@ -71,9 +71,13 @@ async def chat(
         from app.services import free_games_service
         try:
             free_games = await free_games_service.get_free_games(sort_by="popularity")
-            free_games_context = "\n\nCURRENT FREE GAMES ON FREETOGAME (Use these if the user asks for free games):\n"
+            free_games_context = (
+                "\n\nCURRENT FREE GAMES ON GAMEHUB (Use these if the user asks for free games):\n"
+                "When suggesting these games, you MUST include the local link exactly as shown below.\n"
+                "For games NOT listed here, DO NOT try to provide a link because you do not know their GameHub ID.\n\n"
+            )
             for fg in free_games[:10]:
-                free_games_context += f"- {fg.get('title')} ({fg.get('genre')}): {fg.get('short_description')} [Link: {fg.get('game_url')}]\n"
+                free_games_context += f"- {fg.get('title')} ({fg.get('genre')}): {fg.get('short_description')} [Link: /free-to-play/{fg.get('id')}]\n"
         except Exception as e:
             logger.error(f"Failed to fetch free games for AI context: {e}")
             free_games_context = ""

@@ -427,7 +427,7 @@ export default {
                   class="stat-value text-success"
                   ><i class="bi bi-patch-check-fill me-1"></i> Verified</span
                 >
-                <span v-else class="stat-value text-warning"
+                <span v-else class="stat-value" style="color: #fb923c;"
                   ><i class="bi bi-exclamation-triangle-fill me-1"></i> Email
                   not verified</span
                 >
@@ -624,7 +624,8 @@ export default {
                         ? `/free-to-play/${act.item.gameId}`
                         : `/games/${act.item.gameId}`
                     "
-                    class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                    class="btn btn-sm rounded-pill px-3"
+                    style="color: #f87171; border: 1px solid #f87171;"
                     >View Game</router-link
                   >
                 </div>

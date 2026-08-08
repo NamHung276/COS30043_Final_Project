@@ -12,10 +12,10 @@
             Your destination for discovering, tracking, and exploring the vast universe of video games. We aggregate data from top sources like RAWG, Steam, and IsThereAnyDeal.
           </p>
           <div class="d-flex gap-3 fs-5">
-            <a href="#" class="text-muted text-decoration-none hover-white"><i class="bi bi-twitter-x"></i></a>
-            <a href="#" class="text-muted text-decoration-none hover-white"><i class="bi bi-discord"></i></a>
-            <a href="#" class="text-muted text-decoration-none hover-white"><i class="bi bi-youtube"></i></a>
-            <a href="#" class="text-muted text-decoration-none hover-white"><i class="bi bi-github"></i></a>
+            <a href="#" class="text-muted text-decoration-none hover-white" aria-label="X (formerly Twitter)"><i class="bi bi-twitter-x"></i></a>
+            <a href="#" class="text-muted text-decoration-none hover-white" aria-label="Discord"><i class="bi bi-discord"></i></a>
+            <a href="#" class="text-muted text-decoration-none hover-white" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+            <a href="#" class="text-muted text-decoration-none hover-white" aria-label="GitHub"><i class="bi bi-github"></i></a>
           </div>
         </div>
 

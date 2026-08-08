@@ -462,9 +462,9 @@
                 </template>
                 <li><hr class="dropdown-divider border-secondary opacity-25"></li>
                 <li>
-                  <button class="dropdown-item nav-dd-item text-danger" @click="logout">
+                  <button class="dropdown-item nav-dd-item" @click="logout" style="color: #f87171;">
                     <span class="nav-dd-icon" style="background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.25);">
-                      <i class="bi bi-box-arrow-right" style="font-size: 0.85rem;"></i>
+                      <i class="bi bi-box-arrow-right" style="font-size: 0.85rem; color: #f87171;"></i>
                     </span>
                     Logout
                   </button>

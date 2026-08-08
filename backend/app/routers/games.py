@@ -439,7 +439,7 @@ async def get_game_detail(game_id: str):
         result = {
             "id": game_id_int,
             "title": final_title,
-            "slug": detail.get("slug", str(game_id)),
+            "slug": detail.get("slug", game_id),
             "description": final_desc,
             "hero_image": final_hero,
             "cover_image": final_cover,

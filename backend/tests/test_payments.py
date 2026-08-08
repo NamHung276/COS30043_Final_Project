@@ -2,8 +2,15 @@ import pytest
 from unittest.mock import patch, AsyncMock
 from fastapi.testclient import TestClient
 from main import app
+from app.utils.dependencies import get_current_user
+from app.models.user import UserContext
 
 client = TestClient(app)
+
+def mock_get_current_user():
+    return UserContext(uid="test_user", email="test@example.com")
+
+app.dependency_overrides[get_current_user] = mock_get_current_user
 
 @pytest.fixture
 def mock_payment_service():
@@ -15,14 +22,20 @@ def mock_crypto_service():
     with patch("app.routers.payments.crypto_service", autospec=True) as mock:
         yield mock
 
-def test_create_paypal_order_success(mock_payment_service):
+@pytest.fixture
+def mock_steam_service():
+    with patch("app.routers.payments.steam_service", autospec=True) as mock:
+        yield mock
+
+def test_create_paypal_order_success(mock_payment_service, mock_steam_service):
     # Setup mock
     mock_payment_service.create_order = AsyncMock(return_value={"id": "ORDER123", "status": "CREATED"})
+    mock_steam_service.get_game_detail_fallback = AsyncMock(return_value={"price": {"final": 25.50}})
     
     # Test request
     response = client.post(
         "/api/payments/paypal/create-order",
-        json={"amount": 25.50, "currency": "USD", "description": "Test Game Purchase"}
+        json={"items": ["steam-123"], "currency": "USD", "description": "Test Game Purchase"}
     )
     
     assert response.status_code == 200

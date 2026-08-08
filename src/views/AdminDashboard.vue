@@ -726,7 +726,7 @@ export default {
             </div>
             <div class="search-bar">
               <i class="bi bi-search"></i>
-              <input type="text" v-model="searchNews" placeholder="Search articles or authors..." />
+              <input type="text" v-model="searchNews" placeholder="Search articles or authors..." aria-label="Search articles" />
             </div>
           </div>
 
@@ -869,7 +869,7 @@ export default {
               </div>
               <div class="search-bar">
                 <i class="bi bi-search"></i>
-                <input type="text" v-model="searchUsers" placeholder="Search players..." />
+                <input type="text" v-model="searchUsers" placeholder="Search players..." aria-label="Search players" />
               </div>
             </div>
           </div>
@@ -1340,9 +1340,9 @@ export default {
 .report-info { display: flex; flex-direction: column; gap: 6px; }
 .report-meta { display: flex; gap: 12px; align-items: center; }
 .rep-severity { font-size: 0.75rem; font-weight: 800; }
-.sev-high { color: #ef4444; }
-.sev-medium { color: #f97316; }
-.sev-low { color: #22c55e; }
+.sev-high { color: #f87171; } /* Lighter red for contrast */
+.sev-medium { color: #fb923c; } /* Lighter orange for contrast */
+.sev-low { color: #4ade80; } /* Lighter green for contrast */
 
 .rep-type { 
   font-weight: 800; 

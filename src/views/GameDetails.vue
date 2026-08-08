@@ -486,6 +486,11 @@ export default {
     },
 
     addToCart() {
+      if (!this.currentUser) {
+        this.toast?.show("Please log in to add items to your cart", "warning");
+        this.$router.push("/login");
+        return false;
+      }
       const finalPrice = this.discountedPrice || this.displayPrice;
       cartState.add({
         id: this.game.id,
@@ -495,11 +500,13 @@ export default {
         thumbnail: this.game.cover_image,
       });
       this.toast?.show(`${this.game.title} added to cart`, "success");
+      return true;
     },
 
     buyNow() {
-      this.addToCart();
-      this.$router.push("/checkout");
+      if (this.addToCart()) {
+        this.$router.push("/checkout");
+      }
     },
 
     async fetchData(id) {

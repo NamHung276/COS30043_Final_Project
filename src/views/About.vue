@@ -74,7 +74,7 @@ export default {
           
           <!-- Section 1: Why GameHub? -->
           <div class="mb-5">
-            <h3 class="about-text-primary fw-bold mb-4">Why GameHub?</h3>
+            <h3 class="about-text-primary fw-bold mb-4">Why GameHub, but not other platforms?</h3>
             <div class="row g-4">
               <!-- Cards -->
               <div class="col-md-6">

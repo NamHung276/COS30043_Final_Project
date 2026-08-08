@@ -71,6 +71,10 @@ export default {
   mounted() {
     this.unsubscribe = onAuthStateChanged(auth, (user) => {
       this.currentUser = user;
+      if (!user) {
+        this.toast?.show("Please log in to proceed to checkout.", "warning");
+        this.$router.push("/login");
+      }
     });
   },
 

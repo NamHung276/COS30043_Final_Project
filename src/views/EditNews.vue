@@ -92,7 +92,7 @@ export default {
             this.content = data.content || "";
             this.image = data.image && !data.image.includes('placehold.co') ? data.image : '';
           } else {
-            this.$router.push("/gamehub-news");
+            this.$router.push("/news");
           }
         } else {
           this.error = "Article not found.";
@@ -210,7 +210,7 @@ export default {
           readingTime: this.readingTime,
         });
 
-        this.$router.push(`/gamehub-news/${this.articleId}`);
+        this.$router.push(`/news/${this.articleId}`);
       } catch (error) {
         console.error("Failed to update article:", error);
         this.error = "Something went wrong. Please try again.";
@@ -240,7 +240,7 @@ export default {
     <div class="newsroom-header">
       <div class="container-fluid px-4 d-flex justify-content-between align-items-center py-3">
         <div class="d-flex align-items-center gap-3">
-          <router-link :to="`/gamehub-news/${articleId}`" class="btn btn-outline-secondary btn-sm px-3 rounded-pill text-decoration-none">
+          <router-link :to="`/news/${articleId}`" class="btn btn-outline-secondary btn-sm px-3 rounded-pill text-decoration-none">
             <i class="bi bi-arrow-left me-1"></i> Back
           </router-link>
           <span class="text-muted small fw-bold" :class="{'text-success': saveStatus === '✓ Saved'}">{{ saveStatus }}</span>
@@ -517,7 +517,7 @@ export default {
   background: var(--overlay-heavy);
 }
 
-/* Custom Preview Styles exactly matching GameHubNewsDetails */
+/* Custom Preview Styles exactly matching NewsDetails */
 .preview-hero-placeholder {
   width: 100%;
   aspect-ratio: 16/9;

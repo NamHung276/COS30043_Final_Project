@@ -429,7 +429,7 @@ export default {
 
         if (actionStr === "View") {
           if (report.type === "Article") {
-            this.$router.push(`/gamehub-news/${report.targetId}`);
+            this.$router.push(`/news/${report.targetId}`);
           } else if (report.type === "Review") {
             this.$router.push(`/games/${report.gameId}`);
           } else {
@@ -772,7 +772,7 @@ export default {
                     </td>
                     <td class="muted-col">{{ formatDate(post.createdAt) }}</td>
                     <td class="text-end">
-                      <button class="btn-gh-outline me-2" @click="$router.push(`/gamehub-news/${post.id}`)">View</button>
+                      <button class="btn-gh-outline me-2" @click="$router.push(`/news/${post.id}`)">View</button>
                       <button class="btn-gh-danger" @click="askDeletePost(post)">Delete</button>
                     </td>
                   </tr>

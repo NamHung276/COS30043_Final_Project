@@ -46,7 +46,7 @@ export default {
 
   watch: {
     '$route.params.id'() {
-      if (this.$route.name === 'GameHubNewsDetails') {
+      if (this.$route.name === 'NewsDetails') {
         this.loadArticle();
         window.scrollTo(0, 0);
       }
@@ -74,7 +74,7 @@ export default {
       if (!confirm("Are you sure you want to delete this article? This cannot be undone.")) return;
       try {
         await deleteDoc(doc(db, "news", this.article.id));
-        this.$router.push("/gamehub-news");
+        this.$router.push("/news");
       } catch (err) {
         console.error("Error deleting article:", err);
       }
@@ -210,7 +210,7 @@ export default {
 
     <div class="container news-detail-container">
       <!-- Back Button -->
-      <router-link to="/gamehub-news" class="news-back-btn">
+      <router-link to="/news" class="news-back-btn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
         Back to News
       </router-link>
@@ -260,7 +260,7 @@ export default {
           
           <div class="ms-auto d-flex align-items-center gap-2">
             <template v-if="currentUser && article.userId === currentUser.uid">
-              <router-link :to="`/gamehub-news/edit/${article.id}`" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1">
+              <router-link :to="`/news/edit/${article.id}`" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1">
                 <i class="bi bi-pencil-fill me-1"></i> Edit
               </router-link>
               <button class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1" @click="deleteArticle">
@@ -295,7 +295,7 @@ export default {
           <router-link
             v-for="related in relatedArticles"
             :key="related.id"
-            :to="`/gamehub-news/${related.id}`"
+            :to="`/news/${related.id}`"
             class="news-related-card"
           >
             <div class="news-related-img">
@@ -325,7 +325,7 @@ export default {
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       <h3>Article not found</h3>
       <p>This article may have been removed or the link is incorrect.</p>
-      <router-link to="/gamehub-news" class="btn btn-primary">← Back to News</router-link>
+      <router-link to="/news" class="btn btn-primary">← Back to News</router-link>
     </div>
   </div>
 
@@ -640,6 +640,7 @@ export default {
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

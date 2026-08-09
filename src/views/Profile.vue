@@ -654,7 +654,7 @@ export default {
                   class="d-flex justify-content-end pt-2 border-top border-secondary border-opacity-25 mt-2"
                 >
                   <router-link
-                    :to="`/gamehub-news/${act.item.id}`"
+                    :to="`/news/${act.item.id}`"
                     class="btn btn-sm btn-outline-info rounded-pill px-3"
                     >Read Post</router-link
                   >

@@ -123,7 +123,7 @@
           </li>
 
           <li class="nav-item">
-            <router-link class="nav-link" to="/gamehub-news" @click="closeMenu" active-class="nav-link-active">
+            <router-link class="nav-link" to="/news" @click="closeMenu" active-class="nav-link-active">
               Community
             </router-link>
           </li>

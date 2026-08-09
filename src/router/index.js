@@ -18,30 +18,30 @@ const routes = [
     component: () => import("../views/LiveNews.vue"),
   },
   {
-    path: "/gamehub-news",
-    name: "GameHubNews",
-    component: () => import("../views/GameHubNews.vue"),
+    path: "/news",
+    name: "News",
+    component: () => import("../views/News.vue"),
   },
   // IMPORTANT: '/create' and '/user/:id' must come BEFORE '/:id'
   // otherwise '/:id' would match "create" as if it were an article id
   {
-    path: "/gamehub-news/create",
+    path: "/news/create",
     name: "CreateNews",
     component: () => import("../views/CreateNews.vue"),
     meta: { requiresAuth: true },
   },
 
   {
-    path: "/gamehub-news/edit/:id",
+    path: "/news/edit/:id",
     name: "EditNews",
     component: () => import("../views/EditNews.vue"),
     meta: { requiresAuth: true },
   },
 
   {
-    path: "/gamehub-news/:id",
-    name: "GameHubNewsDetails",
-    component: () => import("../views/GameHubNewsDetails.vue"),
+    path: "/news/:id",
+    name: "NewsDetails",
+    component: () => import("../views/NewsDetails.vue"),
   },
   {
     path: "/about",

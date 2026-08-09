@@ -226,7 +226,7 @@ export default {
       );
     },
     detailLink(item) {
-      return `/gamehub-news/${item.id}`;
+      return `/news/${item.id}`;
     },
     formatDate(val) {
       if (!val) return "";
@@ -296,7 +296,7 @@ export default {
             </p>
           </div>
           <router-link
-            to="/gamehub-news/create"
+            to="/news/create"
             class="ghn-post-btn"
             aria-label="Post a new article"
           >
@@ -586,7 +586,7 @@ export default {
                 
                 <div class="ms-auto d-flex align-items-center gap-2">
                   <template v-if="currentUser && item.userId === currentUser.uid">
-                    <router-link :to="`/gamehub-news/edit/${item.id}`" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;" title="Edit Article" @click.stop>
+                    <router-link :to="`/news/edit/${item.id}`" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size: 0.75rem;" title="Edit Article" @click.stop>
                       <i class="bi bi-pencil-fill"></i> Edit
                     </router-link>
                     <button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size: 0.75rem;" @click.prevent="deleteArticle(item.id, item.title)" title="Delete Article">
@@ -1166,6 +1166,7 @@ export default {
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1177,6 +1178,7 @@ export default {
   max-width: 680px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1262,6 +1264,7 @@ export default {
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1517,6 +1520,7 @@ export default {
   transition: color 0.2s;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -1531,6 +1535,7 @@ export default {
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

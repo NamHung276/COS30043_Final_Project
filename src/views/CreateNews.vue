@@ -222,7 +222,7 @@ export default {
 
         // Clear the local draft on successful publish
         this.clearDraft();
-        this.$router.push(`/gamehub-news/${docRef.id}`);
+        this.$router.push(`/news/${docRef.id}`);
       } catch (error) {
         console.error("Failed to submit article:", error);
         this.error = "Something went wrong. Please try again.";
@@ -251,7 +251,7 @@ export default {
     <div class="newsroom-header">
       <div class="container-fluid px-4 d-flex justify-content-between align-items-center py-3">
         <div class="d-flex align-items-center gap-3">
-          <router-link to="/gamehub-news" class="btn btn-outline-secondary btn-sm px-3 rounded-pill text-decoration-none">
+          <router-link to="/news" class="btn btn-outline-secondary btn-sm px-3 rounded-pill text-decoration-none">
             <i class="bi bi-arrow-left me-1"></i> Back
           </router-link>
           <span class="text-muted small fw-bold" :class="{'text-success': saveStatus === '✓ Saved'}">{{ saveStatus }}</span>
@@ -524,7 +524,7 @@ export default {
   background: var(--overlay-heavy);
 }
 
-/* Custom Preview Styles exactly matching GameHubNewsDetails */
+/* Custom Preview Styles exactly matching NewsDetails */
 .preview-hero-placeholder {
   width: 100%;
   aspect-ratio: 16/9;

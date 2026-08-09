@@ -33,7 +33,7 @@
         <div class="col-lg-2 col-md-3 col-6">
           <h6 class="text-white mb-3 fw-bold">Discover</h6>
           <ul class="list-unstyled small d-flex flex-column gap-2">
-            <li><router-link to="/gamehub-news" class="text-muted text-decoration-none hover-white">News & Updates</router-link></li>
+            <li><router-link to="/news" class="text-muted text-decoration-none hover-white">News & Updates</router-link></li>
             <li><router-link to="/converter" class="text-muted text-decoration-none hover-white">Currency Converter</router-link></li>
             <li><router-link to="/profile" class="text-muted text-decoration-none hover-white">My Profile</router-link></li>
             <li><router-link to="/favorites" class="text-muted text-decoration-none hover-white">Wishlist</router-link></li>

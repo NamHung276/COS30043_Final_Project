@@ -289,8 +289,8 @@ GameHub is continuously evolving. Planned enhancements include:
 │       ├── FreeToPlayDetails.vue
 │       ├── GameDetails.vue
 │       ├── GameDetails_backup.vue
-│       ├── GameHubNews.vue
-│       ├── GameHubNewsDetails.vue
+│       ├── News.vue
+│       ├── NewsDetails.vue
 │       ├── Games.vue
 │       ├── Home.vue
 │       ├── Library.vue

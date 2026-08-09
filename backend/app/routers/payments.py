@@ -126,7 +126,33 @@ async def capture_paypal_order(
     """
     try:
         capture_data = await payment_service.capture_order(order_id=request.order_id)
-        return capture_data
+        
+        payment_status = capture_data.get("status")
+        if payment_status != "COMPLETED":
+            return {"success": False, "error": f"Payment status: {payment_status}"}
+            
+        payer_name = "Anonymous"
+        if "payer" in capture_data and "name" in capture_data["payer"]:
+            name_obj = capture_data["payer"]["name"]
+            payer_name = f"{name_obj.get('given_name', '')} {name_obj.get('surname', '')}".strip()
+            
+        transaction_id = capture_data.get("id")
+        amount = 0.0
+        
+        # Try to extract the captured amount from purchase_units
+        if "purchase_units" in capture_data and len(capture_data["purchase_units"]) > 0:
+            payments = capture_data["purchase_units"][0].get("payments", {})
+            captures = payments.get("captures", [])
+            if captures:
+                transaction_id = captures[0].get("id", transaction_id)
+                amount = float(captures[0].get("amount", {}).get("value", 0))
+                
+        return {
+            "success": True,
+            "transaction_id": transaction_id,
+            "payer": payer_name,
+            "amount": amount
+        }
     except Exception as e:
         logger.error(f"Error capturing PayPal order {request.order_id}: {e}")
         raise HTTPException(

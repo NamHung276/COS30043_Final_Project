@@ -57,7 +57,8 @@ def test_capture_paypal_order_success(mock_payment_service):
     
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] == "COMPLETED"
+    assert data["success"] == True
+    assert data["transaction_id"] == "ORDER123"
     
     mock_payment_service.capture_order.assert_called_once_with(order_id="ORDER123")
 

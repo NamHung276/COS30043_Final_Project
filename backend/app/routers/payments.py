@@ -35,14 +35,18 @@ async def create_paypal_order(
     Returns the order ID which the frontend uses to render the PayPal button.
     """
     try:
+        logger.info(f"Incoming PayPal create-order request: {request.dict()}")
+        
         # Use the pre-calculated amount from the frontend (which already ran through
         # the full ITAD + CheapShark + Steam pipeline on the game detail page).
         # This guarantees PayPal charges exactly what the cart displays.
         if request.amount and request.amount > 0:
             final_total = round(request.amount, 2)
+            logger.info(f"Using frontend provided amount: {final_total}")
         else:
             # Fallback: recalculate from game IDs (used when amount is not provided)
             total_amount = 0.0
+            logger.info("Falling back to backend recalculation")
             for game_id in request.items:
                 try:
                     game_id_str = str(game_id)

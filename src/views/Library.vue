@@ -257,6 +257,7 @@ export default {
           status: 'installed',
           playtime: newPlaytime,
           sessions: sessions,
+          sessionStart: null,
           userId: this.currentUser.uid
         }, { merge: true });
         

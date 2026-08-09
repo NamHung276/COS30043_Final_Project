@@ -72,17 +72,8 @@ export default {
 
         this.purchase = { id: snap.id, ...snap.data() };
 
-        // Seed visual history if none exists — in-memory only, not saved to Firebase
-        let displaySessions = this.purchase.sessions || [];
-        if (!displaySessions.length) {
-          const nowTime = Date.now();
-          displaySessions = [
-            { startTime: nowTime - 86400000, duration: 2100 },
-            { startTime: nowTime - 86400000 * 3, duration: 7200 },
-            { startTime: nowTime - 86400000 * 5, duration: 2880 }
-          ];
-          // Attach to purchase for template rendering only — NOT written to Firestore
-          this.purchase = { ...this.purchase, sessions: displaySessions };
+        if (!this.purchase.sessions) {
+          this.purchase.sessions = [];
         }
 
         if (!this.purchase.status) this.purchase.status = 'not_installed';

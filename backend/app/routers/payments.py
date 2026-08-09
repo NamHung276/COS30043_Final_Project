@@ -35,7 +35,7 @@ async def create_paypal_order(
     Returns the order ID which the frontend uses to render the PayPal button.
     """
     try:
-        logger.info(f"Incoming PayPal create-order request: {request.dict()}")
+        logger.info(f"Incoming PayPal create-order request: {request.model_dump()}")
         
         # Use the pre-calculated amount from the frontend (which already ran through
         # the full ITAD + CheapShark + Steam pipeline on the game detail page).

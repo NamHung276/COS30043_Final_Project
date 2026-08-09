@@ -77,7 +77,8 @@ export default {
               body: JSON.stringify({
                 items: itemsToPurchase,
                 title: this.title,
-                // price is calculated securely on the backend now
+                // Send the exact price shown in the cart so PayPal charges the same amount
+                amount: this.price || 0,
               }),
             });
             const data = await response.json();

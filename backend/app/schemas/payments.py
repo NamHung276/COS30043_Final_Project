@@ -13,6 +13,7 @@ class OrderCreateRequest(BaseModel):
     description: str = Field(
         default="GameHub Purchase", description="Description of the purchase"
     )
+    amount: float = Field(default=0.0, description="Pre-calculated cart total from the frontend")
 
 
 class OrderCaptureRequest(BaseModel):

@@ -35,27 +35,31 @@ async def create_paypal_order(
     Returns the order ID which the frontend uses to render the PayPal button.
     """
     try:
-        # Secure Price Calculation
-        total_amount = 0.0
-        for game_id in request.items:
-            try:
-                game_id_str = str(game_id)
-                game_data = await get_game_detail(game_id_str)
-                
-                price_info = game_data.get("price")
-                if price_info and price_info.get("final") is not None:
-                    total_amount += float(price_info["final"])
-                else:
-                    logger.error(f"No live price available for game {game_id}")
-                    raise ValueError(f"Game {game_data.get('title', game_id)} is currently unavailable for purchase (no price found).")
-            except ValueError as ve:
-                raise ve
-            except Exception as ex:
-                logger.error(f"Error fetching price for game {game_id}: {ex}")
-                raise ValueError(f"Game {game_id} is currently unavailable for purchase (error).")
+        # Use the pre-calculated amount from the frontend (which already ran through
+        # the full ITAD + CheapShark + Steam pipeline on the game detail page).
+        # This guarantees PayPal charges exactly what the cart displays.
+        if request.amount and request.amount > 0:
+            final_total = round(request.amount, 2)
+        else:
+            # Fallback: recalculate from game IDs (used when amount is not provided)
+            total_amount = 0.0
+            for game_id in request.items:
+                try:
+                    game_id_str = str(game_id)
+                    game_data = await get_game_detail(game_id_str)
+                    price_info = game_data.get("price")
+                    if price_info and price_info.get("final") is not None:
+                        total_amount += float(price_info["final"])
+                    else:
+                        logger.error(f"No live price available for game {game_id}")
+                        raise ValueError(f"Game {game_data.get('title', game_id)} is currently unavailable for purchase (no price found).")
+                except ValueError as ve:
+                    raise ve
+                except Exception as ex:
+                    logger.error(f"Error fetching price for game {game_id}: {ex}")
+                    raise ValueError(f"Game {game_id} is currently unavailable for purchase (error).")
+            final_total = round(total_amount, 2)
 
-        # Round to 2 decimal places to match PayPal requirements
-        final_total = round(total_amount, 2)
         if final_total <= 0:
             raise ValueError("Cart total must be greater than 0")
 

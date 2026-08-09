@@ -23,6 +23,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+from app.routers.games import get_game_detail
+
 @router.post("/paypal/create-order", response_model=OrderResponse)
 async def create_paypal_order(
     request: OrderCreateRequest,
@@ -38,55 +40,14 @@ async def create_paypal_order(
         for game_id in request.items:
             try:
                 game_id_str = str(game_id)
-                is_steam = game_id_str.startswith("steam-")
-
-                if is_steam:
-                    # Steam fallback game — use steam_service
-                    game = await steam_service.get_game_detail_fallback(game_id_str)
-                    # If Steam already gives us a price, use it directly
-                    steam_price = game.get("price")
-                    if steam_price and steam_price.get("final", 0) > 0:
-                        total_amount += float(steam_price["final"])
-                    else:
-                        total_amount += 17.99  # Reasonable Steam fallback default
-                    continue
-
-                # RAWG integer ID path
-                game_id_int = int(game_id)
-                game = await rawg_service.get_game_detail(game_id_int)
-                steam_id = None
-                stores = game.get("stores", [])
-                for s in stores:
-                    store_info = s.get("store", {})
-                    if store_info.get("slug") == "steam" or store_info.get("id") == 1:
-                        url = s.get("url", "")
-                        if "/app/" in url:
-                            match = re.search(r'/app/(\d+)', url)
-                            if match:
-                                steam_id = match.group(1)
-                                break
+                game_data = await get_game_detail(game_id_str)
                 
-                # First check CheapShark
-                cs_results = await cheapshark_service.get_deals_by_game_name(game.get("name", ""))
-                cheapest_price = None
-                if cs_results:
-                    valid_results = []
-                    if steam_id:
-                        valid_results = [g for g in cs_results if g.get("steamAppID") == steam_id]
-                    if not valid_results:
-                        valid_results = [g for g in cs_results if g.get("external", "").lower() == game.get("name", "").lower()]
-                        
-                    best = min(valid_results, key=lambda g: float(g.get("cheapest", "9999")), default=None)
-                    if best:
-                        cheapest_price = best.get("cheapest")
-                
-                if cheapest_price:
-                    final_price = float(cheapest_price)
+                price_info = game_data.get("price")
+                if price_info and price_info.get("final") is not None:
+                    total_amount += float(price_info["final"])
                 else:
                     logger.error(f"No live price available for game {game_id}")
-                    raise ValueError(f"Game {game.get('name', game_id)} is currently unavailable for purchase (no price found).")
-                    
-                total_amount += final_price
+                    raise ValueError(f"Game {game_data.get('title', game_id)} is currently unavailable for purchase (no price found).")
             except ValueError as ve:
                 raise ve
             except Exception as ex:

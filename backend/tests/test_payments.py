@@ -23,14 +23,16 @@ def mock_crypto_service():
         yield mock
 
 @pytest.fixture
-def mock_steam_service():
-    with patch("app.routers.payments.steam_service", autospec=True) as mock:
+def mock_get_game_detail():
+    with patch("app.routers.payments.get_game_detail", autospec=True) as mock:
         yield mock
 
-def test_create_paypal_order_success(mock_payment_service, mock_steam_service):
+@patch("app.routers.payments.get_game_detail")
+@patch("app.routers.payments.payment_service")
+def test_create_paypal_order_success(mock_payment_service, mock_get_game_detail):
     # Setup mock
     mock_payment_service.create_order = AsyncMock(return_value={"id": "ORDER123", "status": "CREATED"})
-    mock_steam_service.get_game_detail_fallback = AsyncMock(return_value={"price": {"final": 25.50}})
+    mock_get_game_detail.return_value = {"price": {"final": 25.50}, "title": "Test Game"}
     
     # Test request
     response = client.post(

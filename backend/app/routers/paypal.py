@@ -44,6 +44,7 @@ async def create_paypal_order(request: CreateOrderRequest):
       - Legacy mode: { gameId: "steam-730", title: "Naval Action", price: 49.99 }
     """
     try:
+        logger.info(f"Incoming paypal request: {request.model_dump()}")
         if request.items:
             # ── Cart / multi-item mode ──────────────────────────────────────
             # Use the pre-calculated amount from the frontend to ensure exact price match.

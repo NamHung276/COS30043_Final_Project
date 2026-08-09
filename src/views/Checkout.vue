@@ -89,6 +89,11 @@ export default {
         return;
       }
       
+      if (!this.currentUser.emailVerified) {
+        this.toast?.show("Please verify your email address (check the top banner) before purchasing.", "error");
+        return;
+      }
+      
       // Generate a random 4-digit code and store it in session
       const code = String(Math.floor(1000 + Math.random() * 9000));
       this.sessionCode = code;
@@ -330,10 +335,13 @@ export default {
               <!-- Verification gate: shows only when terms agreed and not yet verified -->
               <div v-if="agreedToTerms && !isVerified" class="mb-4 text-center verification-section">
                 <p class="small text-warning mb-2"><i class="bi bi-shield-exclamation me-1"></i> For your security, please verify your account.</p>
+                <div v-if="currentUser && !currentUser.emailVerified" class="alert alert-danger small mt-2 py-2 mb-3 text-start border-danger border-opacity-50">
+                  <i class="bi bi-exclamation-triangle-fill me-1"></i> You must verify your email address (see top banner) before you can purchase games.
+                </div>
                 <button 
                   class="btn btn-outline-warning w-100 fw-bold rounded-pill" 
                   @click="sendVerificationCode"
-                  :disabled="sendingEmail"
+                  :disabled="sendingEmail || (currentUser && !currentUser.emailVerified)"
                 >
                   <span v-if="sendingEmail" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                   <i v-else class="bi bi-envelope-check me-2"></i> 

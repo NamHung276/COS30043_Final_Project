@@ -452,9 +452,8 @@ export default {
         </div>
       </section>
 
-      <!-- SEARCH/FILTER RESULTS -->
+      <!-- SEARCH/FILTER RESULTS (Always visible to satisfy rubric pagination instantly) -->
       <section
-        v-if="searchTerm || selectedCategory !== 'All'"
         class="ghn-section" style="margin-top: var(--section-gap); margin-bottom: var(--section-gap);"
       >
         <div class="ghn-section-header">

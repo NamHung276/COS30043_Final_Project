@@ -329,13 +329,15 @@ export default {
     </div>
   </div>
 
-  <ReportModal 
-    :show="showReportModal"
-    :targetName="article?.title"
-    targetType="Article"
-    @close="showReportModal = false"
-    :on-submit="submitReport"
-  />
+  <template v-if="article">
+    <ReportModal 
+      :show="showReportModal"
+      :targetName="article.title"
+      targetType="Article"
+      @close="showReportModal = false"
+      :on-submit="submitReport"
+    />
+  </template>
   </div>
 </template>
 

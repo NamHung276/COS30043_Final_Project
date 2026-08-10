@@ -142,7 +142,8 @@ export const useAuthStore = defineStore("auth", {
           );
 
           // Check ban status the same way email/password login does
-          if (snap.data().status === "Banned") {
+          const freshSnap = await getDoc(userRef);
+          if (freshSnap.exists() && freshSnap.data().status === "Banned") {
             await signOut(auth);
             return { ok: false, error: "Your account has been suspended by an administrator." };
           }

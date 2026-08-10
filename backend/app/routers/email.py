@@ -75,7 +75,7 @@ def send_email_sync(recipient: str, code: str):
         logger.error(f"Failed to send email to {recipient}: {e}")
         raise e
 
-@router.post("/api/email/send-verification", summary="Send verification code via email")
+@router.post("/email/send-verification", summary="Send verification code via email")
 def send_verification(request: VerificationRequest, background_tasks: BackgroundTasks):
     """
     Sends a 4-digit verification code to the user's email address.

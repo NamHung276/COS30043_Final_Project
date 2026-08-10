@@ -363,12 +363,16 @@ async def get_game_detail(game_id: str):
         if cs_best and itad_current:
             cs_val = float(cs_best.get("cheapest", 0))
             itad_val = float(itad_current.get("price", {}).get("amount", 9999))
+            
+            cs_normal = float(cs_best.get("normalPrice") or cs_val)
+            cs_discount = round((1 - cs_val / cs_normal) * 100) if cs_normal > 0 else 0
+            
             if cs_val <= itad_val:
                 final_price = {
                     "currency": "USD",
-                    "initial": float(cs_best.get("normalPrice") or cs_val),
+                    "initial": cs_normal,
                     "final": cs_val,
-                    "discount_percent": 0,
+                    "discount_percent": cs_discount,
                     "store_name": "CheapShark",
                     "url": f"https://www.cheapshark.com/redirect?dealID={cs_best.get('dealID')}",
                     "source": "CheapShark"
@@ -394,11 +398,14 @@ async def get_game_detail(game_id: str):
                 "source": "ITAD"
             }
         elif cs_best:
+            cs_val = float(cs_best.get("cheapest", 0))
+            cs_normal = float(cs_best.get("normalPrice") or cs_val)
+            cs_discount = round((1 - cs_val / cs_normal) * 100) if cs_normal > 0 else 0
             final_price = {
                 "currency": "USD",
-                "initial": float(cs_best.get("normalPrice") or cs_best.get("cheapest", 0)),
-                "final": float(cs_best.get("cheapest", 0)),
-                "discount_percent": 0,
+                "initial": cs_normal,
+                "final": cs_val,
+                "discount_percent": cs_discount,
                 "store_name": "CheapShark",
                 "url": f"https://www.cheapshark.com/redirect?dealID={cs_best.get('dealID')}",
                 "source": "CheapShark"

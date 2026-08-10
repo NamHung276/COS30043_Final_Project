@@ -20,7 +20,15 @@ async def get_system_health(user: UserContext = Depends(get_current_user)):
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
     
-    # In a real app, we would verify the user role here using Firebase Auth claims or DB fetch.
+    # Verify user role via Firestore or custom claims
+    from app.services.firebase_service import get_firestore
+    db = get_firestore()
+    if db:
+        user_doc = db.collection("users").document(user.uid).get()
+        if not user_doc.exists or user_doc.to_dict().get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+    elif not getattr(user, "is_admin", False):
+        raise HTTPException(status_code=403, detail="Admin access required")
     
     # Gather mock system metrics
     active_users = random.randint(100, 500)

@@ -55,7 +55,7 @@ export default {
           try {
             const baseUrl = import.meta.env.PROD
               ? `${import.meta.env.VITE_API_BASE_URL || "https://gamehub-api-er30.onrender.com"}/api`
-              : "http://localhost:8000/api";
+              : "/api";
               
             const idToken = await auth.currentUser?.getIdToken();
             
@@ -96,7 +96,7 @@ export default {
           try {
             const baseUrl = import.meta.env.PROD
               ? `${import.meta.env.VITE_API_BASE_URL || "https://gamehub-api-er30.onrender.com"}/api`
-              : "http://localhost:8000/api";
+              : "/api";
               
             const idToken = await auth.currentUser?.getIdToken();
             

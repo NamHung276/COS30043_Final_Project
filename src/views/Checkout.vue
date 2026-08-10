@@ -28,6 +28,7 @@ export default {
       codeExpiry: null,         // Timestamp when the code expires
       codeSent: false,
       sendingEmail: false,
+      unsubscribe: null,
     };
   },
 

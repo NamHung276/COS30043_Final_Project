@@ -132,6 +132,7 @@ export default {
   async mounted() {
     this.unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
+        this.$router.push("/");
         return;
       }
       this.currentUser = user;
@@ -175,8 +176,8 @@ export default {
     },
     async loadReviewsCount() {
       try {
-        const snap = await getDocs(collection(db, "reviews"));
-        this.totalReviews = snap.docs.length;
+        const snap = await getCountFromServer(collection(db, "reviews"));
+        this.totalReviews = snap.data().count;
       } catch (e) {
         console.error("Failed to load reviews count", e);
       }
